@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { usersService, type UserWithOrgs } from '../api/users-service';
 import { GlassCard } from '../../../shared/components/glass-card';
 import {
@@ -7,15 +7,12 @@ import {
   UserPlus,
   Search,
   Mail,
-  Shield,
   Building,
   Plus,
   CheckCircle2,
-  ExternalLink,
   Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useToastStore } from '@/stores/use-toast-store';
 import { CreateUserModal } from './create-user-modal';
 import { LinkOrganizationModal } from './link-organization-modal';
 
@@ -26,8 +23,7 @@ export default function TeamPage() {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithOrgs | null>(null);
 
-  const queryClient = useQueryClient();
-  const { addToast } = useToastStore();
+
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['team', activeTab],

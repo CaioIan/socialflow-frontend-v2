@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, Settings, LogOut, Image, X, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, LogOut, X, AlertTriangle } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';

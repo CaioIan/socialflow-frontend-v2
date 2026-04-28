@@ -4,7 +4,7 @@ import { Sidebar } from '@/shared/components/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { OrganizationSelector } from '@/features/auth/components/organization-selector';
-import { Menu, X } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 export function DashboardLayout() {
   const { currentOrganizationId, organizations, user } = useAuthStore();

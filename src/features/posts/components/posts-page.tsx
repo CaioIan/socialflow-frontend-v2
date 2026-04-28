@@ -10,7 +10,6 @@ import {
   AlertCircle, 
   XCircle, 
   Image as ImageIcon,
-  MessageSquare,
   Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { X, Building, Loader2, Check } from 'lucide-react';
+import { X, Building, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '@/shared/components/glass-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
