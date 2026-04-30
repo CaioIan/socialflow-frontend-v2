@@ -23,9 +23,12 @@ import { UploadVersionModal } from './upload-version-modal';
 import { PostActionsMenu } from './post-actions-menu';
 import { Upload } from 'lucide-react';
 
+type TabType = 'pending' | 'approved';
+
 export default function PostsPage() {
   const { orgId, id: campaignId } = useParams<{ orgId: string, id: string }>();
   const { user } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<TabType>('pending');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -50,6 +53,11 @@ export default function PostsPage() {
     queryFn: () => postsService.getByCampaign(campaignId!),
     enabled: !!campaignId
   });
+
+  // Filtrar posts por status - ambos mantêm ordem cronológica
+  const pendingPosts = posts.filter(p => p.status === 'PENDING' || p.status === 'ALTERATION_REQUESTED');
+  const approvedPosts = posts.filter(p => p.status === 'APPROVED');
+  const displayedPosts = activeTab === 'pending' ? pendingPosts : approvedPosts;
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -101,8 +109,59 @@ export default function PostsPage() {
         )}
       </header>
 
+      {/* Tabs Navigation */}
+      <div className="flex gap-2 border-b border-white/5">
+        <button
+          onClick={() => setActiveTab('pending')}
+          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg ${
+            activeTab === 'pending'
+              ? 'bg-blue-500/20 text-blue-400'
+              : 'bg-blue-500/5 text-blue-300'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            <span>Pendentes</span>
+            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+              activeTab === 'pending'
+                ? 'bg-blue-500/30 text-blue-200'
+                : 'bg-blue-500/10 text-blue-300'
+            }`}>
+              {pendingPosts.length}
+            </span>
+          </div>
+          {activeTab === 'pending' && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-400" />
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('approved')}
+          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg ${
+            activeTab === 'approved'
+              ? 'bg-emerald-500/20 text-emerald-400'
+              : 'bg-emerald-500/5 text-emerald-300'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Aprovados</span>
+            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+              activeTab === 'approved'
+                ? 'bg-emerald-500/30 text-emerald-200'
+                : 'bg-emerald-500/10 text-emerald-300'
+            }`}>
+              {approvedPosts.length}
+            </span>
+          </div>
+          {activeTab === 'approved' && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-400" />
+          )}
+        </button>
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-        {posts.map((post, index) => {
+        {displayedPosts.map((post, index) => {
           const status = getStatusConfig(post.status);
           const Icon = status.icon;
 
@@ -146,6 +205,17 @@ export default function PostsPage() {
                     />
                   </div>
                 </div>
+
+                {post.status === 'APPROVED' && post.statusHistory && (
+                  (() => {
+                    const approval = post.statusHistory.find(h => h.toStatus === 'APPROVED');
+                    return approval ? (
+                      <p className="text-[8px] text-zinc-500 -mt-2 mb-3">
+                        Aprovado por: <span className="text-zinc-400 font-semibold">{approval.changedByUser.name || approval.changedByUser.email}</span>
+                      </p>
+                    ) : null;
+                  })()
+                )}
 
                 <div className="flex-1 space-y-4">
                   {/* Container da Imagem: Altura adaptável com min-h para quem não tem imagem */}
@@ -211,19 +281,34 @@ export default function PostsPage() {
           );
         })}
 
-        {posts.length === 0 && (
-          <div className="col-span-full py-24 text-center border-2 border-dashed border-white/5 rounded-[3rem] bg-white/[0.01]">
+        {displayedPosts.length === 0 && (
+          <div className="col-span-full py-24 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.01]">
             <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <Clock className="w-10 h-10 text-zinc-700" />
+              {activeTab === 'pending' ? (
+                <Clock className="w-10 h-10 text-blue-700" />
+              ) : (
+                <CheckCircle2 className="w-10 h-10 text-emerald-700" />
+              )}
             </div>
-            <h3 className="text-xl font-bold text-zinc-400 mb-2">Nenhum post agendado</h3>
+            <h3 className="text-xl font-bold text-zinc-400 mb-2">
+              {activeTab === 'pending'
+                ? posts.length === 0
+                  ? 'Nenhum post agendado'
+                  : 'Aguardando próximos designs...'
+                : 'Nenhum post aprovado ainda'
+              }
+            </h3>
             <p className="text-zinc-600 mb-8 max-w-xs mx-auto text-sm text-balance">
-              {isAdmin 
-                ? "Comece agendando o primeiro post para este cronograma mensal."
-                : "Aguardando o administrador cadastrar o cronograma de posts."
+              {activeTab === 'pending'
+                ? posts.length === 0
+                  ? isAdmin
+                    ? 'Comece agendando o primeiro post para este cronograma mensal.'
+                    : 'Aguardando o administrador cadastrar o cronograma de posts.'
+                  : 'Todos os posts estão aprovados! Envie novos designs para continuar.'
+                : 'Nenhum post foi aprovado até agora.'
               }
             </p>
-            {isAdmin && (
+            {activeTab === 'pending' && posts.length === 0 && isAdmin && (
               <button 
                 onClick={() => setIsCreateModalOpen(true)}
                 className="inline-flex items-center gap-2 text-primary hover:text-white transition-colors font-bold"

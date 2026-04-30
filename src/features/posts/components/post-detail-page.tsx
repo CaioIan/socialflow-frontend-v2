@@ -264,6 +264,22 @@ export default function PostDetailPage() {
                       <span className="font-bold text-sm uppercase tracking-wider">Este post foi aprovado!</span>
                     </div>
                   )}
+                  {post.status === 'APPROVED' && post.statusHistory && (
+                    (() => {
+                      const approval = post.statusHistory.find(h => h.toStatus === 'APPROVED');
+                      return approval ? (
+                        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-4">
+                          <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-2">Aprovado por</div>
+                          <div className="text-sm font-medium text-emerald-300 mb-1">
+                            {approval.changedByUser.name || approval.changedByUser.email}
+                          </div>
+                          <div className="text-xs text-zinc-600">
+                            {new Date(approval.createdAt).toLocaleDateString('pt-BR')} às {new Date(approval.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      ) : null;
+                    })()
+                  )}
                 </div>
               )}
             </GlassCard>

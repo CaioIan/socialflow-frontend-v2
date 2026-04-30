@@ -2,6 +2,18 @@ import api from '@/api/axios';
 
 export type PostStatus = 'PENDING' | 'ALTERATION_REQUESTED' | 'APPROVED' | 'CANCELLED';
 
+export interface StatusHistoryRecord {
+  id: string;
+  toStatus: PostStatus;
+  fromStatus: PostStatus | null;
+  createdAt: string;
+  changedByUser: {
+    id: string;
+    name?: string;
+    email: string;
+  };
+}
+
 export interface Post {
   id: string;
   organizationId: string;
@@ -15,6 +27,7 @@ export interface Post {
   createdAt: string;
   assets?: Array<{ id: string; cloudinaryUrl: string; assetType: string; createdAt: string }>;
   currentVersion?: { feedUrl: string | null; storiesUrl: string | null };
+  statusHistory?: StatusHistoryRecord[];
 }
 
 export interface CreatePostRequest {
@@ -30,6 +43,15 @@ export interface UploadVersionRequest {
   feedUrl?: string;
   storiesUrl?: string;
 }
+
+export const getLastApproval = (post: Post) => {
+  if (!post.statusHistory) return null;
+  const approval = post.statusHistory.find(h => h.toStatus === 'APPROVED');
+  return approval ? {
+    approvedBy: approval.changedByUser.name || approval.changedByUser.email,
+    approvedAt: new Date(approval.createdAt)
+  } : null;
+};
 
 export const postsService = {
   getByCampaign: async (campaignId: string) => {
