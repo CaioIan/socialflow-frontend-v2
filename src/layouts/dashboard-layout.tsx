@@ -84,9 +84,7 @@ export function DashboardLayout() {
                 {user?.name || 'Usuário'}
               </span>
               <span className="text-[10px] text-zinc-500 uppercase tracking-tighter font-bold truncate max-w-[200px]">
-                {organizations.length > 0 
-                  ? organizations.map(org => org.name).join(', ') 
-                  : userRole === 'ADMIN' ? 'Gestão SocialFlow' : 'Sem Organização'}
+                {user?.role || 'Usuário'}
               </span>
             </div>
             <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-white/10 flex items-center justify-center text-primary font-bold shadow-[0_0_15px_oklch(var(--primary)/0.1)]">
