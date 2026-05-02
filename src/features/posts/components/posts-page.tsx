@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/use-auth-store';
+import { useOrganizationAccess } from '@/shared/hooks/use-organization-access';
 import { GlassCard } from '@/shared/components/glass-card';
 import { 
   ArrowLeft, 
@@ -28,6 +29,7 @@ type TabType = 'pending' | 'approved';
 export default function PostsPage() {
   const { orgId, id: campaignId } = useParams<{ orgId: string, id: string }>();
   const { user } = useAuthStore();
+  useOrganizationAccess(orgId);
   const [activeTab, setActiveTab] = useState<TabType>('pending');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

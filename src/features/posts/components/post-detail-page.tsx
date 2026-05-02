@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/use-auth-store';
+import { useOrganizationAccess } from '@/shared/hooks/use-organization-access';
 import { postsService, type PostStatus } from '../api/posts-service';
 import { postCommentsService } from '../api/post-comments-service';
 import { GlassCard } from '@/shared/components/glass-card';
@@ -30,6 +31,7 @@ export default function PostDetailPage() {
   const { orgId, campId, postId } = useParams<{ orgId: string, campId: string, postId: string }>();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const { hasAccess } = useOrganizationAccess(orgId);
   const { addToast } = useToastStore();
   const [copied, setCopied] = useState(false);
   const [isReplaceAssetModalOpen, setIsReplaceAssetModalOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function PostDetailPage() {
   const { data: post, isLoading } = useQuery({
     queryKey: ['post', postId],
     queryFn: () => postsService.getById(postId!),
-    enabled: !!postId
+    enabled: !!postId && hasAccess
   });
 
   const { data: comments } = useQuery({

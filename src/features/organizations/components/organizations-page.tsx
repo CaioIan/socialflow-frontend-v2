@@ -23,7 +23,7 @@ export default function OrganizationsPage() {
 
   // Busca a lista real de organizações da API
   const { data: organizations = [], isLoading, error } = useQuery({
-    queryKey: ['organizations'],
+    queryKey: ['organizations', user?.id],
     queryFn: organizationsService.getAll
   });
 

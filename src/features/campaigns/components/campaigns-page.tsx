@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/use-auth-store';
+import { useOrganizationAccess } from '@/shared/hooks/use-organization-access';
 import { GlassCard } from '@/shared/components/glass-card';
 import { FolderKanban, Plus, Calendar, ArrowLeft, Loader2, Edit2, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -16,6 +17,7 @@ export default function CampaignsPage() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
+  useOrganizationAccess(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<any>(undefined);
   

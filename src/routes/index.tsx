@@ -7,6 +7,7 @@ import CampaignsPage from '@/features/campaigns/components/campaigns-page';
 import PostsPage from '@/features/posts/components/posts-page';
 import PostDetailPage from '@/features/posts/components/post-detail-page';
 import TeamPage from '@/features/team/components/team-page';
+import { AdminDashboardPage } from '@/features/dashboard/components/admin-dashboard-page';
 
 export const router = createBrowserRouter([
   {
@@ -45,10 +46,13 @@ export const router = createBrowserRouter([
         path: 'team',
         element: <TeamPage />,
       },
-      // Rota de fallback dentro do layout para /dashboard antigo ou similares
       {
         path: 'dashboard',
-        element: <Navigate to="/organizations" replace />,
+        element: (
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        ),
       }
     ],
   },

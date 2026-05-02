@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const { user, logout } = useAuthStore();
+  const { user, logout, currentOrganizationId } = useAuthStore();
   const [isMobile, setIsMobile] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
@@ -27,9 +27,15 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const menuItems = [
     { 
       icon: LayoutDashboard, 
-      label: role === 'CLIENT' ? 'Minhas Aprovações' : role === 'DESIGNER' ? 'Minha Pauta' : 'Dashboard', 
+      label: 'Dashboard Administrativo', 
       href: '/dashboard', 
-      roles: ['ADMIN', 'DESIGNER', 'CLIENT'] 
+      roles: ['ADMIN'] 
+    },
+    { 
+      icon: Building2, 
+      label: 'Minha Organização', 
+      href: currentOrganizationId ? `/organizations/${currentOrganizationId}/campaigns` : '/organizations',
+      roles: ['CLIENT'] 
     },
     { icon: Building2, label: 'Organizações', href: '/organizations', roles: ['ADMIN', 'DESIGNER'] },
     { icon: Users, label: 'Equipe', href: '/team', roles: ['ADMIN'] },

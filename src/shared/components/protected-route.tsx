@@ -17,8 +17,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    // Se o usuário não tiver a role necessária, manda para o dashboard
-    return <Navigate to="/dashboard" replace />;
+    // Se o usuário não tiver a role necessária, manda para organizações
+    return <Navigate to="/organizations" replace />;
   }
 
   return <>{children}</>;
