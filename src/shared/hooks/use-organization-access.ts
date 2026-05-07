@@ -9,17 +9,15 @@ export function useOrganizationAccess(organizationId: string | undefined) {
   const { user } = useAuthStore();
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
 
-  const { data: organizations = [] } = useQuery({
+  const { data: organizations = [], isLoading } = useQuery({
     queryKey: ['organizations', user?.id],
     queryFn: organizationsService.getAll,
     enabled: !!user?.id && !isAdmin,
+    staleTime: 1000 * 60 * 5,
   });
 
   useEffect(() => {
-    if (!user || !organizationId) return;
-
-    // ADMINs podem acessar qualquer organização
-    if (isAdmin) return;
+    if (!user || !organizationId || isAdmin || isLoading) return;
 
     // Verificar se o usuário tem acesso a essa organização
     const hasAccess = organizations.some(org => org.id === organizationId);
@@ -27,10 +25,10 @@ export function useOrganizationAccess(organizationId: string | undefined) {
     if (!hasAccess) {
       navigate('/organizations', { replace: true });
     }
-  }, [organizationId, organizations, user, isAdmin, navigate]);
+  }, [organizationId, organizations, user, isAdmin, navigate, isLoading]);
 
   return {
     hasAccess: isAdmin || organizations.some(org => org.id === organizationId),
-    isLoading: !isAdmin && organizations.length === 0 && !!user?.id,
+    isLoading: !isAdmin && isLoading,
   };
 }

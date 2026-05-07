@@ -31,7 +31,10 @@ export function DeletePostModal({
       return await postsService.delete(postId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts', campaignId] });
+      // Invalidate posts list in campaign
+      queryClient.invalidateQueries({ queryKey: ['posts', orgId, campaignId] });
+      // Invalidate dashboard stats since post count has changed
+      queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);

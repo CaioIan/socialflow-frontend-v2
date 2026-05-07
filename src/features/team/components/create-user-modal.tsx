@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { X, UserPlus, Loader2, Mail, Lock, User } from 'lucide-react';
+import { X, UserPlus, Loader2, Mail, Lock, User, Building } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '@/shared/components/glass-card';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { usersService } from '../api/users-service';
+import { organizationsService } from '@/features/organizations/api/organizations-service';
 import { useToastStore } from '@/stores/use-toast-store';
 
 interface CreateUserModalProps {
@@ -18,25 +19,32 @@ export function CreateUserModal({ isOpen, onClose, defaultRole }: CreateUserModa
     name: '',
     email: '',
     password: '',
-    role: defaultRole
+    role: defaultRole,
+    organizationId: ''
   });
 
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
+
+  const { data: organizations } = useQuery({
+    queryKey: ['organizations-for-link'],
+    queryFn: () => organizationsService.getAll(),
+  });
 
   const createMutation = useMutation({
     mutationFn: (data: typeof formData) => 
       usersService.create({
         name: data.name,
         email: data.email,
-        passwordHash: data.password, // O backend vai fazer o hash
-        role: data.role
+        passwordHash: data.password,
+        role: data.role,
+        organizationId: data.organizationId || undefined
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team'] });
       addToast('Usuário criado com sucesso!', 'success');
       onClose();
-      setFormData({ name: '', email: '', password: '', role: defaultRole });
+      setFormData({ name: '', email: '', password: '', role: defaultRole, organizationId: '' });
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Erro ao criar usuário';
@@ -136,6 +144,26 @@ export function CreateUserModal({ isOpen, onClose, defaultRole }: CreateUserModa
                   </select>
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                    <Building className="w-4 h-4" />
+                    Organização (Opcional)
+                  </label>
+                  <select
+                    value={formData.organizationId}
+                    onChange={e => setFormData({ ...formData, organizationId: e.target.value })}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
+                  >
+                    <option value="" className="bg-zinc-900">Sem alocação inicial</option>
+                    {organizations?.map((org) => (
+                      <option key={org.id} value={org.id} className="bg-zinc-900">
+                        {org.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-zinc-500">Se deixar em branco, o usuário pode ser alocado depois na seção de não alocados.</p>
+                </div>
+
                 <div className="flex gap-4 pt-4">
                   <button
                     type="button"
@@ -147,7 +175,7 @@ export function CreateUserModal({ isOpen, onClose, defaultRole }: CreateUserModa
                   <button
                     type="submit"
                     disabled={createMutation.isPending}
-                    className="flex-[2] py-3 px-4 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-lg transition-all flex justify-center items-center gap-2"
+                    className="flex-2 btn-primary py-3 px-4 rounded-xl"
                   >
                     {createMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Criar Usuário'}
                   </button>

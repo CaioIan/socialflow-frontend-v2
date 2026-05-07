@@ -38,10 +38,9 @@ export interface Organization {
 }
 
 class DashboardService {
-  async getOverview(organizationId?: string): Promise<OverviewStats> {
+  async getOverview(): Promise<OverviewStats> {
     try {
-      const params = organizationId ? { organizationId } : {};
-      const response = await api.get<OverviewStats>('/stats/overview', { params });
+      const response = await api.get<OverviewStats>('/stats/overview');
       return response.data;
     } catch (error) {
       console.error('Failed to fetch overview stats:', error);
@@ -50,13 +49,11 @@ class DashboardService {
   }
 
   async getRecentApprovals(
-    organizationId?: string,
     limit: number = 10,
   ): Promise<RecentApproval[]> {
     try {
-      const params = organizationId ? { organizationId, limit } : { limit };
       const response = await api.get<RecentApproval[]>('/stats/recent-approvals', {
-        params,
+        params: { limit },
       });
       return response.data;
     } catch (error) {
@@ -65,12 +62,9 @@ class DashboardService {
     }
   }
 
-  async getPostsByStatus(organizationId?: string): Promise<PostsByStatus> {
+  async getPostsByStatus(): Promise<PostsByStatus> {
     try {
-      const params = organizationId ? { organizationId } : {};
-      const response = await api.get<PostsByStatus>('/stats/posts-by-status', {
-        params,
-      });
+      const response = await api.get<PostsByStatus>('/stats/posts-by-status');
       return response.data;
     } catch (error) {
       console.error('Failed to fetch posts by status:', error);

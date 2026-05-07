@@ -23,9 +23,10 @@ interface UploadVersionModalProps {
   onClose: () => void;
   postId: string;
   campaignId: string;
+  orgId: string;
 }
 
-export function UploadVersionModal({ isOpen, onClose, postId, campaignId }: UploadVersionModalProps) {
+export function UploadVersionModal({ isOpen, onClose, postId, campaignId, orgId }: UploadVersionModalProps) {
   const queryClient = useQueryClient();
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading_feed' | 'uploading_stories' | 'saving'>('idle');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -95,7 +96,7 @@ export function UploadVersionModal({ isOpen, onClose, postId, campaignId }: Uplo
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts', campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['posts', orgId, campaignId] });
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);

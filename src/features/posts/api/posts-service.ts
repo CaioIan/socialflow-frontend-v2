@@ -28,6 +28,10 @@ export interface Post {
   assets?: Array<{ id: string; cloudinaryUrl: string; assetType: string; createdAt: string }>;
   currentVersion?: { feedUrl: string | null; storiesUrl: string | null };
   statusHistory?: StatusHistoryRecord[];
+  organization?: {
+    isActive: boolean;
+    name: string;
+  };
 }
 
 export interface CreatePostRequest {
@@ -99,8 +103,11 @@ export const postsService = {
     return response.data;
   },
 
-  updateStatus: async (postId: string, status: PostStatus) => {
-    const response = await api.patch<Post>(`/posts/${postId}/status`, { status });
+  updateStatus: async (postId: string, status: PostStatus, scheduledFor?: Date) => {
+    const response = await api.patch<Post>(`/posts/${postId}/status`, { 
+      status,
+      ...(scheduledFor && { scheduledFor: scheduledFor.toISOString() })
+    });
     return response.data;
   },
 

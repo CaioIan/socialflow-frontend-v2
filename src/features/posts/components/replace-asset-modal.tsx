@@ -14,6 +14,7 @@ interface ReplaceAssetModalProps {
   assetType: 'FEED' | 'STORIES';
   postId: string;
   campaignId: string;
+  orgId: string;
   currentImageUrl?: string;
 }
 
@@ -25,6 +26,7 @@ export function ReplaceAssetModal({
   assetType,
   postId,
   campaignId,
+  orgId,
   currentImageUrl,
 }: ReplaceAssetModalProps) {
   const queryClient = useQueryClient();
@@ -114,7 +116,7 @@ export function ReplaceAssetModal({
       });
 
       // Atualizar o cache do grid de posts
-      queryClient.setQueryData(['posts', campaignId], (oldData: any) => {
+      queryClient.setQueryData(['posts', orgId, campaignId], (oldData: any) => {
         console.log('Updating posts cache for campaignId:', campaignId, 'Old data:', oldData);
         if (!Array.isArray(oldData)) return oldData;
 
@@ -133,7 +135,7 @@ export function ReplaceAssetModal({
 
       // Invalidar para garantir que dados "não-críticos" sejam atualizados em segundo plano
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
-      queryClient.invalidateQueries({ queryKey: ['posts', campaignId], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['posts', orgId, campaignId], refetchType: 'all' });
 
       setIsSuccess(true);
       setTimeout(() => {

@@ -129,7 +129,7 @@ export function LinkOrganizationModal({ isOpen, onClose, user }: LinkOrganizatio
                   <button
                     type="submit"
                     disabled={!selectedOrgId || linkMutation.isPending}
-                    className="flex-[2] py-3 px-4 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-2 btn-primary py-3 px-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {linkMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Vincular Agora'}
                   </button>

@@ -47,7 +47,13 @@ export function OrganizationSelector() {
                 disabled={selectMutation.isPending}
                 className="w-full text-left group"
               >
-                <GlassCard className="flex items-center gap-4 hover:border-primary/50 transition-all p-5">
+                <GlassCard className={`flex items-center gap-4 hover:border-primary/50 transition-all p-5 relative ${selectMutation.isPending && selectMutation.variables === org.organizationId ? 'opacity-75' : ''}`}>
+                  {/* Loading Overlay */}
+                  {selectMutation.isPending && selectMutation.variables === org.organizationId && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50 rounded-xl">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    </div>
+                  )}
                   <div className="w-12 h-12 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center group-hover:bg-primary/10 group-hover:border-primary/30 transition-colors">
                     <Building2 className="w-6 h-6 text-zinc-400 group-hover:text-primary" />
                   </div>

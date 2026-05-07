@@ -18,6 +18,7 @@ type CreateCampaignForm = z.infer<typeof createCampaignSchema>;
 interface CreateCampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
+  organizationId?: string;
   initialData?: {
     id: string;
     title: string;
@@ -26,7 +27,7 @@ interface CreateCampaignModalProps {
   };
 }
 
-export function CreateCampaignModal({ isOpen, onClose, initialData }: CreateCampaignModalProps) {
+export function CreateCampaignModal({ isOpen, onClose, organizationId, initialData }: CreateCampaignModalProps) {
   const queryClient = useQueryClient();
   const currentYear = new Date().getFullYear();
   const isEditing = !!initialData;
@@ -67,7 +68,7 @@ export function CreateCampaignModal({ isOpen, onClose, initialData }: CreateCamp
         ? campaignsService.update(initialData!.id, data as any)
         : campaignsService.create(data as any),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['campaigns', organizationId] });
       reset();
       onClose();
     },
