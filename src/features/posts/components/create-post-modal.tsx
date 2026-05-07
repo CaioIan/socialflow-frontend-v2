@@ -21,10 +21,9 @@ interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   campaignId: string;
-  orgId: string;
 }
 
-export function CreatePostModal({ isOpen, onClose, campaignId, orgId }: CreatePostModalProps) {
+export function CreatePostModal({ isOpen, onClose, campaignId }: CreatePostModalProps) {
   const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -75,7 +74,7 @@ export function CreatePostModal({ isOpen, onClose, campaignId, orgId }: CreatePo
       return post;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts', orgId, campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['posts', campaignId] });
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);

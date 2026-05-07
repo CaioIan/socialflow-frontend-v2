@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useOrganizationAccess } from '@/shared/hooks/use-organization-access';
 import { GlassCard } from '@/shared/components/glass-card';
@@ -21,10 +20,8 @@ export default function CampaignsPage() {
   useOrganizationAccess(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<any>(undefined);
-
+  
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
-  const isDesigner = user?.role?.toUpperCase() === 'DESIGNER';
-  const isClient = user?.role?.toUpperCase() === 'CLIENT';
 
   const handleEdit = (campaign: any) => {
     setEditingCampaign(campaign);
@@ -40,15 +37,13 @@ export default function CampaignsPage() {
   const { data: activeOrg, isLoading: isLoadingOrg } = useQuery({
     queryKey: ['organization', id],
     queryFn: () => organizationsService.getById(id!),
-    enabled: !!id,
-    staleTime: 1000 * 60 * 5,
+    enabled: !!id
   });
 
   // Busca a lista real de campanhas
   const { data: campaigns = [], isLoading: isLoadingCampaigns } = useQuery({
     queryKey: ['campaigns', id],
-    queryFn: () => campaignsService.getAll(),
-    enabled: !!id,
+    queryFn: campaignsService.getAll,
   });
 
   const deactivateMutation = useMutation({
@@ -65,7 +60,7 @@ export default function CampaignsPage() {
   if (isLoadingOrg || isLoadingCampaigns) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-zinc-500">
-        <Loader2 className="w-8 h-8 animate-spin loader-gradient mb-4" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
         <p>Carregando campanhas...</p>
       </div>
     );
@@ -75,43 +70,28 @@ export default function CampaignsPage() {
     <div className="space-y-8">
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="space-y-1">
-          <Link
-            to="/organizations"
+          <Link 
+            to="/organizations" 
             className="text-xs text-zinc-500 hover:text-primary flex items-center gap-1 mb-2 transition-colors w-fit"
           >
             <ArrowLeft className="w-3 h-3" />
             Voltar para Organizações
           </Link>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-            <span className="text-zinc-500 font-normal shrink-0">Campanhas /</span>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-glow flex items-center gap-3">
+            <span className="text-zinc-500 font-normal shrink-0">Campanhas /</span> 
             <span className="truncate">{activeOrg?.name || 'Empresa'}</span>
           </h1>
-          <p className="text-zinc-500 text-sm">
-            {isAdmin && 'Pastas de artes e cronogramas mensais das campanhas.'}
-            {isDesigner && 'Campanhas onde você está alocado para fazer upload de artes.'}
-            {isClient && 'Campanhas da sua organização para acompanhar e aprovar posts.'}
-          </p>
+          <p className="text-zinc-500 text-sm">Pastas de artes e cronogramas mensais.</p>
         </div>
-
+        
         {isAdmin && (
-          <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              disabled={activeOrg?.isActive === false}
-              className={cn(
-                "btn-primary px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all w-full sm:w-auto",
-                activeOrg?.isActive === false && "opacity-50 cursor-not-allowed grayscale"
-              )}
-            >
-              <Plus className="w-5 h-5" />
-              Nova Campanha
-            </button>
-            {activeOrg?.isActive === false && (
-              <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider animate-pulse">
-                Ative a organização novamente
-              </span>
-            )}
-          </div>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-white px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
+          >
+            <Plus className="w-5 h-5" />
+            Nova Campanha
+          </button>
         )}
       </header>
 
@@ -124,10 +104,10 @@ export default function CampaignsPage() {
             transition={{ delay: index * 0.1 }}
             onClick={() => navigate(`/organizations/${id}/campaigns/${campaign.id}/posts`)}
           >
-            <GlassCard className="group hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden h-full active:scale-[0.98]">
+            <GlassCard className="group hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden h-full active:scale-[0.98] transition-transform">
               {isAdmin && (
                 <div className="absolute top-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
-                  <button
+                  <button 
                     onClick={(e) => {
                       e.stopPropagation();
                       handleEdit(campaign);
@@ -136,10 +116,10 @@ export default function CampaignsPage() {
                   >
                     <Edit2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
                   </button>
-                  <button
+                  <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (window.confirm('Deseja realmente arquivar esta campanha?')) {
+                      if(window.confirm('Deseja realmente arquivar esta campanha?')) {
                         deactivateMutation.mutate(campaign.id);
                       }
                     }}
@@ -165,11 +145,11 @@ export default function CampaignsPage() {
               <h3 className="text-lg font-bold text-white mb-1 group-hover:text-glow transition-all">
                 {campaign.title}
               </h3>
-
+              
               <div className="flex items-center gap-2 text-zinc-500 text-sm mb-6">
                 <Calendar className="w-4 h-4" />
                 <span>
-                  {campaign.referenceMonth && campaign.referenceYear
+                  {campaign.referenceMonth && campaign.referenceYear 
                     ? `${new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(new Date(2024, campaign.referenceMonth - 1))} ${campaign.referenceYear}`
                     : 'Sem data definida'}
                 </span>
@@ -186,17 +166,16 @@ export default function CampaignsPage() {
         ))}
 
         {campaigns.length === 0 && (
-          <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-[2rem] bg-white/1">
+          <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-[2rem] bg-white/[0.01]">
             <FolderKanban className="w-10 h-10 text-zinc-700 mx-auto mb-4" />
             <p className="text-zinc-500 text-sm">Nenhuma campanha cadastrada nesta organização.</p>
           </div>
         )}
       </div>
 
-      <CreateCampaignModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        organizationId={id}
+      <CreateCampaignModal 
+        isOpen={isModalOpen} 
+        onClose={handleCloseModal} 
         initialData={editingCampaign}
       />
     </div>

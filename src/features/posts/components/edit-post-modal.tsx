@@ -20,10 +20,9 @@ interface EditPostModalProps {
   onClose: () => void;
   postId: string;
   campaignId: string;
-  orgId: string;
 }
 
-export function EditPostModal({ isOpen, onClose, postId, campaignId, orgId }: EditPostModalProps) {
+export function EditPostModal({ isOpen, onClose, postId, campaignId }: EditPostModalProps) {
   const queryClient = useQueryClient();
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -56,7 +55,7 @@ export function EditPostModal({ isOpen, onClose, postId, campaignId, orgId }: Ed
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts', orgId, campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['posts', campaignId] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
       setIsSuccess(true);
       setTimeout(() => {
@@ -74,7 +73,7 @@ export function EditPostModal({ isOpen, onClose, postId, campaignId, orgId }: Ed
     <Modal isOpen={isOpen} onClose={onClose} title="Editar Post" className="max-w-xl">
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin loader-gradient" />
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
       ) : isSuccess ? (
         <div className="py-12 flex flex-col items-center justify-center space-y-4">

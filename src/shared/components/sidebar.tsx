@@ -4,9 +4,6 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useState, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-
-import logoImg from '@/assets/sidebar-logo.png';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -15,7 +12,6 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, logout, currentOrganizationId } = useAuthStore();
-  const queryClient = useQueryClient();
   const [isMobile, setIsMobile] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
@@ -29,17 +25,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const role = user?.role?.toUpperCase() || '';
 
   const menuItems = [
-    {
-      icon: LayoutDashboard,
-      label: 'Dashboard Administrativo',
-      href: '/dashboard',
-      roles: ['ADMIN']
+    { 
+      icon: LayoutDashboard, 
+      label: 'Dashboard Administrativo', 
+      href: '/dashboard', 
+      roles: ['ADMIN'] 
     },
-    {
-      icon: Building2,
-      label: 'Minha Organização',
+    { 
+      icon: Building2, 
+      label: 'Minha Organização', 
       href: currentOrganizationId ? `/organizations/${currentOrganizationId}/campaigns` : '/organizations',
-      roles: ['CLIENT']
+      roles: ['CLIENT'] 
     },
     { icon: Building2, label: 'Organizações', href: '/organizations', roles: ['ADMIN', 'DESIGNER'] },
     { icon: Users, label: 'Equipe', href: '/team', roles: ['ADMIN'] },
@@ -48,16 +44,15 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const filteredItems = menuItems.filter(item => item.roles.includes(role));
 
   const handleLogout = () => {
-    queryClient.clear();
     logout();
     setIsLogoutModalOpen(false);
   };
 
   return (
     <>
-      <motion.aside
+      <motion.aside 
         initial={false}
-        animate={{
+        animate={{ 
           x: (isMobile && !isOpen) ? -256 : 0,
         }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
@@ -67,11 +62,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         )}
       >
         <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
-              <img src={logoImg} alt="SocialFlow Logo" className="h-16 w-auto object-contain" />
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_15px_oklch(var(--primary)/0.4)]">
+                <span className="text-white font-bold text-xl leading-none">S</span>
+              </div>
+              <span className="font-bold text-xl tracking-tight text-glow">SocialFlow</span>
             </div>
-            <button
+            <button 
               onClick={onClose}
               className="p-2 hover:bg-white/5 rounded-lg text-zinc-500 md:hidden"
             >
@@ -87,19 +85,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 onClick={onClose}
                 className={({ isActive }) => cn(
                   "group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative",
-                  isActive ? "text-white bg-white/10" : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+                  isActive ? "text-white" : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
                 )}
               >
                 {({ isActive }) => (
                   <>
-                    <item.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-300")} />
-                    <span className={cn("font-medium text-sm transition-colors", isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-300")}>
-                      {item.label}
-                    </span>
+                    <item.icon className={cn("w-5 h-5", isActive ? "text-primary" : "group-hover:text-zinc-300")} />
+                    <span className="font-medium text-sm">{item.label}</span>
                     {isActive && (
-                      <div
-                        className="absolute inset-0 rounded-xl -z-10"
-                        style={{ background: 'var(--brand-gradient)' }}
+                      <motion.div
+                        layoutId="active-nav"
+                        className="absolute inset-0 bg-primary/10 rounded-xl border border-primary/20 -z-10"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
                       />
                     )}
                   </>
@@ -110,7 +109,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         <div className="mt-auto p-6 border-t border-white/5">
-          <button
+          <button 
             onClick={() => setIsLogoutModalOpen(true)}
             className="flex items-center gap-3 px-3 py-2 text-zinc-500 hover:text-red-400 transition-colors w-full group"
           >
@@ -123,7 +122,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Logout Confirmation Modal */}
       <AnimatePresence>
         {isLogoutModalOpen && (
-          <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -140,7 +139,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <div className="w-16 h-16 rounded-3xl bg-red-500/10 flex items-center justify-center mb-6 mx-auto">
                 <AlertTriangle className="w-8 h-8 text-red-500" />
               </div>
-
+              
               <h3 className="text-xl font-bold text-white text-center mb-2 text-glow">Deseja sair?</h3>
               <p className="text-zinc-500 text-center text-sm mb-8">
                 Você precisará fazer login novamente para acessar suas campanhas.

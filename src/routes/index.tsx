@@ -44,11 +44,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'team',
-        element: (
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <TeamPage />
-          </ProtectedRoute>
-        ),
+        element: <TeamPage />,
       },
       {
         path: 'dashboard',

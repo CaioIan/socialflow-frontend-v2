@@ -125,7 +125,7 @@ export function CreateOrganizationModal({
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-3 btn-primary py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+            className="flex-3 bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
             {mutation.isPending ? (
               <>
