@@ -8,7 +8,6 @@ import { loginSchema, type LoginFormData } from '../schemas/login-schema';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useToastStore } from '@/stores/use-toast-store';
 import { GlassCard } from '@/shared/components/glass-card';
-import loginLogo from '@/assets/login-screen-logo.png';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -57,10 +56,14 @@ export default function LoginPage() {
         className="w-full max-w-md z-10"
       >
         <div className="text-center mb-8">
-          <img src={loginLogo} alt="SocialFlow Logo" className="h-40 w-auto mx-auto mb-2 object-contain drop-shadow-[0_0_15px_oklch(var(--primary)/0.3)]" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4 shadow-[0_0_30px_oklch(var(--primary)/0.4)]">
+            <span className="text-white font-bold text-3xl">S</span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-glow mb-2">Bem-vindo de volta</h1>
+          <p className="text-zinc-500">SocialFlow - Gestão Inteligente de Social Media</p>
         </div>
 
-        <GlassCard className="p-8!">
+        <GlassCard className="!p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
             <div className="space-y-2">
@@ -71,7 +74,7 @@ export default function LoginPage() {
                   {...register('email')}
                   type="email"
                   placeholder="exemplo@socialflow.com.br"
-                  className="w-full bg-white/3 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
                 />
               </div>
               {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email.message}</p>}
@@ -85,7 +88,7 @@ export default function LoginPage() {
                   {...register('password')}
                   type="password"
                   placeholder="••••••••"
-                  className="w-full bg-white/3 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
                 />
               </div>
               {errors.password && <p className="text-xs text-red-500 ml-1">{errors.password.message}</p>}
@@ -94,7 +97,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full btn-primary py-3 rounded-xl mt-4 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_oklch(var(--primary)/0.3)] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loginMutation.isPending ? (
                 <>
