@@ -192,7 +192,7 @@ export default function PostDetailPage() {
                 <div className="flex items-center gap-2 text-zinc-400">
                   <Calendar className="w-4 h-4 text-primary" />
                   <span className="font-medium text-white">
-                    {new Date(post.scheduledFor).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    {new Date(post.scheduledFor).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} às {new Date(post.scheduledFor).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-zinc-400">

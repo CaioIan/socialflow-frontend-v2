@@ -3,13 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useOrganizationAccess } from '@/shared/hooks/use-organization-access';
 import { GlassCard } from '@/shared/components/glass-card';
-import { 
-  ArrowLeft, 
-  Plus, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  XCircle, 
+import {
+  ArrowLeft,
+  Plus,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
   Image as ImageIcon,
   Loader2
 } from 'lucide-react';
@@ -36,7 +36,7 @@ export default function PostsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  
+
   const role = user?.role?.toUpperCase();
   const isAdmin = role === 'ADMIN';
   const isDesigner = role === 'DESIGNER';
@@ -87,8 +87,8 @@ export default function PostsPage() {
     <div className="space-y-8">
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="space-y-1">
-          <Link 
-            to={`/organizations/${orgId}/campaigns`} 
+          <Link
+            to={`/organizations/${orgId}/campaigns`}
             className="text-xs text-zinc-500 hover:text-primary flex items-center gap-1 mb-2 transition-colors w-fit"
           >
             <ArrowLeft className="w-3 h-3" />
@@ -99,9 +99,9 @@ export default function PostsPage() {
           </h1>
           <p className="text-zinc-500 text-sm">Cronograma de postagens e artes.</p>
         </div>
-        
+
         {isAdmin && (
-          <button 
+          <button
             onClick={() => setIsCreateModalOpen(true)}
             className="bg-primary hover:bg-primary/90 text-white px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
           >
@@ -115,20 +115,18 @@ export default function PostsPage() {
       <div className="flex gap-2 border-b border-white/5">
         <button
           onClick={() => setActiveTab('pending')}
-          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg ${
-            activeTab === 'pending'
+          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg ${activeTab === 'pending'
               ? 'bg-blue-500/20 text-blue-400'
               : 'bg-blue-500/5 text-blue-300'
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
             <span>Pendentes</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-              activeTab === 'pending'
+            <span className={`px-2 py-1 rounded-full text-xs font-bold ${activeTab === 'pending'
                 ? 'bg-blue-500/30 text-blue-200'
                 : 'bg-blue-500/10 text-blue-300'
-            }`}>
+              }`}>
               {pendingPosts.length}
             </span>
           </div>
@@ -139,20 +137,18 @@ export default function PostsPage() {
 
         <button
           onClick={() => setActiveTab('approved')}
-          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg ${
-            activeTab === 'approved'
+          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg ${activeTab === 'approved'
               ? 'bg-emerald-500/20 text-emerald-400'
               : 'bg-emerald-500/5 text-emerald-300'
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4" />
             <span>Aprovados</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-              activeTab === 'approved'
+            <span className={`px-2 py-1 rounded-full text-xs font-bold ${activeTab === 'approved'
                 ? 'bg-emerald-500/30 text-emerald-200'
                 : 'bg-emerald-500/10 text-emerald-300'
-            }`}>
+              }`}>
               {approvedPosts.length}
             </span>
           </div>
@@ -179,105 +175,105 @@ export default function PostsPage() {
               transition={{ delay: index * 0.05 }}
               className="h-full"
             >
-              <Link 
+              <Link
                 to={`/organizations/${orgId}/campaigns/${campaignId}/posts/${post.id}`}
                 className="block h-full group"
               >
                 <GlassCard className="hover:border-white/20 transition-all flex flex-col h-full active:scale-[0.98] transition-transform">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`px-3 py-1 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${status.bg} ${status.color}`}>
-                    <Icon className="w-3 h-3" />
-                    {status.label}
-                  </div>
-                  <div 
-                    onClick={(e) => e.preventDefault()} // Impede o link do card de disparar ao clicar no menu
-                    className="relative z-20"
-                  >
-                    <PostActionsMenu 
-                      postId={post.id}
-                      isAdmin={isAdmin}
-                      onEdit={(postId) => {
-                        setSelectedPostId(postId);
-                        setIsEditModalOpen(true);
-                      }}
-                      onDelete={(postId) => {
-                        setSelectedPostId(postId);
-                        setIsDeleteModalOpen(true);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {post.status === 'APPROVED' && post.statusHistory && (
-                  (() => {
-                    const approval = post.statusHistory.find(h => h.toStatus === 'APPROVED');
-                    return approval ? (
-                      <p className="text-[8px] text-zinc-500 -mt-2 mb-3">
-                        Aprovado por: <span className="text-zinc-400 font-semibold">{approval.changedByUser.name || approval.changedByUser.email}</span>
-                      </p>
-                    ) : null;
-                  })()
-                )}
-
-                <div className="flex-1 space-y-4">
-                  {/* Container da Imagem: Altura adaptável com min-h para quem não tem imagem */}
-                  <div className="relative w-full rounded-xl overflow-hidden bg-black/20 border border-white/5 mb-4 group-hover:border-primary/20 transition-all min-h-[120px] sm:min-h-[250px] flex flex-col items-center justify-center">
-                    {previewUrl ? (
-                      <img 
-                        src={previewUrl} 
-                        className="w-full h-auto max-h-[200px] sm:max-h-[400px] object-contain transition-transform duration-500 group-hover:scale-105"
-                        alt="Preview do Post"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-zinc-600 gap-2">
-                        <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
-                        <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest opacity-50 text-center px-2">Sem Arte</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between text-white">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white/5 flex flex-col items-center justify-center border border-white/5">
-                        <span className="text-[10px] uppercase font-bold text-zinc-500 leading-none">
-                          {new Date(post.scheduledFor).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}
-                        </span>
-                        <span className="text-lg font-bold leading-none mt-0.5">
-                          {new Date(post.scheduledFor).getDate()}
-                        </span>
-                      </div>
-                      <span className="text-xs font-medium text-zinc-500 hidden sm:inline">
-                        Agendado
-                      </span>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`px-3 py-1 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${status.bg} ${status.color}`}>
+                      <Icon className="w-3 h-3" />
+                      {status.label}
                     </div>
+                    <div
+                      onClick={(e) => e.preventDefault()} // Impede o link do card de disparar ao clicar no menu
+                      className="relative z-20"
+                    >
+                      <PostActionsMenu
+                        postId={post.id}
+                        isAdmin={isAdmin}
+                        onEdit={(postId) => {
+                          setSelectedPostId(postId);
+                          setIsEditModalOpen(true);
+                        }}
+                        onDelete={(postId) => {
+                          setSelectedPostId(postId);
+                          setIsDeleteModalOpen(true);
+                        }}
+                      />
+                    </div>
+                  </div>
 
-                    <div className="flex gap-2">
-                      {(isAdmin || isDesigner) && (!post.currentVersionId || post.status === 'ALTERATION_REQUESTED') && (
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setSelectedPostId(post.id);
-                            setIsUploadModalOpen(true);
-                          }}
-                          className="flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 text-primary hover:text-white transition-all bg-primary/10 hover:bg-primary rounded-xl relative z-20"
-                          title={post.currentVersionId ? 'Nova Versão' : 'Upload'}
-                        >
-                          <Upload className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />
-                        </button>
-                      )}
-                      {(isAdmin || isDesigner || isClient) && post.currentVersionId && (
-                        <div 
-                          className="flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 text-emerald-400 hover:text-white transition-all bg-emerald-500/10 hover:bg-emerald-500 rounded-xl"
-                          title="Abrir Preview"
-                        >
-                          <ImageIcon className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />
+                  {post.status === 'APPROVED' && post.statusHistory && (
+                    (() => {
+                      const approval = post.statusHistory.find(h => h.toStatus === 'APPROVED');
+                      return approval ? (
+                        <p className="text-[8px] text-zinc-500 -mt-2 mb-3">
+                          Aprovado por: <span className="text-zinc-400 font-semibold">{approval.changedByUser.name || approval.changedByUser.email}</span>
+                        </p>
+                      ) : null;
+                    })()
+                  )}
+
+                  <div className="flex-1 space-y-4">
+                    {/* Container da Imagem: Altura adaptável com min-h para quem não tem imagem */}
+                    <div className="relative w-full rounded-xl overflow-hidden bg-black/20 border border-white/5 mb-4 group-hover:border-primary/20 transition-all min-h-[120px] sm:min-h-[250px] flex flex-col items-center justify-center">
+                      {previewUrl ? (
+                        <img
+                          src={previewUrl}
+                          className="w-full h-auto max-h-[200px] sm:max-h-[400px] object-contain transition-transform duration-500 group-hover:scale-105"
+                          alt="Preview do Post"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-zinc-600 gap-2">
+                          <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                          <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest opacity-50 text-center px-2">Sem Arte</span>
                         </div>
                       )}
                     </div>
+
+                    <div className="flex items-center justify-between text-white">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/5 flex flex-col items-center justify-center border border-white/5">
+                          <span className="text-[10px] uppercase font-bold text-zinc-500 leading-none">
+                            {new Date(post.scheduledFor).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}
+                          </span>
+                          <span className="text-lg font-bold leading-none mt-0.5">
+                            {new Date(post.scheduledFor).getDate()}
+                        </span>
+                        <span className="text-[8px] font-bold text-primary mt-0.5">
+                          {new Date(post.scheduledFor).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {(isAdmin || isDesigner) && (!post.currentVersionId || post.status === 'ALTERATION_REQUESTED') && (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedPostId(post.id);
+                              setIsUploadModalOpen(true);
+                            }}
+                            className="flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 text-primary hover:text-white transition-all bg-primary/10 hover:bg-primary rounded-xl relative z-20"
+                            title={post.currentVersionId ? 'Nova Versão' : 'Upload'}
+                          >
+                            <Upload className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />
+                          </button>
+                        )}
+                        {(isAdmin || isDesigner || isClient) && post.currentVersionId && (
+                          <div
+                            className="flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 text-emerald-400 hover:text-white transition-all bg-emerald-500/10 hover:bg-emerald-500 rounded-xl"
+                            title="Abrir Preview"
+                          >
+                            <ImageIcon className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </GlassCard>
+                </GlassCard>
               </Link>
             </motion.div>
           );
@@ -311,7 +307,7 @@ export default function PostsPage() {
               }
             </p>
             {activeTab === 'pending' && posts.length === 0 && isAdmin && (
-              <button 
+              <button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="inline-flex items-center gap-2 text-primary hover:text-white transition-colors font-bold"
               >
@@ -323,15 +319,15 @@ export default function PostsPage() {
         )}
       </div>
 
-      <CreatePostModal 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
+      <CreatePostModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
         campaignId={campaignId!}
       />
 
       {selectedPostId && (
         <>
-          <EditPostModal 
+          <EditPostModal
             isOpen={isEditModalOpen}
             onClose={() => {
               setIsEditModalOpen(false);
@@ -341,7 +337,7 @@ export default function PostsPage() {
             campaignId={campaignId!}
           />
 
-          <DeletePostModal 
+          <DeletePostModal
             isOpen={isDeleteModalOpen}
             onClose={() => {
               setIsDeleteModalOpen(false);
@@ -352,7 +348,7 @@ export default function PostsPage() {
             orgId={orgId}
           />
 
-          <UploadVersionModal 
+          <UploadVersionModal
             isOpen={isUploadModalOpen}
             onClose={() => {
               setIsUploadModalOpen(false);

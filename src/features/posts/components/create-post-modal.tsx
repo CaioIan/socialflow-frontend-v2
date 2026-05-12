@@ -54,8 +54,8 @@ export function CreatePostModal({ isOpen, onClose, campaignId }: CreatePostModal
   const mutation = useMutation({
     mutationFn: async (data: CreatePostForm) => {
       // 1. Cria o Post (casca)
-      const post = await postsService.create({ 
-        campaignId, 
+      const post = await postsService.create({
+        campaignId,
         scheduledFor: data.scheduledFor,
         briefing: data.briefing,
         captionFixed: data.captionFixed
@@ -96,7 +96,7 @@ export function CreatePostModal({ isOpen, onClose, campaignId }: CreatePostModal
           <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/30">
             <Check className="w-10 h-10 text-emerald-500" />
           </div>
-          <h3 className="text-xl font-bold text-white">Post Agendado!</h3>
+          <h3 className="text-xl font-bold text-white">Post Criado!</h3>
           <p className="text-zinc-500 text-sm">O cronograma foi atualizado com sucesso.</p>
         </div>
       ) : (
@@ -177,7 +177,7 @@ export function CreatePostModal({ isOpen, onClose, campaignId }: CreatePostModal
                 ) : (
                   <div className="w-full h-full flex-1 bg-white/5 border-2 border-dashed border-white/10 group-hover/file:border-primary/50 group-hover/file:bg-primary/5 rounded-xl flex flex-col items-center justify-center text-center transition-all px-4 py-8">
                     <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-3 text-zinc-600 group-hover/file:scale-110 group-hover/file:text-primary transition-all">
-                       <Upload className="w-6 h-6 text-zinc-600" />
+                      <Upload className="w-6 h-6 text-zinc-600" />
                     </div>
                     <span className="text-sm text-zinc-500 group-hover/file:text-primary transition-colors">
                       Arraste a imagem ou clique aqui
