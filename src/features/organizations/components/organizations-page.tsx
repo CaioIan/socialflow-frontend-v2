@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { GlassCard } from '@/shared/components/glass-card';
-import { Building2, ArrowRight, Plus, Loader2, Edit2, Trash2 } from 'lucide-react';
+import { Building2, ArrowRight, Plus, Loader2, Edit2, Trash2, Webhook } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/features/auth/api/auth-service';
 import { organizationsService } from '../api/organizations-service';
 import { useNavigate } from 'react-router-dom';
 import { CreateOrganizationModal } from './create-organization-modal';
+import { WebhookConfigModal } from './webhook-config-modal';
 import { useToastStore } from '@/stores/use-toast-store';
 
 export default function OrganizationsPage() {
@@ -17,7 +18,9 @@ export default function OrganizationsPage() {
   const { user, setCurrentOrganization, currentOrganizationId } = useAuthStore();
   const { addToast } = useToastStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<{ id: string, name: string } | undefined>(undefined);
+  const [webhookOrg, setWebhookOrg] = useState<{ id: string, name: string, n8nWebhookUrl?: string } | undefined>(undefined);
 
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
 
@@ -32,9 +35,19 @@ export default function OrganizationsPage() {
     setIsCreateModalOpen(true);
   };
 
+  const handleWebhookConfig = (org: { id: string, name: string, n8nWebhookUrl?: string }) => {
+    setWebhookOrg(org);
+    setIsWebhookModalOpen(true);
+  };
+
   const handleCloseModal = () => {
     setIsCreateModalOpen(false);
     setEditingOrg(undefined);
+  };
+
+  const handleCloseWebhookModal = () => {
+    setIsWebhookModalOpen(false);
+    setWebhookOrg(undefined);
   };
 
   const selectMutation = useMutation({
@@ -118,6 +131,20 @@ export default function OrganizationsPage() {
                 {/* Botões de Ação Rápida (Admin) */}
                 {isAdmin && (
                   <div className="absolute top-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleWebhookConfig({ 
+                          id: orgId, 
+                          name: org.name, 
+                          n8nWebhookUrl: org.n8nWebhookUrl 
+                        });
+                      }}
+                      title="Configurar Webhook"
+                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-black/40 md:bg-white/5 hover:bg-primary/20 text-white md:text-zinc-400 md:hover:text-primary transition-all shadow-xl border border-white/5 active:scale-90"
+                    >
+                      <Webhook className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                    </button>
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -214,6 +241,14 @@ export default function OrganizationsPage() {
         onClose={handleCloseModal} 
         initialData={editingOrg}
       />
+
+      {webhookOrg && (
+        <WebhookConfigModal
+          isOpen={isWebhookModalOpen}
+          onClose={handleCloseWebhookModal}
+          organization={webhookOrg}
+        />
+      )}
     </div>
   );
 }

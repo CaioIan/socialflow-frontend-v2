@@ -7,7 +7,7 @@ import { Modal } from '@/shared/components/modal';
 import { organizationsService } from '../api/organizations-service';
 import { Loader2 } from 'lucide-react';
 
-// 🔥 Schema agora só valida o que vem do form (sem slug)
+// 🔥 Schema agora só valida o que vem do form (sem slug e sem webhook)
 const createOrgSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres').max(255),
 });
@@ -74,15 +74,12 @@ export function CreateOrganizationModal({
     },
   });
 
-  // 🔥 AQUI ESTÁ A CORREÇÃO REAL
   const onSubmit: SubmitHandler<CreateOrgForm> = (data) => {
     const payload = {
       name: data.name,
-      slug: slugify(data.name), // 👈 ESSENCIAL
-      isActive: true,           // 👈 obrigatório
+      slug: slugify(data.name),
+      isActive: true,
     };
-
-    // console.log('PAYLOAD:', payload); // debug se quiser
 
     mutation.mutate(payload);
   };
@@ -142,7 +139,7 @@ export function CreateOrganizationModal({
 
         {mutation.isError && (
           <p className="text-xs text-red-400 text-center">
-            Erro ao criar organização. Tente novamente.
+            Erro ao processar organização. Tente novamente.
           </p>
         )}
       </form>
