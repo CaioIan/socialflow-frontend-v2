@@ -31,7 +31,6 @@ export function WebhookConfigModal({
   const {
     register,
     handleSubmit,
-    reset,
     setValue,
     formState: { errors },
   } = useForm<WebhookForm>({
