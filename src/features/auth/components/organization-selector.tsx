@@ -72,7 +72,13 @@ export function OrganizationSelector() {
 
         <div className="mt-12 text-center">
           <button
-            onClick={logout}
+            onClick={async () => {
+              try {
+                await authService.logout();
+              } finally {
+                logout();
+              }
+            }}
             className="inline-flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm font-medium"
           >
             <LogOut className="w-4 h-4" />

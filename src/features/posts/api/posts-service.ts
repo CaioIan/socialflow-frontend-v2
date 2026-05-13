@@ -110,8 +110,12 @@ export const postsService = {
     return response.data;
   },
 
-  updateStatus: async (postId: string, status: PostStatus) => {
-    const response = await api.patch<Post>(`/posts/${postId}/status`, { status });
+  updateStatus: async (postId: string, status: PostStatus, versionId?: string, comment?: string) => {
+    const response = await api.patch<Post>(`/posts/${postId}/status`, { 
+      status,
+      versionId,
+      comment
+    });
     return response.data;
   },
 
