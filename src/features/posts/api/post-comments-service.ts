@@ -15,6 +15,10 @@ export interface PostComment {
     email: string;
     role: string;
   };
+  postVersion?: {
+    id: string;
+    versionNumber: number;
+  };
 }
 
 export interface CreatePostCommentRequest {

@@ -181,9 +181,16 @@ export default function PostsPage() {
               >
                 <GlassCard className="hover:border-white/20 transition-all flex flex-col h-full active:scale-[0.98] transition-transform">
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`px-3 py-1 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${status.bg} ${status.color}`}>
-                      <Icon className="w-3 h-3" />
-                      {status.label}
+                    <div className="flex items-center gap-2">
+                      <div className={`px-3 py-1 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${status.bg} ${status.color}`}>
+                        <Icon className="w-3 h-3" />
+                        {status.label}
+                      </div>
+                      {post.currentVersion?.versionNumber && (
+                        <div className="px-2 py-1 rounded-full bg-primary/20 border border-primary/30 text-[9px] font-black text-primary uppercase">
+                          v{post.currentVersion.versionNumber}
+                        </div>
+                      )}
                     </div>
                     <div
                       onClick={(e) => e.preventDefault()} // Impede o link do card de disparar ao clicar no menu

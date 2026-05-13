@@ -96,6 +96,7 @@ export function UploadVersionModal({ isOpen, onClose, postId, campaignId }: Uplo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts', campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);

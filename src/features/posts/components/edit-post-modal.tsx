@@ -36,7 +36,11 @@ export function EditPostModal({ isOpen, onClose, postId, campaignId }: EditPostM
   const { register, handleSubmit, formState: { errors } } = useForm<EditPostForm>({
     resolver: zodResolver(editPostSchema),
     values: post ? {
-      scheduledFor: new Date(post.scheduledFor).toISOString().slice(0, 16),
+      scheduledFor: (() => {
+        const d = new Date(post.scheduledFor);
+        const offset = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - offset).toISOString().slice(0, 16);
+      })(),
       briefing: post.briefing || '',
       captionFixed: post.captionFixed,
     } : {
@@ -49,7 +53,7 @@ export function EditPostModal({ isOpen, onClose, postId, campaignId }: EditPostM
   const mutation = useMutation({
     mutationFn: async (data: EditPostForm) => {
       return await postsService.update(postId, {
-        scheduledFor: data.scheduledFor,
+        scheduledFor: new Date(data.scheduledFor).toISOString(),
         briefing: data.briefing,
         captionFixed: data.captionFixed,
       });
