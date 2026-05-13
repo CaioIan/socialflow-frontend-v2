@@ -72,7 +72,7 @@ export default function PostDetailPage() {
     }
   });
 
-  const handleRequestAdjustment = async (comment: string, target: 'FEED' | 'STORIES' | 'GENERAL') => {
+  const handleRequestAdjustment = async (comment: string) => {
     if (!post?.currentVersionId) return;
     setIsSubmittingAdjustment(true);
     try {
