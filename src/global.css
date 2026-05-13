@@ -135,11 +135,11 @@
 
 @layer utilities {
   .glass {
-    @apply backdrop-blur-2xl bg-white/[0.05] border border-white/[0.12] shadow-[0_8px_32px_0_rgba(0, 0, 0, 0.8)];
+    @apply backdrop-blur-2xl bg-white/[0.05] border border-white/[0.12] shadow-[0_8px_32px_0_rgba(0,_0,_0,_0.8)];
   }
 
   .glass-card {
-    @apply backdrop-blur-2xl bg-white/[0.05] border border-white/[0.12] shadow-[0_8px_32px_0_rgba(0, 0, 0, 0.8)] rounded-2xl transition-all duration-300 relative overflow-hidden;
+    @apply backdrop-blur-2xl bg-white/[0.05] border border-white/[0.12] shadow-[0_8px_32px_0_rgba(0,_0,_0,_0.8)] rounded-2xl transition-all duration-300 relative overflow-hidden;
   }
 
   .bg-brand-gradient {
