@@ -103,7 +103,7 @@ export default function PostsPage() {
         {isAdmin && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-white px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
+            className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
           >
             <Plus className="w-5 h-5" />
             Novo Post
@@ -233,21 +233,25 @@ export default function PostsPage() {
                     </div>
 
                     <div className="flex items-center justify-between text-white">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white/5 flex flex-col items-center justify-center border border-white/5">
-                          <span className="text-[10px] uppercase font-bold text-zinc-500 leading-none">
-                            {new Date(post.scheduledFor).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}
-                          </span>
-                          <span className="text-lg font-bold leading-none mt-0.5">
-                            {new Date(post.scheduledFor).getDate()}
+                      {/* Data à esquerda */}
+                      <div className="w-10 h-10 rounded-xl bg-white/5 flex flex-col items-center justify-center border border-white/5 shrink-0">
+                        <span className="text-[10px] uppercase font-bold text-zinc-500 leading-none">
+                          {new Date(post.scheduledFor).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}
                         </span>
-                        <span className="text-[8px] font-bold text-primary mt-0.5">
-                          {new Date(post.scheduledFor).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        <span className="text-lg font-bold leading-none mt-0.5">
+                          {new Date(post.scheduledFor).getDate()}
                         </span>
-                        </div>
                       </div>
 
-                      <div className="flex gap-2">
+                      {/* Horário ao centro */}
+                      <div className="flex flex-1 justify-center">
+                        <span className="text-xs font-bold text-white bg-white/10 px-2.5 py-1 rounded-lg">
+                          {new Date(post.scheduledFor).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+
+                      {/* Ações à direita */}
+                      <div className="flex gap-2 shrink-0">
                         {(isAdmin || isDesigner) && (!post.currentVersionId || post.status === 'ALTERATION_REQUESTED') && (
                           <button
                             onClick={(e) => {
@@ -256,7 +260,7 @@ export default function PostsPage() {
                               setSelectedPostId(post.id);
                               setIsUploadModalOpen(true);
                             }}
-                            className="flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 text-primary hover:text-white transition-all bg-primary/10 hover:bg-primary rounded-xl relative z-20"
+                            className="flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 text-white transition-all bg-brand-gradient hover:opacity-90 shadow-[0_0_15px_oklch(var(--primary)/0.3)] rounded-xl relative z-20"
                             title={post.currentVersionId ? 'Nova Versão' : 'Upload'}
                           >
                             <Upload className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />

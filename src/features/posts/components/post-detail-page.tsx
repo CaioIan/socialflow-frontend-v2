@@ -202,7 +202,7 @@ export default function PostDetailPage() {
 
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Briefing Operacional</h4>
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-white mb-2">Briefing Operacional</h4>
                   <p className="text-sm text-zinc-400 leading-relaxed bg-white/2 border border-white/5 rounded-2xl p-5 italic">
                     {post.briefing || 'Nenhum briefing fornecido.'}
                   </p>
@@ -210,7 +210,7 @@ export default function PostDetailPage() {
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary">Legenda Fixa Oficial</h4>
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-white">Legenda Fixa Oficial</h4>
                     <button
                       onClick={handleCopyCaption}
                       className="text-[10px] font-bold flex items-center gap-1.5 text-zinc-500 hover:text-white transition-colors"
@@ -303,7 +303,7 @@ export default function PostDetailPage() {
                   </div>
                   {comments.filter(c => c.postVersionId === post.currentVersionId).map(comment => (
                     <div key={comment.id} className="bg-white/5 rounded-2xl p-4 border border-white/10 flex gap-4">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center text-white font-bold shrink-0">
                         {comment.authorUser?.name?.charAt(0) || 'U'}
                       </div>
                       <div className="flex-1">
@@ -318,6 +318,7 @@ export default function PostDetailPage() {
                                 onClick={() => setIsAdjustmentModalOpen(true)}
                                 className="p-1 hover:bg-white/10 rounded transition-colors text-zinc-500 hover:text-white"
                                 title="Editar comentário"
+                                aria-label="Editar comentário"
                               >
                                 <Pencil className="w-3 h-3" />
                               </button>

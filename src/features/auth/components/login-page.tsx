@@ -56,11 +56,7 @@ export default function LoginPage() {
         className="w-full max-w-md z-10"
       >
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4 shadow-[0_0_30px_oklch(var(--primary)/0.4)]">
-            <span className="text-white font-bold text-3xl">S</span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-glow mb-2">Bem-vindo de volta</h1>
-          <p className="text-zinc-500">SocialFlow - Gestão Inteligente de Social Media</p>
+          <img src="/logo/socialflow-wordmark.png" alt="SocialFlow" className="h-18 w-80 mx-auto mb-6" />
         </div>
 
         <GlassCard className="!p-8">
@@ -97,7 +93,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_oklch(var(--primary)/0.3)] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full bg-brand-gradient hover:opacity-90 font-bold py-3 rounded-xl shadow-[0_0_20px_oklch(var(--primary)/0.3)] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loginMutation.isPending ? (
                 <>

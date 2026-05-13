@@ -48,7 +48,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
             >
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-bold text-white tracking-tight">{title}</h2>
-                <button
+                <button title="Fechar" aria-label="Fechar"
                   onClick={onClose}
                   className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
                 >

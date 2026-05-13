@@ -76,7 +76,7 @@ export function WebhookConfigModal({
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 flex gap-4 items-start mb-6">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-brand-gradient flex items-center justify-center text-white shrink-0">
             <Webhook className="w-5 h-5" />
           </div>
           <div className="space-y-1">
@@ -121,7 +121,7 @@ export function WebhookConfigModal({
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-3 bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+            className="flex-3 bg-brand-gradient hover:opacity-90 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
             {mutation.isPending ? (
               <>

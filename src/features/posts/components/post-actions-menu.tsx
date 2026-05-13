@@ -1,4 +1,3 @@
-
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { MoreVertical, Edit2, Trash2 } from 'lucide-react';
 
@@ -23,9 +22,10 @@ export function PostActionsMenu({
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <button 
-          className="text-zinc-600 hover:text-white transition-colors p-1 hover:bg-white/5 rounded-lg"
+        <button
+          title="Mais Opções"
           aria-label="Ações do post"
+          className="text-zinc-600 hover:text-white transition-colors p-1 hover:bg-white/5 rounded-lg"
         >
           <MoreVertical className="w-5 h-5" />
         </button>

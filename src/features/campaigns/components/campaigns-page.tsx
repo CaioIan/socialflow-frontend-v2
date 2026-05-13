@@ -87,7 +87,7 @@ export default function CampaignsPage() {
         {isAdmin && (
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-white px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
+            className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
           >
             <Plus className="w-5 h-5" />
             Nova Campanha
@@ -112,6 +112,8 @@ export default function CampaignsPage() {
                       e.stopPropagation();
                       handleEdit(campaign);
                     }}
+                    title="Editar Campanha"
+                    aria-label="Editar Campanha"
                     className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-black/40 md:bg-black/20 hover:bg-white/10 text-white md:text-zinc-400 md:hover:text-white transition-all backdrop-blur-md shadow-xl border border-white/5 active:scale-90"
                   >
                     <Edit2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
@@ -123,6 +125,8 @@ export default function CampaignsPage() {
                         deactivateMutation.mutate(campaign.id);
                       }
                     }}
+                    title="Arquivar Campanha"
+                    aria-label="Arquivar Campanha"
                     className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-black/40 md:bg-black/20 hover:bg-red-500/20 text-white md:text-zinc-400 md:hover:text-red-400 transition-all backdrop-blur-md shadow-xl border border-white/5 active:scale-90"
                   >
                     <Trash2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
@@ -131,7 +135,7 @@ export default function CampaignsPage() {
               )}
 
               <div className="flex items-start justify-between mb-6">
-                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                <div className="w-12 h-12 rounded-xl bg-brand-gradient flex items-center justify-center text-white transition-all shadow-[0_0_15px_oklch(var(--primary)/0.3)]">
                   <FolderKanban className="w-6 h-6" />
                 </div>
                 <div className="text-right">

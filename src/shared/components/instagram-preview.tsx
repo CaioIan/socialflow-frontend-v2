@@ -145,13 +145,13 @@ export function InstagramPreview({
       <div className="flex p-1 bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-2xl w-fit">
         <button 
           onClick={() => setType('FEED')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${type === 'FEED' ? 'bg-primary text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${type === 'FEED' ? 'bg-brand-gradient text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
         >
           Feed (1:1 / 4:5)
         </button>
         <button 
           onClick={() => setType('STORIES')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${type === 'STORIES' ? 'bg-primary text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${type === 'STORIES' ? 'bg-brand-gradient text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
         >
           Stories (9:16)
         </button>

@@ -143,7 +143,7 @@ export function CreateCampaignModal({ isOpen, onClose, initialData }: CreateCamp
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-3 bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+            className="flex-3 bg-brand-gradient hover:opacity-90 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
             {mutation.isPending ? (
               <>
