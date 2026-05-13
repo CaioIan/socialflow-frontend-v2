@@ -72,7 +72,7 @@ export function CreateUserModal({ isOpen, onClose, defaultRole }: CreateUserModa
                   <UserPlus className="w-6 h-6" />
                   <h2 className="text-2xl font-bold text-white">Novo Usuário</h2>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-zinc-400 hover:text-white">
+                <button title="Fechar" aria-label="Fechar" onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-zinc-400 hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -147,7 +147,7 @@ export function CreateUserModal({ isOpen, onClose, defaultRole }: CreateUserModa
                   <button
                     type="submit"
                     disabled={createMutation.isPending}
-                    className="flex-[2] py-3 px-4 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-lg transition-all flex justify-center items-center gap-2"
+                    className="flex-[2] py-3 px-4 rounded-xl font-bold bg-brand-gradient hover:opacity-90 shadow-lg transition-all flex justify-center items-center gap-2"
                   >
                     {createMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Criar Usuário'}
                   </button>

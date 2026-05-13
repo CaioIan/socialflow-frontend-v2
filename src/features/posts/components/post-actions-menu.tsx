@@ -23,7 +23,7 @@ export function PostActionsMenu({
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <button 
+        <button title="Mais Opções" aria-label="Mais Opções" 
           className="text-zinc-600 hover:text-white transition-colors p-1 hover:bg-white/5 rounded-lg"
           aria-label="AÃ§Ãµes do post"
         >

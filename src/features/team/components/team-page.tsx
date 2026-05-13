@@ -57,7 +57,7 @@ export default function TeamPage() {
 
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_oklch(var(--primary)/0.2)]"
+          className="bg-brand-gradient hover:opacity-90 px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_oklch(var(--primary)/0.2)]"
         >
           <UserPlus className="w-5 h-5" />
           Novo Usuário
@@ -70,7 +70,7 @@ export default function TeamPage() {
           <button
             onClick={() => setActiveTab('DESIGNER')}
             className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'DESIGNER'
-              ? 'bg-primary text-white shadow-lg'
+              ? 'bg-brand-gradient text-white shadow-lg'
               : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
               }`}
           >
@@ -79,7 +79,7 @@ export default function TeamPage() {
           <button
             onClick={() => setActiveTab('CLIENT')}
             className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'CLIENT'
-              ? 'bg-primary text-white shadow-lg'
+              ? 'bg-brand-gradient text-white shadow-lg'
               : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
               }`}
           >
@@ -110,17 +110,17 @@ export default function TeamPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
             >
-              <GlassCard className="p-6 h-full flex flex-col group hover:border-primary/30 transition-all border-white/5">
+              <GlassCard className="p-6 h-full flex flex-col group hover:bg-brand-gradient transition-all border-white/5">
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-white/10 flex items-center justify-center text-primary text-xl font-bold">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-gradient border border-white/10 flex items-center justify-center text-white text-xl font-bold shadow-[0_0_15px_oklch(var(--primary)/0.3)]">
                       {u.name?.charAt(0) || 'U'}
                     </div>
                     <div>
-                      <h3 className="font-bold text-white text-lg group-hover:text-primary transition-colors">
+                      <h3 className="font-bold text-white text-lg group-hover:text-white transition-colors">
                         {u.name || 'Sem nome'}
                       </h3>
-                      <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
+                      <div className="flex items-center gap-1.5 text-zinc-500 group-hover:text-white/80 text-xs transition-colors">
                         <Mail className="w-3 h-3" />
                         {u.email}
                       </div>
@@ -135,7 +135,7 @@ export default function TeamPage() {
                 <div className="space-y-4 flex-1">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-zinc-500 group-hover:text-white/80 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
                         <Building className="w-3 h-3" />
                         Alocações ({u.organizations.length})
                       </span>
@@ -144,7 +144,7 @@ export default function TeamPage() {
                           setSelectedUser(u);
                           setIsLinkModalOpen(true);
                         }}
-                        className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-colors"
+                        className="p-1.5 bg-brand-gradient rounded-lg text-white shadow-[0_0_10px_oklch(var(--primary)/0.3)] transition-colors"
                         title="Vincular a nova organização"
                       >
                         <Plus className="w-4 h-4" />

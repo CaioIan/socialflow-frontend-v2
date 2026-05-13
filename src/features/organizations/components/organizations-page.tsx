@@ -22,7 +22,10 @@ export default function OrganizationsPage() {
   const [editingOrg, setEditingOrg] = useState<{ id: string, name: string } | undefined>(undefined);
   const [webhookOrg, setWebhookOrg] = useState<{ id: string, name: string, n8nWebhookUrl?: string } | undefined>(undefined);
 
-  const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+  const role = user?.role?.toUpperCase();
+  const isAdmin = role === 'ADMIN';
+  const isDesigner = role === 'DESIGNER';
+  const isClient = role === 'CLIENT';
 
   // Busca a lista real de organizações da API
   const { data: organizations = [], isLoading, error } = useQuery({
@@ -95,13 +98,17 @@ export default function OrganizationsPage() {
       <header className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight text-glow">Organizações</h1>
-          <p className="text-zinc-500">Gerencie seus clientes e tenants do SocialFlow.</p>
+          <p className="text-zinc-500">
+            {isAdmin && "Gerencie seus clientes e tenants do SocialFlow."}
+            {isDesigner && "Selecione uma empresa para visualizar suas pautas e demandas."}
+            {isClient && "Selecione sua empresa para acompanhar o cronograma de posts."}
+          </p>
         </div>
-        
+
         {isAdmin && (
-          <button 
+          <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-white px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] active:scale-95"
+            className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] active:scale-95"
           >
             <Plus className="w-5 h-5" />
             Nova Organização
@@ -111,9 +118,9 @@ export default function OrganizationsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {organizations.map((org, index) => {
-          const orgId = org.id; 
+          const orgId = org.id;
           const isActive = orgId === currentOrganizationId;
-          
+
           return (
             <motion.div
               key={orgId}
@@ -123,45 +130,49 @@ export default function OrganizationsPage() {
               onClick={() => !selectMutation.isPending && selectMutation.mutate(orgId)}
               className="cursor-pointer group"
             >
-              <GlassCard 
-                className={`flex flex-col h-full border-t-4 transition-all duration-500 relative overflow-hidden active:scale-[0.98] ${
-                  isActive ? 'border-t-primary bg-primary/[0.03]' : 'border-t-transparent'
-                }`}
+              <GlassCard
+                className={`flex flex-col h-full border-t-4 transition-all duration-500 relative overflow-hidden active:scale-[0.98] ${isActive ? 'border-t-primary bg-primary/[0.03]' : 'border-t-transparent'
+                  }`}
               >
                 {/* Botões de Ação Rápida (Admin) */}
                 {isAdmin && (
                   <div className="absolute top-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleWebhookConfig({ 
-                          id: orgId, 
-                          name: org.name, 
-                          n8nWebhookUrl: org.n8nWebhookUrl 
+                        handleWebhookConfig({
+                          id: orgId,
+                          name: org.name,
+                          n8nWebhookUrl: org.n8nWebhookUrl
                         });
                       }}
                       title="Configurar Webhook"
-                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-black/40 md:bg-white/5 hover:bg-primary/20 text-white md:text-zinc-400 md:hover:text-primary transition-all shadow-xl border border-white/5 active:scale-90"
+                      aria-label="Configurar Webhook"
+                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-brand-gradient text-white transition-all shadow-[0_5px_25px_oklch(var(--primary)/0.6)] active:scale-90 cursor-pointer"
                     >
                       <Webhook className="w-4 h-4 md:w-3.5 md:h-3.5" />
                     </button>
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEdit({ id: orgId, name: org.name });
                       }}
-                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-black/40 md:bg-white/5 hover:bg-white/10 text-white md:text-zinc-400 md:hover:text-white transition-all shadow-xl border border-white/5 active:scale-90"
+                      title="Editar Organização"
+                      aria-label="Editar Organização"
+                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-brand-gradient text-white transition-all shadow-[0_5px_25px_oklch(var(--primary)/0.6)] active:scale-90 cursor-pointer"
                     >
                       <Edit2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
                     </button>
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if(window.confirm('Deseja realmente desativar esta organização?')) {
+                        if (window.confirm('Deseja realmente desativar esta organização?')) {
                           deleteMutation.mutate(orgId);
                         }
                       }}
-                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-black/40 md:bg-white/5 hover:bg-red-500/10 text-white md:text-zinc-400 md:hover:text-red-400 transition-all shadow-xl border border-white/5 active:scale-90"
+                      title="Desativar Organização"
+                      aria-label="Desativar Organização"
+                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-brand-gradient text-white transition-all shadow-[0_5px_25px_oklch(var(--primary)/0.6)] active:scale-90 cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
                     </button>
@@ -169,9 +180,8 @@ export default function OrganizationsPage() {
                 )}
 
                 <div className="flex items-start justify-between mb-6">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-                    isActive ? 'bg-primary/20 text-primary shadow-[0_0_20px_oklch(var(--primary)/0.2)]' : 'bg-white/5 text-zinc-400 group-hover:text-zinc-200'
-                  }`}>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isActive ? 'bg-brand-gradient text-white shadow-[0_0_20px_oklch(var(--primary)/0.3)]' : 'bg-white/5 text-zinc-400 group-hover:text-zinc-200'
+                    }`}>
                     <Building2 className="w-7 h-7" />
                   </div>
                 </div>
@@ -181,12 +191,6 @@ export default function OrganizationsPage() {
                   <p className="text-sm text-zinc-500 mb-6 lowercase font-mono">@{org.slug}</p>
 
                   <div className="flex items-center gap-4 text-xs text-zinc-500">
-                    <div className="px-2.5 py-1 rounded-full bg-white/5 border border-white/5">
-                      SaaS Active
-                    </div>
-                    {isActive && (
-                      <span className="text-primary font-bold">Selecionada</span>
-                    )}
                   </div>
                 </div>
 
@@ -194,7 +198,7 @@ export default function OrganizationsPage() {
                   <div
                     className={cn(
                       "w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm transition-all",
-                      isActive ? "bg-primary text-white shadow-[0_0_20px_oklch(var(--primary)/0.4)]" : "bg-white/5 group-hover:bg-primary/20 text-white"
+                      isActive ? "bg-brand-gradient text-white shadow-[0_0_20px_oklch(var(--primary)/0.4)]" : "bg-white/5 group-hover:bg-brand-gradient hover:text-white"
                     )}
                   >
                     {selectMutation.isPending && selectMutation.variables === orgId ? (
@@ -213,7 +217,7 @@ export default function OrganizationsPage() {
         })}
 
         {organizations.length === 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="col-span-full py-24 text-center border-2 border-dashed border-white/5 rounded-[2rem] bg-white/[0.01]"
@@ -224,7 +228,7 @@ export default function OrganizationsPage() {
             <h3 className="text-xl font-bold text-zinc-400 mb-2">Nenhuma organização</h3>
             <p className="text-zinc-600 mb-8 max-w-xs mx-auto text-sm">Nenhuma empresa cliente cadastrada para gerenciar campanhas.</p>
             {isAdmin && (
-              <button 
+              <button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="inline-flex items-center gap-2 text-primary hover:text-white transition-colors font-bold"
               >
@@ -236,9 +240,9 @@ export default function OrganizationsPage() {
         )}
       </div>
 
-      <CreateOrganizationModal 
-        isOpen={isCreateModalOpen} 
-        onClose={handleCloseModal} 
+      <CreateOrganizationModal
+        isOpen={isCreateModalOpen}
+        onClose={handleCloseModal}
         initialData={editingOrg}
       />
 

@@ -63,7 +63,7 @@ export function AdjustmentRequestModal({
                   <AlertCircle className="w-5 h-5" />
                   <h2 className="text-xl font-bold text-white">Solicitar Ajuste</h2>
                 </div>
-                <button
+                <button title="Fechar" aria-label="Fechar"
                   onClick={onClose}
                   className="p-2 hover:bg-white/10 rounded-full transition-colors text-zinc-400 hover:text-white"
                 >

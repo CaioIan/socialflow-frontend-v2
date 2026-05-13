@@ -48,8 +48,8 @@ export function OrganizationSelector() {
                 className="w-full text-left group"
               >
                 <GlassCard className="flex items-center gap-4 hover:border-primary/50 transition-all p-5">
-                  <div className="w-12 h-12 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center group-hover:bg-primary/10 group-hover:border-primary/30 transition-colors">
-                    <Building2 className="w-6 h-6 text-zinc-400 group-hover:text-primary" />
+                  <div className="w-12 h-12 rounded-xl bg-brand-gradient border border-transparent flex items-center justify-center transition-colors shadow-[0_0_15px_oklch(var(--primary)/0.3)]">
+                    <Building2 className="w-6 h-6 text-white" />
                   </div>
                   
                   <div className="flex-1 min-w-0">
@@ -57,11 +57,11 @@ export function OrganizationSelector() {
                     <p className="text-sm text-zinc-500 truncate lowercase">@{org.slug}</p>
                   </div>
 
-                  <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all">
+                  <div className="w-8 h-8 rounded-full border border-transparent flex items-center justify-center bg-brand-gradient transition-all shadow-[0_0_10px_oklch(var(--primary)/0.3)] text-white">
                     {selectMutation.isPending && selectMutation.variables === org.organizationId ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
                     ) : (
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                      <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-0.5 transition-transform" />
                     )}
                   </div>
                 </GlassCard>

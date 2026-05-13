@@ -62,6 +62,8 @@ export function DashboardLayout() {
           <div className="flex items-center gap-4 overflow-hidden">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
+              title="Abrir Menu"
+              aria-label="Abrir Menu"
               className="p-2 hover:bg-white/5 rounded-xl text-zinc-400 md:hidden"
             >
               <Menu className="w-6 h-6" />
@@ -72,7 +74,7 @@ export function DashboardLayout() {
                 {activeOrg?.name ? `Organização: ${activeOrg.name}` : 'Painel Geral'}
               </h2>
               <h1 className="text-sm md:text-lg font-bold text-white flex items-center gap-2 truncate">
-                <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_oklch(var(--primary))] shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-brand-gradient shadow-[0_0_8px_oklch(var(--primary))] shrink-0" />
                 <span className="truncate">{getPageTitle()}</span>
               </h1>
             </div>
@@ -87,7 +89,7 @@ export function DashboardLayout() {
                 {user?.role || 'Usuário'}
               </span>
             </div>
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-white/10 flex items-center justify-center text-primary font-bold shadow-[0_0_15px_oklch(var(--primary)/0.1)]">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-brand-gradient border border-white/10 flex items-center justify-center text-white font-bold shadow-[0_0_15px_oklch(var(--primary)/0.3)]">
               {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
           </div>

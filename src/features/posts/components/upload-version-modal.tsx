@@ -153,7 +153,7 @@ export function UploadVersionModal({ isOpen, onClose, postId, campaignId }: Uplo
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-full flex-1 bg-white/5 border-2 border-dashed border-white/10 group-hover/file:border-primary/50 group-hover/file:bg-primary/5 rounded-xl flex flex-col items-center justify-center text-center transition-all px-4 py-8">
+                  <div className="w-full h-full flex-1 bg-white/5 border-2 border-dashed border-white/10 group-hover/file:border-transparent group-hover/file:bg-brand-gradient rounded-xl flex flex-col items-center justify-center text-center transition-all px-4 py-8">
                     <ImageIcon className="w-6 h-6 text-zinc-600 mx-auto mb-2 group-hover/file:scale-110 group-hover/file:text-primary transition-all" />
                     <span className="text-xs text-zinc-500 group-hover/file:text-primary transition-colors">
                       Selecionar imagem do Feed
@@ -187,7 +187,7 @@ export function UploadVersionModal({ isOpen, onClose, postId, campaignId }: Uplo
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-full flex-1 bg-white/5 border-2 border-dashed border-white/10 group-hover/file:border-primary/50 group-hover/file:bg-primary/5 rounded-xl flex flex-col items-center justify-center text-center transition-all px-4 py-8">
+                  <div className="w-full h-full flex-1 bg-white/5 border-2 border-dashed border-white/10 group-hover/file:border-transparent group-hover/file:bg-brand-gradient rounded-xl flex flex-col items-center justify-center text-center transition-all px-4 py-8">
                     <Layers className="w-6 h-6 text-zinc-600 mx-auto mb-2 group-hover/file:scale-110 group-hover/file:text-primary transition-all" />
                     <span className="text-xs text-zinc-500 group-hover/file:text-primary transition-colors">
                       Selecionar imagem do Stories
@@ -209,7 +209,7 @@ export function UploadVersionModal({ isOpen, onClose, postId, campaignId }: Uplo
             <button
               type="submit"
               disabled={mutation.isPending || uploadStatus !== 'idle'}
-              className="flex-[2] bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+              className="flex-[2] bg-brand-gradient hover:opacity-90 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
             >
               {uploadStatus !== 'idle' ? (
                 <>

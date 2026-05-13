@@ -250,7 +250,7 @@ export function ReplaceAssetModal({
                   type="button"
                   onClick={handleClickUpload}
                   disabled={mutation.isPending}
-                  className="relative group w-full bg-white/5 border-2 border-dashed border-white/10 group-hover:border-primary/50 group-hover:bg-primary/5 rounded-xl px-4 py-8 text-center transition-all disabled:opacity-50"
+                  className="relative group w-full bg-white/5 border-2 border-dashed border-white/10 group-hover:border-transparent group-hover:bg-brand-gradient rounded-xl px-4 py-8 text-center transition-all disabled:opacity-50"
                 >
                   <Upload className="w-6 h-6 text-zinc-600 mx-auto mb-2 group-hover:scale-110 group-hover:text-primary transition-all" />
                   <span className="text-xs text-zinc-500 group-hover:text-primary transition-colors block">
@@ -275,7 +275,7 @@ export function ReplaceAssetModal({
               type="button"
               onClick={handleSubmit}
               disabled={!selectedFile || mutation.isPending || isResolvingId || !resolvedAssetId}
-              className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 text-sm"
+              className="flex-1 bg-brand-gradient hover:opacity-90 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 text-sm"
             >
               {mutation.isPending ? (
                 <>

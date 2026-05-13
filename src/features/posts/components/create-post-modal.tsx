@@ -175,7 +175,7 @@ export function CreatePostModal({ isOpen, onClose, campaignId }: CreatePostModal
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-full flex-1 bg-white/5 border-2 border-dashed border-white/10 group-hover/file:border-primary/50 group-hover/file:bg-primary/5 rounded-xl flex flex-col items-center justify-center text-center transition-all px-4 py-8">
+                  <div className="w-full h-full flex-1 bg-white/5 border-2 border-dashed border-white/10 group-hover/file:border-transparent group-hover/file:bg-brand-gradient rounded-xl flex flex-col items-center justify-center text-center transition-all px-4 py-8">
                     <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-3 text-zinc-600 group-hover/file:scale-110 group-hover/file:text-primary transition-all">
                       <Upload className="w-6 h-6 text-zinc-600" />
                     </div>
@@ -200,7 +200,7 @@ export function CreatePostModal({ isOpen, onClose, campaignId }: CreatePostModal
             <button
               type="submit"
               disabled={mutation.isPending || isUploading}
-              className="flex-[2] bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+              className="flex-[2] bg-brand-gradient hover:opacity-90 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
             >
               {mutation.isPending || isUploading ? (
                 <>
