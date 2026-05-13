@@ -20,7 +20,7 @@ export default function OrganizationsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<{ id: string, name: string } | undefined>(undefined);
-  const [webhookOrg, setWebhookOrg] = useState<{ id: string, name: string, n8nWebhookUrl?: string } | undefined>(undefined);
+  const [webhookOrg, setWebhookOrg] = useState<{ id: string, name: string, n8nWebhookUrl?: string, webhookToken?: string, webhookHeaderName?: string } | undefined>(undefined);
 
   const role = user?.role?.toUpperCase();
   const isAdmin = role === 'ADMIN';
@@ -38,7 +38,7 @@ export default function OrganizationsPage() {
     setIsCreateModalOpen(true);
   };
 
-  const handleWebhookConfig = (org: { id: string, name: string, n8nWebhookUrl?: string }) => {
+  const handleWebhookConfig = (org: { id: string, name: string, n8nWebhookUrl?: string, webhookToken?: string, webhookHeaderName?: string }) => {
     setWebhookOrg(org);
     setIsWebhookModalOpen(true);
   };
@@ -143,7 +143,9 @@ export default function OrganizationsPage() {
                         handleWebhookConfig({
                           id: orgId,
                           name: org.name,
-                          n8nWebhookUrl: org.n8nWebhookUrl
+                          n8nWebhookUrl: org.n8nWebhookUrl,
+                          webhookToken: org.webhookToken,
+                          webhookHeaderName: org.webhookHeaderName
                         });
                       }}
                       title="Configurar Webhook"

@@ -62,7 +62,7 @@ export default function PostDetailPage() {
       postsService.updateStatus(postId!, status, versionId, comment),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
-      queryClient.invalidateQueries({ queryKey: ['posts', campId] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] }); // Invalida todas as listas de posts
       queryClient.invalidateQueries({ queryKey: ['post-comments', postId] });
       addToast("Status do post atualizado!", "success");
     },
