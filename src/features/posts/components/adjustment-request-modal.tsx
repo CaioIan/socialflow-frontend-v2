@@ -7,7 +7,7 @@ import { GlassCard } from '@/shared/components/glass-card';
 interface AdjustmentRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (comment: string, target: 'FEED' | 'STORIES' | 'GENERAL') => Promise<void>;
+  onSubmit: (comment: string) => Promise<void>;
   isLoading: boolean;
   initialComment?: string;
   initialTarget?: 'FEED' | 'STORIES' | 'GENERAL';
@@ -35,7 +35,7 @@ export function AdjustmentRequestModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim()) return;
-    await onSubmit(comment, target);
+    await onSubmit(comment);
     setComment('');
     setTarget('GENERAL');
   };

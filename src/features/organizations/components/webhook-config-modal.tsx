@@ -10,6 +10,8 @@ import { useToastStore } from '@/stores/use-toast-store';
 
 const webhookSchema = z.object({
   n8nWebhookUrl: z.string().url('URL inválida').or(z.literal('')),
+  webhookToken: z.string().optional(),
+  webhookHeaderName: z.string().optional(),
 });
 
 type WebhookForm = z.infer<typeof webhookSchema>;
@@ -17,7 +19,7 @@ type WebhookForm = z.infer<typeof webhookSchema>;
 interface WebhookConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
-  organization: { id: string; name: string; n8nWebhookUrl?: string };
+  organization: { id: string; name: string; n8nWebhookUrl?: string; webhookToken?: string; webhookHeaderName?: string };
 }
 
 export function WebhookConfigModal({
@@ -37,12 +39,16 @@ export function WebhookConfigModal({
     resolver: zodResolver(webhookSchema),
     defaultValues: {
       n8nWebhookUrl: organization?.n8nWebhookUrl || '',
+      webhookToken: organization?.webhookToken || '',
+      webhookHeaderName: organization?.webhookHeaderName || 'X-Webhook-Token',
     },
   });
 
   React.useEffect(() => {
     if (organization) {
       setValue('n8nWebhookUrl', organization.n8nWebhookUrl || '');
+      setValue('webhookToken', organization.webhookToken || '');
+      setValue('webhookHeaderName', organization.webhookHeaderName || 'X-Webhook-Token');
     }
   }, [organization, setValue]);
 
@@ -52,6 +58,8 @@ export function WebhookConfigModal({
         name: organization.name,
         slug: '', // Service will handle it
         n8nWebhookUrl: data.n8nWebhookUrl || undefined,
+        webhookToken: data.webhookToken || undefined,
+        webhookHeaderName: data.webhookHeaderName || 'X-Webhook-Token',
       }),
 
     onSuccess: () => {
@@ -73,6 +81,7 @@ export function WebhookConfigModal({
       isOpen={isOpen}
       onClose={onClose}
       title={`Integração Webhook - ${organization?.name}`}
+      className="max-w-2xl"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 flex gap-4 items-start mb-6">
@@ -87,29 +96,51 @@ export function WebhookConfigModal({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="n8nWebhookUrl" className="text-sm font-medium text-zinc-400">
-            Webhook URL (n8n)
-          </label>
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+            <label htmlFor="n8nWebhookUrl" className="text-sm font-medium text-zinc-400">
+              Webhook URL (n8n)
+            </label>
+            <div className="space-y-1">
+              <input
+                id="n8nWebhookUrl"
+                placeholder="https://sua-instancia.n8n.cloud/webhook/..."
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+                {...register('n8nWebhookUrl')}
+              />
+              {errors.n8nWebhookUrl && (
+                <p className="text-[10px] text-red-400">{errors.n8nWebhookUrl.message}</p>
+              )}
+            </div>
+          </div>
 
-          <input
-            id="n8nWebhookUrl"
-            placeholder="https://sua-instancia.n8n.cloud/webhook/..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
-            {...register('n8nWebhookUrl')}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+            <label htmlFor="webhookHeaderName" className="text-sm font-medium text-zinc-400">
+              Header Name
+            </label>
+            <input
+              id="webhookHeaderName"
+              placeholder="X-Webhook-Token"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+              {...register('webhookHeaderName')}
+            />
+          </div>
 
-          {errors.n8nWebhookUrl && (
-            <p className="text-xs text-red-400 mt-1">
-              {errors.n8nWebhookUrl.message}
-            </p>
-          )}
-          <p className="text-[10px] text-zinc-500">
-            Este URL será chamado via POST toda vez que um post desta organização for aprovado.
-          </p>
+          <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+            <label htmlFor="webhookToken" className="text-sm font-medium text-zinc-400">
+              Webhook Token
+            </label>
+            <input
+              id="webhookToken"
+              type="password"
+              placeholder="••••••••••••••••"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+              {...register('webhookToken')}
+            />
+          </div>
         </div>
 
-        <div className="flex gap-3 pt-4">
+        <div className="flex gap-3 pt-4 justify-end">
           <button
             type="button"
             onClick={onClose}

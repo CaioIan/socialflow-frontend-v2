@@ -29,7 +29,7 @@ export function CreateUserModal({ isOpen, onClose, defaultRole }: CreateUserModa
       usersService.create({
         name: data.name,
         email: data.email,
-        passwordHash: data.password, // O backend vai fazer o hash
+        password: data.password, // O backend vai fazer o hash
         role: data.role
       }),
     onSuccess: () => {

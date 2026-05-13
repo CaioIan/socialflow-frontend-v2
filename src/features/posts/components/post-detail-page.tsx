@@ -58,55 +58,37 @@ export default function PostDetailPage() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: (status: PostStatus) => postsService.updateStatus(postId!, status),
+    mutationFn: ({ status, versionId, comment }: { status: PostStatus, versionId?: string, comment?: string }) => 
+      postsService.updateStatus(postId!, status, versionId, comment),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
-      queryClient.invalidateQueries({ queryKey: ['posts', campId] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] }); // Invalida todas as listas de posts
+      queryClient.invalidateQueries({ queryKey: ['post-comments', postId] });
       addToast("Status do post atualizado!", "success");
     },
-    onError: () => {
-      addToast("Erro ao atualizar status.", "error");
+    onError: (error: any) => {
+      const message = error.response?.data?.message || "Erro ao atualizar status.";
+      addToast(message, "error");
     }
   });
 
-  const handleRequestAdjustment = async (comment: string, target: 'FEED' | 'STORIES' | 'GENERAL') => {
+  const handleRequestAdjustment = async (comment: string) => {
     if (!post?.currentVersionId) return;
     setIsSubmittingAdjustment(true);
     try {
-      // Verificar se já existe um comentário deste usuário para esta versão
-      const existingComment = comments?.find(
-        c => c.postVersionId === post.currentVersionId && c.authorUserId === user?.id
-      );
+      // O backend agora cria o comentário e o vínculo com o histórico automaticamente
+      // em uma única transação quando enviamos o status 'ALTERATION_REQUESTED' com o campo 'comment'.
+      await updateStatusMutation.mutateAsync({ 
+        status: 'ALTERATION_REQUESTED', 
+        versionId: post.currentVersionId,
+        comment
+      });
 
-      if (existingComment) {
-        // Atualizar comentário existente
-        await postCommentsService.update(existingComment.id, {
-          target,
-          body: comment
-        });
-      } else {
-        // Criar novo comentário
-        await postCommentsService.create({
-          postId: postId!,
-          postVersionId: post.currentVersionId!,
-          target,
-          body: comment
-        });
-      }
-
-      // 2. Atualizar o status
-      await updateStatusMutation.mutateAsync('ALTERATION_REQUESTED');
-
-      // 3. Sucesso: fechar modal e avisar
       setIsAdjustmentModalOpen(false);
       addToast("Solicitação de ajuste enviada com sucesso!", "success");
-
-      // 4. Atualizar dados na tela
-      queryClient.invalidateQueries({ queryKey: ['post-comments', postId] });
-      queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch (error) {
       console.error('Error requesting adjustment', error);
-      addToast("Erro ao enviar solicitação de ajuste.", "error");
+      // O erro já é tratado no onError do mutation
     } finally {
       setIsSubmittingAdjustment(false);
     }
@@ -244,7 +226,10 @@ export default function PostDetailPage() {
                   <div className="flex flex-col sm:flex-row gap-4">
                     {post.status !== 'APPROVED' && (
                       <button
-                        onClick={() => updateStatusMutation.mutate('APPROVED')}
+                        onClick={() => updateStatusMutation.mutate({ 
+                          status: 'APPROVED', 
+                          versionId: post.currentVersionId || undefined 
+                        })}
                         disabled={updateStatusMutation.isPending || !post.currentVersionId}
                         className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_rgba(16,185,129,0.2)] disabled:opacity-50 disabled:grayscale"
                       >

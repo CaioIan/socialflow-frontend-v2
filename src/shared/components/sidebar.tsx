@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/use-auth-store';
+import { authService } from '@/features/auth/api/auth-service';
 import { useState, useEffect } from 'react';
 
 interface SidebarProps {
@@ -43,9 +44,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const filteredItems = menuItems.filter(item => item.roles.includes(role));
 
-  const handleLogout = () => {
-    logout();
-    setIsLogoutModalOpen(false);
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } finally {
+      logout();
+      setIsLogoutModalOpen(false);
+    }
   };
 
   return (

@@ -9,13 +9,8 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    try {
-      await api.post('/auth/logout');
-    } finally {
-      // Limpa tokens do localStorage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-    }
+    // O backend limpa os cookies httpOnly via Set-Cookie
+    await api.post('/auth/logout');
   },
 
   me: async () => {
