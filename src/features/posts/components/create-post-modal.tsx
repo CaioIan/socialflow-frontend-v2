@@ -56,7 +56,7 @@ export function CreatePostModal({ isOpen, onClose, campaignId }: CreatePostModal
       // 1. Cria o Post (casca)
       const post = await postsService.create({
         campaignId,
-        scheduledFor: data.scheduledFor,
+        scheduledFor: new Date(data.scheduledFor).toISOString(),
         briefing: data.briefing,
         captionFixed: data.captionFixed
       });

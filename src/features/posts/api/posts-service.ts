@@ -26,7 +26,18 @@ export interface Post {
   currentVersionId: string | null;
   createdAt: string;
   assets?: Array<{ id: string; cloudinaryUrl: string; assetType: string; createdAt: string }>;
-  currentVersion?: { feedUrl: string | null; storiesUrl: string | null };
+  currentVersion?: { 
+    id: string;
+    versionNumber: number;
+    feedUrl: string | null; 
+    storiesUrl: string | null;
+    assets?: Array<{ id: string; cloudinaryUrl: string; assetType: string; createdAt: string }>;
+  };
+  assignedDesigner?: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
   statusHistory?: StatusHistoryRecord[];
 }
 

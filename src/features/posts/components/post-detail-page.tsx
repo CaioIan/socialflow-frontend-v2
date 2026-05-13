@@ -17,10 +17,10 @@ import {
   Calendar,
   User,
   RotateCw,
-  Pencil,
   ChevronRight,
   Download,
-  Loader2
+  Loader2,
+  Layers
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -149,10 +149,14 @@ export default function PostDetailPage() {
 
   if (!post) return <div>Post não encontrado.</div>;
 
-  // LÓGICA CORRIGIDA: Encontra o asset específico e mais recente pelo seu tipo.
-  // Ordena por data de criação para garantir que o mais novo seja pego.
-  const feedAsset = post.assets?.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'FEED');
-  const storiesAsset = post.assets?.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'STORIES');
+  // LÓGICA CORRIGIDA: Prioriza assets da versão atual se disponível, senão pega os mais recentes.
+  const currentVersionAssets = post.currentVersion?.assets || [];
+  
+  const feedAsset = currentVersionAssets.find(a => a.assetType === 'FEED') || 
+                    (post.assets || []).slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'FEED');
+                    
+  const storiesAsset = currentVersionAssets.find(a => a.assetType === 'STORIES') || 
+                       (post.assets || []).slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'STORIES');
 
   // Usa a URL e o ID do asset encontrado.
   const feedUrl = feedAsset?.cloudinaryUrl || null;
@@ -197,7 +201,16 @@ export default function PostDetailPage() {
                 </div>
                 <div className="flex items-center gap-2 text-zinc-400">
                   <User className="w-4 h-4 text-primary" />
+                  <span className="font-medium text-white">Designer: {post.assignedDesigner?.name || 'Não atribuído'}</span>
                 </div>
+                {post.currentVersion?.versionNumber && (
+                  <div className="flex items-center gap-2">
+                    <div className="px-5 py-2 rounded-full bg-brand-gradient text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-[0_8px_20px_oklch(var(--primary)/0.4)]">
+                      <Layers className="w-4 h-4" />
+                      Versão {post.currentVersion.versionNumber}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-6">
@@ -294,39 +307,38 @@ export default function PostDetailPage() {
             </div>
 
             <div className="space-y-4">
-              {comments && post.currentVersionId && comments.filter(c => c.postVersionId === post.currentVersionId).length > 0 ? (
+              {comments && comments.length > 0 ? (
                 <>
                   <div className="flex justify-center mb-6">
                     <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                      Comentários da Versão Atual
+                      Histórico de Comentários
                     </span>
                   </div>
-                  {comments.filter(c => c.postVersionId === post.currentVersionId).map(comment => (
+                  {comments.map(comment => (
                     <div key={comment.id} className="bg-white/5 rounded-2xl p-4 border border-white/10 flex gap-4">
                       <div className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center text-white font-bold shrink-0">
                         {comment.authorUser?.name?.charAt(0) || 'U'}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-sm">{comment.authorUser?.name || 'User'}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm">{comment.authorUser?.name || 'User'}</span>
+                            {comment.postVersion?.versionNumber && (
+                              <span className="px-2 py-0.5 rounded bg-brand-gradient text-white text-[9px] font-bold uppercase tracking-tighter shadow-sm">
+                                Versão {comment.postVersion.versionNumber}
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center gap-3">
                             <span className="text-[10px] text-zinc-500">
                               {new Date(comment.createdAt).toLocaleDateString()} {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            {comment.authorUserId === user?.id && (
-                              <button
-                                onClick={() => setIsAdjustmentModalOpen(true)}
-                                className="p-1 hover:bg-white/10 rounded transition-colors text-zinc-500 hover:text-white"
-                                title="Editar comentário"
-                                aria-label="Editar comentário"
-                              >
-                                <Pencil className="w-3 h-3" />
-                              </button>
-                            )}
                           </div>
                         </div>
-                        <div className="inline-block px-2 py-0.5 rounded bg-black/30 border border-white/5 text-[10px] font-bold text-zinc-400 mb-2">
-                          {comment.target === 'GENERAL' ? 'GERAL' : comment.target}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="inline-block px-2 py-0.5 rounded bg-black/30 border border-white/5 text-[10px] font-bold text-zinc-400">
+                            {comment.target === 'GENERAL' ? 'GERAL' : comment.target}
+                          </div>
                         </div>
                         <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{comment.body}</p>
                       </div>
@@ -335,7 +347,7 @@ export default function PostDetailPage() {
                 </>
               ) : (
                 <div className="py-12 text-center text-zinc-600">
-                  <p className="text-sm">Nenhum comentário por enquanto nesta versão.</p>
+                  <p className="text-sm">Nenhum comentário por enquanto.</p>
                 </div>
               )}
             </div>
