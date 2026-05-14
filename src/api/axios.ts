@@ -1,11 +1,9 @@
 import axios from 'axios';
 
+// Removemos a imposição do Content-Type application/json global pro formData não quebrar
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL?.replace(/\/+$/, ''),
-  withCredentials: true, // Envia e recebe cookies httpOnly automaticamente
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  withCredentials: true,
 });
 
 // Interceptor de resposta: trata erros de autenticação

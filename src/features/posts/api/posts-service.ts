@@ -102,11 +102,7 @@ export const postsService = {
     formData.append('postId', postId);
     formData.append('assetType', assetType);
 
-    const response = await api.post('/assets/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await api.post('/assets/upload', formData);
     return response.data;
   },
 
@@ -123,11 +119,7 @@ export const postsService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await api.patch(`/assets/${assetId}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await api.patch(`/assets/${assetId}`, formData);
     return response.data;
   }
 };
