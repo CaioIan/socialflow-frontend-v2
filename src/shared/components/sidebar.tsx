@@ -26,17 +26,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const role = user?.role?.toUpperCase() || '';
 
   const menuItems = [
-    { 
-      icon: LayoutDashboard, 
-      label: 'Dashboard Administrativo', 
-      href: '/dashboard', 
-      roles: ['ADMIN'] 
+    {
+      icon: LayoutDashboard,
+      label: 'Dashboard Administrativo',
+      href: '/dashboard',
+      roles: ['ADMIN']
     },
-    { 
-      icon: Building2, 
-      label: 'Minha Organização', 
+    {
+      icon: Building2,
+      label: 'Minha Organização',
       href: currentOrganizationId ? `/organizations/${currentOrganizationId}/campaigns` : '/organizations',
-      roles: ['CLIENT'] 
+      roles: ['CLIENT']
     },
     { icon: Building2, label: 'Organizações', href: '/organizations', roles: ['ADMIN', 'DESIGNER'] },
     { icon: Users, label: 'Equipe', href: '/team', roles: ['ADMIN'] },
@@ -55,9 +55,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      <motion.aside 
+      <motion.aside
         initial={false}
-        animate={{ 
+        animate={{
           x: (isMobile && !isOpen) ? -256 : 0,
         }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
@@ -69,9 +69,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-6">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center">
-              <img src="/logo/socialflow-wordmark.png" alt="SocialFlow" className="h-12 w-auto" />
+              <img src="/logo/socialflow-wordmark.png" alt="SocialFlow" className="h-10 w-auto" />
             </div>
-            <button title="Fechar" aria-label="Fechar" 
+            <button title="Fechar" aria-label="Fechar"
               onClick={onClose}
               className="p-2 hover:bg-white/5 rounded-lg text-zinc-500 md:hidden"
             >
@@ -111,7 +111,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         <div className="mt-auto p-6 border-t border-white/5">
-          <button 
+          <button
             onClick={() => setIsLogoutModalOpen(true)}
             className="flex items-center gap-3 px-3 py-2 text-zinc-500 hover:text-red-400 transition-colors w-full group"
           >
@@ -141,7 +141,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <div className="w-16 h-16 rounded-3xl bg-red-500/10 flex items-center justify-center mb-6 mx-auto">
                 <AlertTriangle className="w-8 h-8 text-red-500" />
               </div>
-              
+
               <h3 className="text-xl font-bold text-white text-center mb-2 text-glow">Deseja sair?</h3>
               <p className="text-zinc-500 text-center text-sm mb-8">
                 Você precisará fazer login novamente para acessar suas campanhas.
