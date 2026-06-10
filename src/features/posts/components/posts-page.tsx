@@ -11,13 +11,15 @@ import {
   AlertCircle,
   XCircle,
   Image as ImageIcon,
-  Loader2
+  Loader2,
+  FileUp
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { campaignsService } from '@/features/campaigns/api/campaigns-service';
 import { postsService } from '../api/posts-service';
 import { CreatePostModal } from './create-post-modal';
+import { ImportPostsModal } from './import-posts-modal';
 import { EditPostModal } from './edit-post-modal';
 import { DeletePostModal } from './delete-post-modal';
 import { UploadVersionModal } from './upload-version-modal';
@@ -32,6 +34,7 @@ export default function PostsPage() {
   useOrganizationAccess(orgId);
   const [activeTab, setActiveTab] = useState<TabType>('pending');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -101,13 +104,22 @@ export default function PostsPage() {
         </div>
 
         {isAdmin && (
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
-          >
-            <Plus className="w-5 h-5" />
-            Novo Post
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="border border-white/10 text-zinc-300 hover:text-white hover:bg-white/5 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
+            >
+              <FileUp className="w-5 h-5" />
+              Importar Posts
+            </button>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
+            >
+              <Plus className="w-5 h-5" />
+              Novo Post
+            </button>
+          </div>
         )}
       </header>
 
@@ -333,6 +345,12 @@ export default function PostsPage() {
       <CreatePostModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+        campaignId={campaignId!}
+      />
+
+      <ImportPostsModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
         campaignId={campaignId!}
       />
 

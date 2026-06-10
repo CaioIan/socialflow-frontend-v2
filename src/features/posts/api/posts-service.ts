@@ -55,6 +55,12 @@ export interface UploadVersionRequest {
   storiesUrl?: string;
 }
 
+export interface ImportPostsResult {
+  totalRows: number;
+  created: number;
+  errors: Array<{ row: number; message: string }>;
+}
+
 export const getLastApproval = (post: Post) => {
   if (!post.statusHistory) return null;
   const approval = post.statusHistory.find(h => h.toStatus === 'APPROVED');
@@ -120,6 +126,20 @@ export const postsService = {
     formData.append('file', file);
 
     const response = await api.patch(`/assets/${assetId}`, formData);
+    return response.data;
+  },
+
+  downloadImportTemplate: async () => {
+    const response = await api.get('/posts/import-template', { responseType: 'blob' });
+    return response.data as Blob;
+  },
+
+  importPosts: async (campaignId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('campaignId', campaignId);
+
+    const response = await api.post<ImportPostsResult>('/posts/import', formData);
     return response.data;
   }
 };
