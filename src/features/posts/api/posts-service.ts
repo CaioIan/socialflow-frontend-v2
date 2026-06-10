@@ -1,4 +1,5 @@
 import api from '@/api/axios';
+import { compressImageIfNeeded } from '@/lib/image-compression';
 
 export type PostStatus = 'PENDING' | 'ALTERATION_REQUESTED' | 'APPROVED' | 'CANCELLED';
 
@@ -103,8 +104,11 @@ export const postsService = {
   },
 
   uploadAsset: async (file: File, postId: string, assetType: string = 'FEED') => {
+    // Comprime a imagem automaticamente se exceder o limite da Vercel (4.5MB)
+    const processedFile = await compressImageIfNeeded(file);
+
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', processedFile);
     formData.append('postId', postId);
     formData.append('assetType', assetType);
 
@@ -122,8 +126,11 @@ export const postsService = {
   },
 
   replaceAsset: async (assetId: string, file: File) => {
+    // Comprime a imagem automaticamente se exceder o limite da Vercel (4.5MB)
+    const processedFile = await compressImageIfNeeded(file);
+
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', processedFile);
 
     const response = await api.patch(`/assets/${assetId}`, formData);
     return response.data;
