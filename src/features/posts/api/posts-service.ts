@@ -104,16 +104,54 @@ export const postsService = {
   },
 
   uploadAsset: async (file: File, postId: string, assetType: string = 'FEED') => {
-    // Comprime a imagem automaticamente se exceder o limite da Vercel (4.5MB)
+    // 1. Opcional: Comprime para economizar banda do usuário
     const processedFile = await compressImageIfNeeded(file);
 
+    // 2. Solicita os parâmetros de assinatura para o backend
+    const signResponse = await api.post('/assets/sign-upload', {
+      postId,
+      assetType,
+      fileName: processedFile.name,
+    });
+    
+    const signData = signResponse.data;
+
+    // 3. Monta o FormData para o Cloudinary (UPLOAD DIRETO)
     const formData = new FormData();
     formData.append('file', processedFile);
-    formData.append('postId', postId);
-    formData.append('assetType', assetType);
+    formData.append('api_key', signData.apiKey);
+    formData.append('timestamp', signData.timestamp.toString());
+    formData.append('signature', signData.signature);
+    formData.append('folder', signData.folder);
+    formData.append('public_id', signData.publicId);
 
-    const response = await api.post('/assets/upload', formData);
-    return response.data;
+    // 4. Faz o upload diretamente para o Cloudinary
+    const cloudinaryRes = await fetch(
+      `https://api.cloudinary.com/v1_1/${signData.cloudName}/auto/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+
+    if (!cloudinaryRes.ok) {
+      throw new Error('Falha no upload direto para o Cloudinary');
+    }
+
+    const cloudinaryData = await cloudinaryRes.json();
+
+    // 5. Registra o asset no banco de dados via API
+    const registerResponse = await api.post('/assets/register', {
+      postId,
+      assetType,
+      originalFileName: file.name,
+      fileSize: processedFile.size,
+      mimeType: processedFile.type || 'application/octet-stream',
+      cloudinaryPublicId: cloudinaryData.public_id,
+      cloudinaryUrl: cloudinaryData.secure_url,
+    });
+
+    return registerResponse.data;
   },
 
   updateStatus: async (postId: string, status: PostStatus, versionId?: string, comment?: string) => {
