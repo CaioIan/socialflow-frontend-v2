@@ -1,5 +1,4 @@
 import api from '@/api/axios';
-import { compressImageIfNeeded } from '@/lib/image-compression';
 
 export type PostStatus = 'PENDING' | 'ALTERATION_REQUESTED' | 'APPROVED' | 'CANCELLED';
 
@@ -104,21 +103,18 @@ export const postsService = {
   },
 
   uploadAsset: async (file: File, postId: string, assetType: string = 'FEED') => {
-    // 1. Opcional: Comprime para economizar banda do usuário
-    const processedFile = await compressImageIfNeeded(file);
-
     // 2. Solicita os parâmetros de assinatura para o backend
     const signResponse = await api.post('/assets/sign-upload', {
       postId,
       assetType,
-      fileName: processedFile.name,
+      fileName: file.name,
     });
     
     const signData = signResponse.data;
 
     // 3. Monta o FormData para o Cloudinary (UPLOAD DIRETO)
     const formData = new FormData();
-    formData.append('file', processedFile);
+    formData.append('file', file);
     formData.append('api_key', signData.apiKey);
     formData.append('timestamp', signData.timestamp.toString());
     formData.append('signature', signData.signature);
@@ -145,8 +141,8 @@ export const postsService = {
       postId,
       assetType,
       originalFileName: file.name,
-      fileSize: processedFile.size,
-      mimeType: processedFile.type || 'application/octet-stream',
+      fileSize: file.size,
+      mimeType: file.type || 'application/octet-stream',
       cloudinaryPublicId: cloudinaryData.public_id,
       cloudinaryUrl: cloudinaryData.secure_url,
     });
@@ -164,11 +160,8 @@ export const postsService = {
   },
 
   replaceAsset: async (assetId: string, file: File) => {
-    // Comprime a imagem automaticamente se exceder o limite da Vercel (4.5MB)
-    const processedFile = await compressImageIfNeeded(file);
-
     const formData = new FormData();
-    formData.append('file', processedFile);
+    formData.append('file', file);
 
     const response = await api.patch(`/assets/${assetId}`, formData);
     return response.data;
