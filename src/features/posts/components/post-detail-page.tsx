@@ -20,7 +20,9 @@ import {
   ChevronRight,
   Download,
   Loader2,
-  Layers
+  Layers,
+  Sparkles,
+  XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -48,7 +50,11 @@ export default function PostDetailPage() {
   const { data: post, isLoading } = useQuery({
     queryKey: ['post', postId],
     queryFn: () => postsService.getById(postId!),
-    enabled: !!postId && hasAccess
+    enabled: !!postId && hasAccess,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      return data?.aiGenerationStatus === 'GENERATING' ? 5000 : false;
+    },
   });
 
   const { data: comments } = useQuery({
@@ -70,6 +76,18 @@ export default function PostDetailPage() {
       const message = error.response?.data?.message || "Erro ao atualizar status.";
       addToast(message, "error");
     }
+  });
+
+  const generateWithClaudeMutation = useMutation({
+    mutationFn: () => postsService.generateWithClaude(postId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
+      addToast('Geração de arte iniciada! Acompanhe o status abaixo.', 'success');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Erro ao iniciar geração de arte.';
+      addToast(message, 'error');
+    },
   });
 
   const handleRequestAdjustment = async (comment: string) => {
@@ -131,18 +149,21 @@ export default function PostDetailPage() {
 
   if (!post) return <div>Post não encontrado.</div>;
 
-  // LÓGICA CORRIGIDA: Prioriza assets da versão atual se disponível, senão pega os mais recentes.
+  // Priority: current version feedUrls (array), then Cloudinary assets
   const currentVersionAssets = post.currentVersion?.assets || [];
-  
-  const feedAsset = currentVersionAssets.find(a => a.assetType === 'FEED') || 
-                    (post.assets || []).slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'FEED');
-                    
-  const storiesAsset = currentVersionAssets.find(a => a.assetType === 'STORIES') || 
-                       (post.assets || []).slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'STORIES');
+  const feedUrls: string[] = post.currentVersion?.feedUrls?.length
+    ? post.currentVersion.feedUrls
+    : currentVersionAssets.filter(a => a.assetType === 'FEED').map(a => a.cloudinaryUrl);
 
-  // Usa a URL e o ID do asset encontrado.
-  const feedUrl = feedAsset?.cloudinaryUrl || null;
-  const storiesUrl = storiesAsset?.cloudinaryUrl || null;
+  const feedAsset = currentVersionAssets.find(a => a.assetType === 'FEED') ||
+    (post.assets || []).slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'FEED');
+
+  const storiesAsset = currentVersionAssets.find(a => a.assetType === 'STORIES') ||
+    (post.assets || []).slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'STORIES');
+
+  const feedUrl = feedUrls[0] || feedAsset?.cloudinaryUrl || null;
+  const storiesUrl = post.currentVersion?.storiesUrl || storiesAsset?.cloudinaryUrl || null;
+  const isCarousel = feedUrls.length > 1;
 
   const feedAssetId = feedAsset?.id || null;
   const storiesAssetId = storiesAsset?.id || null;
@@ -219,6 +240,47 @@ export default function PostDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* GERAR COM CLAUDE - Admin only, no artwork yet */}
+              {isAdmin && (
+                <div className="mt-8 pt-6 border-t border-white/5">
+                  {post.aiGenerationStatus === 'GENERATING' ? (
+                    <div className="flex flex-col items-center gap-3 py-4 bg-primary/5 border border-primary/20 rounded-2xl">
+                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                      <p className="text-sm font-bold text-primary">Gerando arte com Claude...</p>
+                      <p className="text-[10px] text-zinc-500">Esta página atualiza automaticamente.</p>
+                    </div>
+                  ) : post.aiGenerationStatus === 'FAILED' ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 py-3 px-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400">
+                        <XCircle className="w-4 h-4 shrink-0" />
+                        <span className="text-xs font-medium">Geração anterior falhou. Tente novamente.</span>
+                      </div>
+                      <button
+                        onClick={() => generateWithClaudeMutation.mutate()}
+                        disabled={generateWithClaudeMutation.isPending}
+                        className="w-full flex items-center justify-center gap-2 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 px-6 py-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-50"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Tentar Novamente com Claude
+                      </button>
+                    </div>
+                  ) : !post.currentVersionId ? (
+                    <button
+                      onClick={() => generateWithClaudeMutation.mutate()}
+                      disabled={generateWithClaudeMutation.isPending}
+                      className="w-full flex items-center justify-center gap-2 bg-brand-gradient hover:opacity-90 px-6 py-4 rounded-2xl font-bold transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] disabled:opacity-50"
+                    >
+                      {generateWithClaudeMutation.isPending ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-5 h-5" />
+                      )}
+                      GERAR COM CLAUDE
+                    </button>
+                  ) : null}
+                </div>
+              )}
 
               {/* Approval Panel - Only for CLIENT */}
               {isClient && (
@@ -346,27 +408,40 @@ export default function PostDetailPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="space-y-4"
           >
-            {/* Desktop Preview: Raw Art View */}
+            {/* Art preview — Desktop */}
             <div className="hidden lg:flex flex-col gap-10">
-              {feedUrl && (
+              {feedUrls.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-2">
-                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Arte do Feed</h3>
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-2">
+                      Arte do Feed
+                      {isCarousel && (
+                        <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] font-bold border border-primary/30">
+                          CARROSSEL {feedUrls.length} imgs
+                        </span>
+                      )}
+                    </h3>
                     <button
-                      onClick={() => handleDownload(feedUrl, 'feed')}
+                      onClick={() => handleDownload(feedUrls[0], 'feed')}
                       className="flex items-center gap-2 text-primary hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider group"
                     >
                       <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
                       Baixar HD
                     </button>
                   </div>
-                  <div className="rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-black/20 group cursor-zoom-in">
-                    <img
-                      src={feedUrl}
-                      className="w-full h-auto transition-transform duration-700 group-hover:scale-105"
-                      alt="Arte Feed"
-                    />
-                  </div>
+                  {isCarousel ? (
+                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 no-scrollbar">
+                      {feedUrls.map((url, i) => (
+                        <div key={i} className="min-w-[80%] snap-center rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-black/20 group cursor-zoom-in">
+                          <img src={url} className="w-full h-auto transition-transform duration-700 group-hover:scale-105" alt={`Feed ${i + 1}`} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-black/20 group cursor-zoom-in">
+                      <img src={feedUrls[0]} className="w-full h-auto transition-transform duration-700 group-hover:scale-105" alt="Arte Feed" />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -383,53 +458,44 @@ export default function PostDetailPage() {
                     </button>
                   </div>
                   <div className="rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-black/20 aspect-[9/16] group cursor-zoom-in">
-                    <img
-                      src={storiesUrl}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      alt="Arte Stories"
-                    />
+                    <img src={storiesUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Arte Stories" />
                   </div>
                 </div>
               )}
 
-              {!feedUrl && !storiesUrl && (
+              {feedUrls.length === 0 && !storiesUrl && (
                 <div className="py-32 text-center border-2 border-dashed border-white/5 rounded-[3rem] bg-white/[0.01]">
                   <p className="text-zinc-600 font-medium">Nenhuma arte disponível para esta versão.</p>
                 </div>
               )}
             </div>
 
-            {/* Mobile Carousel View */}
+            {/* Art preview — Mobile */}
             <div className="lg:hidden">
-              {/* Carousel View with Indicators */}
               <div className="relative group/carousel">
                 <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-4">
-                  {feedUrl && (
-                    <div className="min-w-full snap-center space-y-2 relative">
+                  {feedUrls.map((url, i) => (
+                    <div key={i} className="min-w-full snap-center space-y-2 relative">
                       <div className="flex items-center justify-between px-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Arte do Feed</span>
-                        <button
-                          onClick={() => handleDownload(feedUrl, 'feed')}
-                          className="flex items-center gap-1.5 text-primary hover:text-white transition-colors text-[10px] font-bold uppercase"
-                        >
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                          {isCarousel ? `Feed ${i + 1}/${feedUrls.length}` : 'Arte do Feed'}
+                        </span>
+                        <button onClick={() => handleDownload(url, `feed-${i + 1}`)} className="flex items-center gap-1.5 text-primary hover:text-white transition-colors text-[10px] font-bold uppercase">
                           <Download className="w-3.5 h-3.5" />
                           Baixar HD
                         </button>
                       </div>
                       <div className="rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-black/20">
-                        <img src={feedUrl} className="w-full h-auto" alt="Arte Feed" />
+                        <img src={url} className="w-full h-auto" alt={`Feed ${i + 1}`} />
                       </div>
                     </div>
-                  )}
+                  ))}
 
                   {storiesUrl && (
                     <div className="min-w-full snap-center space-y-2 relative">
                       <div className="flex items-center justify-between px-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Arte do Stories</span>
-                        <button
-                          onClick={() => handleDownload(storiesUrl, 'stories')}
-                          className="flex items-center gap-1.5 text-primary hover:text-white transition-colors text-[10px] font-bold uppercase"
-                        >
+                        <button onClick={() => handleDownload(storiesUrl, 'stories')} className="flex items-center gap-1.5 text-primary hover:text-white transition-colors text-[10px] font-bold uppercase">
                           <Download className="w-3.5 h-3.5" />
                           Baixar HD
                         </button>
@@ -440,15 +506,14 @@ export default function PostDetailPage() {
                     </div>
                   )}
 
-                  {!feedUrl && !storiesUrl && (
+                  {feedUrls.length === 0 && !storiesUrl && (
                     <div className="min-w-full py-20 text-center border-2 border-dashed border-white/5 rounded-[2rem] bg-white/[0.01]">
                       <p className="text-zinc-600 text-sm">Nenhuma arte disponível para esta versão.</p>
                     </div>
                   )}
                 </div>
 
-                {/* Floating Arrow Indicator (Mobile Only) */}
-                {(feedUrl && storiesUrl) && (
+                {(feedUrls.length + (storiesUrl ? 1 : 0)) > 1 && (
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none animate-pulse">
                     <div className="bg-black/40 backdrop-blur-md border border-white/10 p-2 rounded-full text-white/70 shadow-2xl">
                       <ChevronRight className="w-4 h-4" />
@@ -457,19 +522,19 @@ export default function PostDetailPage() {
                 )}
               </div>
 
-              {/* Carousel Indicators (Dots) */}
-              {(feedUrl && storiesUrl) && (
+              {(feedUrls.length + (storiesUrl ? 1 : 0)) > 1 && (
                 <div className="flex justify-center gap-2 mt-2">
-                  <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_oklch(var(--primary)/0.5)]"></div>
-                  <div className="w-2 h-2 rounded-full bg-white/10"></div>
+                  {[...Array(feedUrls.length + (storiesUrl ? 1 : 0))].map((_, i) => (
+                    <div key={i} className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-primary shadow-[0_0_10px_oklch(var(--primary)/0.5)]' : 'bg-white/10'}`} />
+                  ))}
                 </div>
               )}
             </div>
 
             {/* Replace Asset Buttons - Visible for ADMIN and DESIGNER */}
-            {(isAdmin || isDesigner) && (post.currentVersion?.feedUrl || post.currentVersion?.storiesUrl) && (
+            {(isAdmin || isDesigner) && (feedUrls.length > 0 || storiesUrl) && (
               <div className="space-y-3 pt-4">
-                {post.currentVersion?.feedUrl && (
+                {feedUrls.length > 0 && (
                   <button
                     onClick={() => {
                       setSelectedAssetId(feedAssetId || 'feed-placeholder');
@@ -483,7 +548,7 @@ export default function PostDetailPage() {
                   </button>
                 )}
 
-                {post.currentVersion?.storiesUrl && (
+                {storiesUrl && (
                   <button
                     onClick={() => {
                       setSelectedAssetId(storiesAssetId || 'stories-placeholder');

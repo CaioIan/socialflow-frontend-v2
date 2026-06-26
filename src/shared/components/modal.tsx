@@ -12,7 +12,6 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
-  // Gerencia o fechamento com a tecla Esc
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -20,6 +19,18 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
     if (isOpen) window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
+
+  // Bloqueia scroll do body quando o modal está aberto
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   return (
     <AnimatePresence>
@@ -30,34 +41,41 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
           />
 
-          {/* Modal Content */}
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-[101] pointer-events-none">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className={cn(
-                "w-full max-w-md bg-zinc-900/90 border border-white/10 backdrop-blur-2xl rounded-3xl p-8 shadow-2xl pointer-events-auto relative",
-                className
-              )}
-            >
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-white tracking-tight">{title}</h2>
-                <button title="Fechar" aria-label="Fechar"
-                  onClick={onClose}
-                  className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+          {/* Scroll container — cobre toda a tela, scroll vertical, fecha ao clicar fora */}
+          <div
+            className="fixed inset-0 z-[101] overflow-y-auto overscroll-contain"
+            onClick={onClose}
+          >
+            <div className="flex min-h-full items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+                className={cn(
+                  "w-full max-w-md bg-zinc-900/90 border border-white/10 backdrop-blur-2xl rounded-3xl p-8 shadow-2xl relative",
+                  className
+                )}
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-2xl font-bold text-white tracking-tight">{title}</h2>
+                  <button
+                    title="Fechar"
+                    aria-label="Fechar"
+                    onClick={onClose}
+                    className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
-              {children}
-            </motion.div>
+                {children}
+              </motion.div>
+            </div>
           </div>
         </>
       )}

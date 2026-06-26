@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from '@/shared/components/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,16 +6,34 @@ import { useAuthStore } from '@/stores/use-auth-store';
 import { OrganizationSelector } from '@/features/auth/components/organization-selector';
 import { Menu } from 'lucide-react';
 
+const COLLAPSED_KEY = 'sidebar-collapsed';
+
 export function DashboardLayout() {
   const { currentOrganizationId, organizations, user } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(
+    () => localStorage.getItem(COLLAPSED_KEY) === 'true'
+  );
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const location = useLocation();
 
-  // Trava de segurança: somente CLIENTS são obrigados a selecionar empresa no boot.
   const userRole = user?.role?.toUpperCase();
   const isClient = userRole === 'CLIENT';
-
   const activeOrg = organizations.find(org => org.organizationId === currentOrganizationId);
+
+  const handleToggleCollapse = () => {
+    setIsCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem(COLLAPSED_KEY, String(next));
+      return next;
+    });
+  };
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -37,13 +55,14 @@ export function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-[#0a0a0a]">
-      {/* Sidebar - Desktop & Mobile */}
-      <Sidebar 
-        isOpen={isMobileMenuOpen} 
-        onClose={() => setIsMobileMenuOpen(false)} 
-        />
+      <Sidebar
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={handleToggleCollapse}
+      />
 
-      {/* Overlay para fechar menu mobile ao clicar fora */}
+      {/* Overlay para fechar menu mobile */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -56,19 +75,22 @@ export function DashboardLayout() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 md:ml-64 min-h-screen flex flex-col w-full overflow-hidden">
-        {/* Navbar / Header area */}
+      <motion.main
+        animate={{ marginLeft: isMobile ? 0 : (isCollapsed ? 64 : 256) }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="flex-1 min-h-screen flex flex-col w-full overflow-hidden"
+      >
         <header className="h-20 border-b border-white/5 bg-black/10 backdrop-blur-md sticky top-0 z-40 px-4 md:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 overflow-hidden">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               title="Abrir Menu"
               aria-label="Abrir Menu"
-              className="p-2 hover:bg-white/5 rounded-xl text-zinc-400 md:hidden"
+              className="p-2 rounded-xl text-zinc-400 md:hidden"
             >
               <Menu className="w-6 h-6" />
             </button>
-            
+
             <div className="overflow-hidden">
               <h2 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 truncate">
                 {activeOrg?.name ? `Organização: ${activeOrg.name}` : 'Painel Geral'}
@@ -95,17 +117,16 @@ export function DashboardLayout() {
           </div>
         </header>
 
-        {/* Content area */}
         <motion.div
           key={currentOrganizationId}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
           className="p-4 md:p-8 flex-1"
         >
           <Outlet />
         </motion.div>
-      </main>
+      </motion.main>
     </div>
   );
 }

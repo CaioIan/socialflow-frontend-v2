@@ -1,6 +1,7 @@
 import api from '@/api/axios';
 
 export type PostStatus = 'PENDING' | 'ALTERATION_REQUESTED' | 'APPROVED' | 'CANCELLED';
+export type AiGenerationStatus = 'IDLE' | 'GENERATING' | 'COMPLETED' | 'FAILED';
 
 export interface StatusHistoryRecord {
   id: string;
@@ -22,15 +23,17 @@ export interface Post {
   briefing: string | null;
   captionFixed: string;
   status: PostStatus;
+  aiGenerationStatus: AiGenerationStatus;
   assignedDesignerId: string | null;
   currentVersionId: string | null;
   createdAt: string;
   assets?: Array<{ id: string; cloudinaryUrl: string; assetType: string; createdAt: string }>;
-  currentVersion?: { 
+  currentVersion?: {
     id: string;
     versionNumber: number;
-    feedUrl: string | null; 
+    feedUrls: string[];
     storiesUrl: string | null;
+    isCarousel: boolean;
     assets?: Array<{ id: string; cloudinaryUrl: string; assetType: string; createdAt: string }>;
   };
   assignedDesigner?: {
@@ -44,14 +47,14 @@ export interface Post {
 export interface CreatePostRequest {
   campaignId: string;
   scheduledFor: string;
-  briefing?: string;
+  briefing: string;
   captionFixed: string;
   assignedDesignerId?: string;
 }
 
 export interface UploadVersionRequest {
   postId: string;
-  feedUrl?: string;
+  feedUrls?: string[];
   storiesUrl?: string;
 }
 
@@ -98,7 +101,11 @@ export const postsService = {
   },
 
   uploadVersion: async (data: UploadVersionRequest) => {
-    const response = await api.post('/post-versions/upload', data);
+    const response = await api.post('/post-versions/upload', {
+      postId: data.postId,
+      feedUrls: data.feedUrls,
+      storiesUrl: data.storiesUrl,
+    });
     return response.data;
   },
 
@@ -179,5 +186,10 @@ export const postsService = {
 
     const response = await api.post<ImportPostsResult>('/posts/import', formData);
     return response.data;
-  }
+  },
+
+  generateWithClaude: async (postId: string) => {
+    const response = await api.post<Post>(`/posts/${postId}/generate`);
+    return response.data;
+  },
 };
