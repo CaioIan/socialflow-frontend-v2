@@ -24,9 +24,10 @@ import { EditPostModal } from './edit-post-modal';
 import { DeletePostModal } from './delete-post-modal';
 import { UploadVersionModal } from './upload-version-modal';
 import { PostActionsMenu } from './post-actions-menu';
-import { Upload } from 'lucide-react';
+import { CampaignPlanningPanel } from '@/features/campaigns/components/campaign-planning-panel';
+import { Upload, BookOpen } from 'lucide-react';
 
-type TabType = 'pending' | 'approved';
+type TabType = 'pending' | 'approved' | 'planning';
 
 export default function PostsPage() {
   const { orgId, id: campaignId } = useParams<{ orgId: string, id: string }>();
@@ -124,10 +125,10 @@ export default function PostsPage() {
       </header>
 
       {/* Tabs Navigation */}
-      <div className="flex gap-2 border-b border-white/5">
+      <div className="flex gap-2 border-b border-white/5 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab('pending')}
-          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg ${activeTab === 'pending'
+          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg shrink-0 ${activeTab === 'pending'
               ? 'bg-blue-500/20 text-blue-400'
               : 'bg-blue-500/5 text-blue-300'
             }`}
@@ -149,7 +150,7 @@ export default function PostsPage() {
 
         <button
           onClick={() => setActiveTab('approved')}
-          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg ${activeTab === 'approved'
+          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg shrink-0 ${activeTab === 'approved'
               ? 'bg-emerald-500/20 text-emerald-400'
               : 'bg-emerald-500/5 text-emerald-300'
             }`}
@@ -168,8 +169,31 @@ export default function PostsPage() {
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-400" />
           )}
         </button>
+
+        <button
+          onClick={() => setActiveTab('planning')}
+          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg shrink-0 ${activeTab === 'planning'
+              ? 'bg-primary/20 text-primary'
+              : 'bg-primary/5 text-primary/60'
+            }`}
+        >
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4" />
+            <span>Planejamento</span>
+          </div>
+          {activeTab === 'planning' && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary" />
+          )}
+        </button>
       </div>
 
+      {/* Planning tab content */}
+      {activeTab === 'planning' && (
+        <CampaignPlanningPanel campaignId={campaignId!} isAdmin={isAdmin} />
+      )}
+
+      {/* Posts grid — hidden when planning tab is active */}
+      {activeTab !== 'planning' && (
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         {displayedPosts.map((post, index) => {
           const status = getStatusConfig(post.status);
@@ -177,7 +201,7 @@ export default function PostsPage() {
 
           // Buscar o asset mais recente do tipo FEED
           const feedAsset = post.assets?.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'FEED');
-          const previewUrl = post.currentVersion?.feedUrl || feedAsset?.cloudinaryUrl || null;
+          const previewUrl = post.currentVersion?.feedUrls?.[0] || feedAsset?.cloudinaryUrl || null;
 
           return (
             <motion.div
@@ -271,7 +295,7 @@ export default function PostsPage() {
 
                       {/* Ações à direita */}
                       <div className="flex gap-2 shrink-0">
-                        {(isAdmin || isDesigner) && (!post.currentVersionId || post.status === 'ALTERATION_REQUESTED') && (
+                        {(isAdmin || isDesigner) && (!post.currentVersionId || post.status === 'ALTERATION_REQUESTED') && (post.aiGenerationStatus !== 'GENERATING') && (
                           <button
                             onClick={(e) => {
                               e.preventDefault();
@@ -341,6 +365,7 @@ export default function PostsPage() {
           </div>
         )}
       </div>
+      )} {/* end activeTab !== 'planning' */}
 
       <CreatePostModal
         isOpen={isCreateModalOpen}

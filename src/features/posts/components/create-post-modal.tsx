@@ -10,7 +10,7 @@ import { Loader2, Calendar, FileText, Type, Image as ImageIcon, Upload, Check } 
 
 const createPostSchema = z.object({
   scheduledFor: z.string().min(1, 'A data é obrigatória'),
-  briefing: z.string().max(500, 'O briefing deve ter no máximo 500 caracteres').optional(),
+  briefing: z.string().min(1, 'O briefing é obrigatório').max(500, 'O briefing deve ter no máximo 500 caracteres'),
   captionFixed: z.string().min(1, 'A legenda fixa é obrigatória').max(2000),
   referenceFile: z.any().optional(),
 });
@@ -57,8 +57,8 @@ export function CreatePostModal({ isOpen, onClose, campaignId }: CreatePostModal
       const post = await postsService.create({
         campaignId,
         scheduledFor: new Date(data.scheduledFor).toISOString(),
-        briefing: data.briefing,
-        captionFixed: data.captionFixed
+        briefing: data.briefing!,
+        captionFixed: data.captionFixed,
       });
 
       // 2. Se houver arquivo, faz o upload como Asset
@@ -122,7 +122,7 @@ export function CreatePostModal({ isOpen, onClose, campaignId }: CreatePostModal
               <div className="space-y-2">
                 <label htmlFor="briefing" className="text-sm font-medium text-zinc-400 flex items-center gap-2">
                   <FileText className="w-4 h-4" />
-                  Briefing / Tema da Arte (Opcional)
+                  Briefing / Tema da Arte
                 </label>
                 <textarea
                   id="briefing"
