@@ -13,7 +13,11 @@ const createCampaignSchema = z.object({
   referenceMonth: z.string().transform(v => v ? parseInt(v) : undefined).optional(),
 });
 
-type CreateCampaignForm = z.infer<typeof createCampaignSchema>;
+// O schema faz `.transform()` de string -> number, então input e output diferem:
+// o formulário trabalha com strings (values de <input>/<select>) e o payload
+// enviado à API já sai com os números convertidos.
+type CreateCampaignFormInput = z.input<typeof createCampaignSchema>;
+type CreateCampaignPayload = z.output<typeof createCampaignSchema>;
 
 interface CreateCampaignModalProps {
   isOpen: boolean;
@@ -37,12 +41,12 @@ export function CreateCampaignModal({ isOpen, onClose, initialData }: CreateCamp
     reset,
     setValue,
     formState: { errors },
-  } = useForm<CreateCampaignForm>({
-    resolver: zodResolver(createCampaignSchema) as any,
+  } = useForm<CreateCampaignFormInput, unknown, CreateCampaignPayload>({
+    resolver: zodResolver(createCampaignSchema),
     defaultValues: {
       title: initialData?.title || '',
-      referenceYear: (initialData?.referenceYear || currentYear).toString() as any,
-      referenceMonth: (initialData?.referenceMonth || '').toString() as any,
+      referenceYear: (initialData?.referenceYear || currentYear).toString(),
+      referenceMonth: (initialData?.referenceMonth || '').toString(),
     }
   });
 
@@ -50,22 +54,22 @@ export function CreateCampaignModal({ isOpen, onClose, initialData }: CreateCamp
   React.useEffect(() => {
     if (initialData) {
       setValue('title', initialData.title);
-      setValue('referenceYear', (initialData.referenceYear || currentYear).toString() as any);
-      setValue('referenceMonth', (initialData.referenceMonth || '').toString() as any);
+      setValue('referenceYear', (initialData.referenceYear || currentYear).toString());
+      setValue('referenceMonth', (initialData.referenceMonth || '').toString());
     } else {
       reset({
         title: '',
-        referenceYear: currentYear.toString() as any,
-        referenceMonth: '' as any,
+        referenceYear: currentYear.toString(),
+        referenceMonth: '',
       });
     }
   }, [initialData, setValue, reset, currentYear]);
 
   const mutation = useMutation({
-    mutationFn: (data: CreateCampaignForm) => 
-      isEditing 
-        ? campaignsService.update(initialData!.id, data as any)
-        : campaignsService.create(data as any),
+    mutationFn: (data: CreateCampaignPayload) =>
+      isEditing
+        ? campaignsService.update(initialData!.id, data)
+        : campaignsService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       reset();
@@ -73,13 +77,13 @@ export function CreateCampaignModal({ isOpen, onClose, initialData }: CreateCamp
     },
   });
 
-  const onSubmit = (data: CreateCampaignForm) => {
-    mutation.mutate(data as any);
+  const onSubmit = (data: CreateCampaignPayload) => {
+    mutation.mutate(data);
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Editar Campanha' : 'Nova Campanha'}>
-      <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-2">
           <label htmlFor="title" className="text-sm font-medium text-zinc-400">
             Título da Campanha

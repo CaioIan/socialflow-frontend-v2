@@ -21,13 +21,12 @@ import {
   Download,
   Loader2,
   Layers,
-  Sparkles,
-  XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 
 import { useToastStore } from '@/stores/use-toast-store';
+import { getApiErrorMessage } from '@/api/api-error';
 
 export default function PostDetailPage() {
   const { orgId, campId, postId } = useParams<{ orgId: string, campId: string, postId: string }>();
@@ -51,10 +50,6 @@ export default function PostDetailPage() {
     queryKey: ['post', postId],
     queryFn: () => postsService.getById(postId!),
     enabled: !!postId && hasAccess,
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      return data?.aiGenerationStatus === 'GENERATING' ? 5000 : false;
-    },
   });
 
   const { data: comments } = useQuery({
@@ -72,22 +67,9 @@ export default function PostDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['post-comments', postId] });
       addToast("Status do post atualizado!", "success");
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || "Erro ao atualizar status.";
-      addToast(message, "error");
+    onError: (error: unknown) => {
+      addToast(getApiErrorMessage(error, 'Erro ao atualizar status.'), 'error');
     }
-  });
-
-  const generateWithClaudeMutation = useMutation({
-    mutationFn: () => postsService.generateWithClaude(postId!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['post', postId] });
-      addToast('Geração de arte iniciada! Acompanhe o status abaixo.', 'success');
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Erro ao iniciar geração de arte.';
-      addToast(message, 'error');
-    },
   });
 
   const handleRequestAdjustment = async (comment: string) => {
@@ -125,7 +107,8 @@ export default function PostDetailPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
+    } catch {
+      // Falha no download via blob (CORS, rede): abre em nova aba como fallback.
       window.open(url, '_blank');
     }
   };
@@ -240,47 +223,6 @@ export default function PostDetailPage() {
                   </div>
                 </div>
               </div>
-
-              {/* GERAR COM CLAUDE - Admin only, no artwork yet */}
-              {isAdmin && (
-                <div className="mt-8 pt-6 border-t border-white/5">
-                  {post.aiGenerationStatus === 'GENERATING' ? (
-                    <div className="flex flex-col items-center gap-3 py-4 bg-primary/5 border border-primary/20 rounded-2xl">
-                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                      <p className="text-sm font-bold text-primary">Gerando arte com Claude...</p>
-                      <p className="text-[10px] text-zinc-500">Esta página atualiza automaticamente.</p>
-                    </div>
-                  ) : post.aiGenerationStatus === 'FAILED' ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 py-3 px-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400">
-                        <XCircle className="w-4 h-4 shrink-0" />
-                        <span className="text-xs font-medium">Geração anterior falhou. Tente novamente.</span>
-                      </div>
-                      <button
-                        onClick={() => generateWithClaudeMutation.mutate()}
-                        disabled={generateWithClaudeMutation.isPending}
-                        className="w-full flex items-center justify-center gap-2 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 px-6 py-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-50"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        Tentar Novamente com Claude
-                      </button>
-                    </div>
-                  ) : !post.currentVersionId ? (
-                    <button
-                      onClick={() => generateWithClaudeMutation.mutate()}
-                      disabled={generateWithClaudeMutation.isPending}
-                      className="w-full flex items-center justify-center gap-2 bg-brand-gradient hover:opacity-90 px-6 py-4 rounded-2xl font-bold transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] disabled:opacity-50"
-                    >
-                      {generateWithClaudeMutation.isPending ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Sparkles className="w-5 h-5" />
-                      )}
-                      GERAR COM CLAUDE
-                    </button>
-                  ) : null}
-                </div>
-              )}
 
               {/* Approval Panel - Only for CLIENT */}
               {isClient && (

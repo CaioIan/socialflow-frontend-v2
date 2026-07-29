@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { usersService, type UserWithOrgs } from '../api/users-service';
 import { organizationsService } from '@/features/organizations/api/organizations-service';
 import { useToastStore } from '@/stores/use-toast-store';
+import { getApiErrorMessage } from '@/api/api-error';
 
 interface LinkOrganizationModalProps {
   isOpen: boolean;
@@ -38,8 +39,8 @@ export function LinkOrganizationModal({ isOpen, onClose, user }: LinkOrganizatio
       addToast('Usuário vinculado com sucesso!', 'success');
       onClose();
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Erro ao vincular usuário';
+    onError: (error: unknown) => {
+      const message = getApiErrorMessage(error, 'Erro ao vincular usuário');
       addToast(message, 'error');
     }
   });

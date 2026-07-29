@@ -24,10 +24,9 @@ import { EditPostModal } from './edit-post-modal';
 import { DeletePostModal } from './delete-post-modal';
 import { UploadVersionModal } from './upload-version-modal';
 import { PostActionsMenu } from './post-actions-menu';
-import { CampaignPlanningPanel } from '@/features/campaigns/components/campaign-planning-panel';
-import { Upload, BookOpen } from 'lucide-react';
+import { Upload } from 'lucide-react';
 
-type TabType = 'pending' | 'approved' | 'planning';
+type TabType = 'pending' | 'approved';
 
 export default function PostsPage() {
   const { orgId, id: campaignId } = useParams<{ orgId: string, id: string }>();
@@ -169,39 +168,23 @@ export default function PostsPage() {
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-400" />
           )}
         </button>
-
-        <button
-          onClick={() => setActiveTab('planning')}
-          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg shrink-0 ${activeTab === 'planning'
-              ? 'bg-primary/20 text-primary'
-              : 'bg-primary/5 text-primary/60'
-            }`}
-        >
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            <span>Planejamento</span>
-          </div>
-          {activeTab === 'planning' && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary" />
-          )}
-        </button>
       </div>
 
-      {/* Planning tab content */}
-      {activeTab === 'planning' && (
-        <CampaignPlanningPanel campaignId={campaignId!} isAdmin={isAdmin} />
-      )}
-
-      {/* Posts grid — hidden when planning tab is active */}
-      {activeTab !== 'planning' && (
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         {displayedPosts.map((post, index) => {
           const status = getStatusConfig(post.status);
           const Icon = status.icon;
 
-          // Buscar o asset mais recente do tipo FEED
+          // Buscar o asset mais recente de cada tipo — posts só de Stories (sem Feed)
+          // precisam cair pra capa de Stories, senão o card fica sem prévia nenhuma.
           const feedAsset = post.assets?.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'FEED');
-          const previewUrl = post.currentVersion?.feedUrls?.[0] || feedAsset?.cloudinaryUrl || null;
+          const storiesAsset = post.assets?.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'STORIES');
+          const previewUrl =
+            post.currentVersion?.feedUrls?.[0] ||
+            feedAsset?.cloudinaryUrl ||
+            post.currentVersion?.storiesUrl ||
+            storiesAsset?.cloudinaryUrl ||
+            null;
 
           return (
             <motion.div
@@ -295,7 +278,7 @@ export default function PostsPage() {
 
                       {/* Ações à direita */}
                       <div className="flex gap-2 shrink-0">
-                        {(isAdmin || isDesigner) && (!post.currentVersionId || post.status === 'ALTERATION_REQUESTED') && (post.aiGenerationStatus !== 'GENERATING') && (
+                        {(isAdmin || isDesigner) && (!post.currentVersionId || post.status === 'ALTERATION_REQUESTED') && (
                           <button
                             onClick={(e) => {
                               e.preventDefault();
@@ -365,7 +348,6 @@ export default function PostsPage() {
           </div>
         )}
       </div>
-      )} {/* end activeTab !== 'planning' */}
 
       <CreatePostModal
         isOpen={isCreateModalOpen}

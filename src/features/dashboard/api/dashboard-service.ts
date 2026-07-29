@@ -1,91 +1,64 @@
 import api from '@/api/axios';
 
+export type PostStatus = 'PENDING' | 'ALTERATION_REQUESTED' | 'APPROVED' | 'CANCELLED';
+
 export interface OverviewStats {
   totalOrganizations: number;
   totalUsers: number;
   totalDesigners: number;
   totalClients: number;
   activeCampaigns: number;
-  posts: {
-    PENDING: number;
-    ALTERATION_REQUESTED: number;
-    APPROVED: number;
-    CANCELLED: number;
-  };
+  posts: Record<PostStatus, number>;
   pendingPostsTotal: number;
 }
 
-export interface RecentApproval {
+export interface StatsPostListItem {
   id: string;
-  postId: string;
+  organizationId: string;
+  organizationName: string;
+  campaignId: string;
   campaignTitle: string;
-  approvedBy: string;
-  approvedAt: string;
+  captionFixed: string;
   scheduledFor: string;
+  status: PostStatus;
+  createdAt: string;
 }
 
-export interface PostsByStatus {
-  PENDING: number;
-  ALTERATION_REQUESTED: number;
-  APPROVED: number;
-  CANCELLED: number;
+export interface StatsPostsList {
+  items: StatsPostListItem[];
+  total: number;
 }
 
-export interface Organization {
-  id: string;
-  name: string;
-  slug: string;
+export interface StatsTimelinePoint {
+  date: string;
+  created: number;
+  approved: number;
 }
+
+export type PeriodDays = 7 | 30 | 90;
 
 class DashboardService {
   async getOverview(organizationId?: string): Promise<OverviewStats> {
-    try {
-      const params = organizationId ? { organizationId } : {};
-      const response = await api.get<OverviewStats>('/stats/overview', { params });
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch overview stats:', error);
-      throw error;
-    }
+    const params = organizationId ? { organizationId } : {};
+    const response = await api.get<OverviewStats>('/stats/overview', { params });
+    return response.data;
   }
 
-  async getRecentApprovals(
+  async getPostsByStatus(
+    status: PostStatus,
     organizationId?: string,
-    limit: number = 10,
-  ): Promise<RecentApproval[]> {
-    try {
-      const params = organizationId ? { organizationId, limit } : { limit };
-      const response = await api.get<RecentApproval[]>('/stats/recent-approvals', {
-        params,
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch recent approvals:', error);
-      throw error;
-    }
+    skip = 0,
+    take = 20,
+  ): Promise<StatsPostsList> {
+    const params = { status, skip, take, ...(organizationId ? { organizationId } : {}) };
+    const response = await api.get<StatsPostsList>('/stats/posts', { params });
+    return response.data;
   }
 
-  async getPostsByStatus(organizationId?: string): Promise<PostsByStatus> {
-    try {
-      const params = organizationId ? { organizationId } : {};
-      const response = await api.get<PostsByStatus>('/stats/posts-by-status', {
-        params,
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch posts by status:', error);
-      throw error;
-    }
-  }
-
-  async getOrganizations(): Promise<Organization[]> {
-    try {
-      const response = await api.get<Organization[]>('/stats/organizations');
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch organizations:', error);
-      throw error;
-    }
+  async getPostsTimeline(days: PeriodDays, organizationId?: string): Promise<StatsTimelinePoint[]> {
+    const params = { days, ...(organizationId ? { organizationId } : {}) };
+    const response = await api.get<StatsTimelinePoint[]>('/stats/posts-timeline', { params });
+    return response.data;
   }
 }
 

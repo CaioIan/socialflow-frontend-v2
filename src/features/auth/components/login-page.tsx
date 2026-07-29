@@ -8,6 +8,7 @@ import { loginSchema, type LoginFormData } from '../schemas/login-schema';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useToastStore } from '@/stores/use-toast-store';
 import { GlassCard } from '@/shared/components/glass-card';
+import { getApiErrorMessage } from '@/api/api-error';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -26,12 +27,11 @@ export default function LoginPage() {
     onSuccess: (data) => {
       setAuth(data.user, data.organizations);
       addToast('Login realizado com sucesso!', 'success');
-      const from = (location.state as any)?.from?.pathname || '/organizations';
+      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/organizations';
       navigate(from, { replace: true });
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Credenciais inválidas ou erro no servidor.';
-      addToast(message, 'error');
+    onError: (error: unknown) => {
+      addToast(getApiErrorMessage(error, 'Credenciais inválidas ou erro no servidor.'), 'error');
     },
   });
 

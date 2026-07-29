@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal } from '@/shared/components/modal';
 import api from '@/api/axios';
 import { Loader2, Upload, CheckCircle, AlertTriangle } from 'lucide-react';
+import type { Post } from '../api/posts-service';
 
 interface ReplaceAssetModalProps {
   isOpen: boolean;
@@ -47,11 +48,8 @@ export function ReplaceAssetModal({
   React.useEffect(() => {
     if (!isOpen) return;
 
-    console.log('Modal opened with:', { initialAssetId, currentAssetUrl, postId });
-
     // If initialAssetId is provided and is valid UUID, use it directly
     if (initialAssetId && isValidUUID(initialAssetId)) {
-      console.log('Using provided asset ID:', initialAssetId);
       setResolvedAssetId(initialAssetId);
       return;
     }
@@ -59,25 +57,15 @@ export function ReplaceAssetModal({
     // Try to resolve from URL
     if (currentAssetUrl && !resolvedAssetId) {
       setIsResolvingId(true);
-      console.log('Resolving asset from URL:', currentAssetUrl);
-      
-      api.get(`/posts/${postId}`)
-        .then((response: any) => {
+
+      api.get<Post>(`/posts/${postId}`)
+        .then((response) => {
           const post = response.data;
-          console.log('Post data received, assets:', post.assets);
-          const foundAsset = post.assets?.find((a: any) => a.cloudinaryUrl === currentAssetUrl);
-          console.log('Found asset:', foundAsset);
+          const foundAsset = post.assets?.find((a) => a.cloudinaryUrl === currentAssetUrl);
           if (foundAsset?.id && isValidUUID(foundAsset.id)) {
-            console.log('Resolved valid asset ID:', foundAsset.id);
             setResolvedAssetId(foundAsset.id);
-          } else {
-            console.error('Found asset but invalid ID format:', foundAsset?.id);
-            if (post.assets?.length === 0) {
-              console.error('No assets found in post - backend may not be creating them');
-            }
           }
         })
-        .catch(err => console.error('Failed to resolve asset ID:', err))
         .finally(() => setIsResolvingId(false));
     }
   }, [isOpen]);
@@ -90,8 +78,6 @@ export function ReplaceAssetModal({
       const formData = new FormData();
       formData.append('file', file);
 
-      console.log('Uploading with asset ID:', resolvedAssetId);
-
       const response = await api.patch(`/assets/${resolvedAssetId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -100,35 +86,34 @@ export function ReplaceAssetModal({
       return response.data;
     },
     onSuccess: (data) => {
-      console.log('Asset replaced successfully. Updating caches...', { campaignId, postId, resolvedAssetId });
-
       // Atualizar o cache da página de detalhes do post
-      queryClient.setQueryData(['post', postId], (oldData: any) => {
-        if (!oldData) return oldData;
+      queryClient.setQueryData(['post', postId], (oldData: Post | undefined) => {
+        if (!oldData?.assets) return oldData;
 
-        const updatedAssets = oldData.assets.map((asset: any) => 
-          asset.id === resolvedAssetId ? { ...asset, cloudinaryUrl: data.cloudinaryUrl, createdAt: new Date().toISOString() } : asset
+        const updatedAssets = oldData.assets.map((asset) =>
+          asset.id === resolvedAssetId
+            ? { ...asset, cloudinaryUrl: data.cloudinaryUrl, createdAt: new Date().toISOString() }
+            : asset,
         );
 
         return { ...oldData, assets: updatedAssets };
       });
 
       // Atualizar o cache do grid de posts
-      queryClient.setQueryData(['posts', campaignId], (oldData: any) => {
-        console.log('Updating posts cache for campaignId:', campaignId, 'Old data:', oldData);
+      queryClient.setQueryData(['posts', campaignId], (oldData: Post[] | undefined) => {
         if (!Array.isArray(oldData)) return oldData;
 
-        const updated = oldData.map((post: any) => {
-          if (post.id !== postId) return post;
+        return oldData.map((post) => {
+          if (post.id !== postId || !post.assets) return post;
 
-          const updatedAssets = post.assets.map((asset: any) => 
-            asset.id === resolvedAssetId ? { ...asset, cloudinaryUrl: data.cloudinaryUrl, createdAt: new Date().toISOString() } : asset
+          const updatedAssets = post.assets.map((asset) =>
+            asset.id === resolvedAssetId
+              ? { ...asset, cloudinaryUrl: data.cloudinaryUrl, createdAt: new Date().toISOString() }
+              : asset,
           );
 
           return { ...post, assets: updatedAssets };
         });
-        console.log('Updated posts cache:', updated);
-        return updated;
       });
 
       // Invalidar para garantir que dados "não-críticos" sejam atualizados em segundo plano

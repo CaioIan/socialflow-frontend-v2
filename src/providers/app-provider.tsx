@@ -22,7 +22,8 @@ function AuthBoot({ children }: { children: ReactNode }) {
       try {
         const data = await authService.me();
         setUser(data.user);
-      } catch (error) {
+      } catch {
+        // Sem sessão válida: libera a UI para a tela de login.
         setIsCheckingAuth(false);
       }
     }

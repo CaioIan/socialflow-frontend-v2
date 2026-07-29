@@ -6,7 +6,7 @@ export interface Campaign {
   title: string;
   referenceYear: number | null;
   referenceMonth: number | null;
-  isActive: boolean;
+  postsCount: number;
   createdAt: string;
 }
 
@@ -32,7 +32,7 @@ export const campaignsService = {
     return response.data;
   },
 
-  deactivate: async (id: string) => {
+  deleteCampaign: async (id: string) => {
     await api.delete(`/campaigns/${id}`);
   }
 };

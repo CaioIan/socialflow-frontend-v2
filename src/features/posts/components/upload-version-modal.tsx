@@ -1,9 +1,9 @@
-import * as React from 'react';
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal } from '@/shared/components/modal';
 import { postsService } from '../api/posts-service';
 import { Loader2, ImageIcon, Layers, Upload, CheckCircle, Plus, X } from 'lucide-react';
+import { getApiErrorMessage } from '@/api/api-error';
 
 interface UploadVersionModalProps {
   isOpen: boolean;
@@ -87,8 +87,8 @@ export function UploadVersionModal({ isOpen, onClose, postId, campaignId }: Uplo
         onClose();
       }, 1500);
     },
-    onError: (err: any) => {
-      setError(err?.message || 'Erro ao enviar artes.');
+    onError: (err: unknown) => {
+      setError(getApiErrorMessage(err, err instanceof Error ? err.message : 'Erro ao enviar artes.'));
       setUploadStatus('idle');
     },
   });

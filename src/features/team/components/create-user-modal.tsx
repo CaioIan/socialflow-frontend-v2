@@ -6,6 +6,7 @@ import { GlassCard } from '@/shared/components/glass-card';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersService } from '../api/users-service';
 import { useToastStore } from '@/stores/use-toast-store';
+import { getApiErrorMessage } from '@/api/api-error';
 
 interface CreateUserModalProps {
   isOpen: boolean;
@@ -38,8 +39,8 @@ export function CreateUserModal({ isOpen, onClose, defaultRole }: CreateUserModa
       onClose();
       setFormData({ name: '', email: '', password: '', role: defaultRole });
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Erro ao criar usuário';
+    onError: (error: unknown) => {
+      const message = getApiErrorMessage(error, 'Erro ao criar usuário');
       addToast(message, 'error');
     }
   });
@@ -127,7 +128,7 @@ export function CreateUserModal({ isOpen, onClose, defaultRole }: CreateUserModa
                   <label className="text-sm font-medium text-zinc-300">Papel (Role)</label>
                   <select
                     value={formData.role}
-                    onChange={e => setFormData({ ...formData, role: e.target.value as any })}
+                    onChange={e => setFormData({ ...formData, role: e.target.value as CreateUserModalProps['defaultRole'] })}
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
                   >
                     <option value="ADMIN" className="bg-zinc-900">Administrador</option>
