@@ -1,34 +1,29 @@
-import type { Organization } from '../api/dashboard-service';
+import { useQuery } from '@tanstack/react-query';
+import { organizationsService } from '@/features/organizations/api/organizations-service';
 
 interface OrganizationFilterProps {
-  organizations: Organization[];
-  selectedId: string | undefined;
-  onSelect: (id: string | undefined) => void;
+  value: string | undefined;
+  onChange: (value: string | undefined) => void;
 }
 
-export function OrganizationFilter({ organizations, selectedId, onSelect }: OrganizationFilterProps) {
-  if (!organizations || organizations.length === 0) {
-    return null;
-  }
+export function OrganizationFilter({ value, onChange }: OrganizationFilterProps) {
+  const { data: organizations = [] } = useQuery({
+    queryKey: ['organizations'],
+    queryFn: organizationsService.getAll,
+  });
 
   return (
-    <div className="flex items-center gap-4 bg-white rounded-lg border border-gray-200 p-4 backdrop-blur-sm">
-      <label htmlFor="org-filter" className="font-medium text-gray-700 whitespace-nowrap">
-        Filtrar por Organização:
-      </label>
-      <select
-        id="org-filter"
-        value={selectedId || ''}
-        onChange={(e) => onSelect(e.target.value || undefined)}
-        className="rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 flex-1"
-      >
-        <option value="">Todas as organizações</option>
-        {organizations.map((org) => (
-          <option key={org.id} value={org.id}>
-            {org.name}
-          </option>
-        ))}
-      </select>
-    </div>
+    <select
+      value={value ?? ''}
+      onChange={(e) => onChange(e.target.value || undefined)}
+      className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+    >
+      <option value="">Todas as organizações</option>
+      {organizations.map((org) => (
+        <option key={org.id} value={org.id}>
+          {org.name}
+        </option>
+      ))}
+    </select>
   );
 }

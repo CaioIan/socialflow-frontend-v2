@@ -75,11 +75,11 @@ export function AdjustmentRequestModal({
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-300">Onde o ajuste deve ser feito?</label>
                   <div className="grid grid-cols-3 gap-2">
-                    {['GENERAL', 'FEED', 'STORIES'].map((t) => (
+                    {(['GENERAL', 'FEED', 'STORIES'] as const).map((t) => (
                       <button
                         key={t}
                         type="button"
-                        onClick={() => setTarget(t as any)}
+                        onClick={() => setTarget(t)}
                         className={`py-2 px-3 rounded-xl text-xs font-bold transition-colors ${
                           target === t
                             ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'

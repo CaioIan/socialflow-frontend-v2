@@ -1,5 +1,5 @@
 import api from '@/api/axios';
-import type { LoginResponse } from '../types';
+import type { LoginResponse, User } from '../types';
 import type { LoginFormData } from '../schemas/login-schema';
 
 export const authService = {
@@ -18,7 +18,7 @@ export const authService = {
     return response.data;
   },
 
-  selectOrganization: async (organizationId: string): Promise<{ user: any }> => {
+  selectOrganization: async (organizationId: string): Promise<{ user: User }> => {
     const response = await api.post('/auth/select-organization', { organizationId });
     return response.data;
   }

@@ -9,7 +9,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { organizationsService } from '@/features/organizations/api/organizations-service';
 import { campaignsService } from '../api/campaigns-service';
 import { CreateCampaignModal } from './create-campaign-modal';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
+import type { Campaign } from '../api/campaigns-service';
 
 export default function CampaignsPage() {
   const navigate = useNavigate();
@@ -19,11 +21,12 @@ export default function CampaignsPage() {
   const { addToast } = useToastStore();
   useOrganizationAccess(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<any>(undefined);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | undefined>(undefined);
+  const [campaignPendingDelete, setCampaignPendingDelete] = useState<{ id: string; title: string; postsCount: number } | undefined>(undefined);
   
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
 
-  const handleEdit = (campaign: any) => {
+  const handleEdit = (campaign: Campaign) => {
     setEditingCampaign(campaign);
     setIsModalOpen(true);
   };
@@ -46,14 +49,16 @@ export default function CampaignsPage() {
     queryFn: campaignsService.getAll,
   });
 
-  const deactivateMutation = useMutation({
-    mutationFn: campaignsService.deactivate,
+  const deleteMutation = useMutation({
+    mutationFn: campaignsService.deleteCampaign,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns', id] });
-      addToast('Campanha arquivada com sucesso!', 'success');
+      addToast('Campanha excluída com sucesso.', 'success');
+      setCampaignPendingDelete(undefined);
     },
     onError: () => {
-      addToast('Erro ao arquivar campanha.', 'error');
+      addToast('Erro ao excluir campanha.', 'error');
+      setCampaignPendingDelete(undefined);
     },
   });
 
@@ -118,15 +123,13 @@ export default function CampaignsPage() {
                   >
                     <Edit2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
                   </button>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if(window.confirm('Deseja realmente arquivar esta campanha?')) {
-                        deactivateMutation.mutate(campaign.id);
-                      }
+                      setCampaignPendingDelete({ id: campaign.id, title: campaign.title, postsCount: campaign.postsCount });
                     }}
-                    title="Arquivar Campanha"
-                    aria-label="Arquivar Campanha"
+                    title="Excluir Campanha"
+                    aria-label="Excluir Campanha"
                     className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-black/40 md:bg-black/20 hover:bg-red-500/20 text-white md:text-zinc-400 md:hover:text-red-400 transition-all backdrop-blur-md shadow-xl border border-white/5 active:scale-90"
                   >
                     <Trash2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
@@ -137,12 +140,6 @@ export default function CampaignsPage() {
               <div className="flex items-start justify-between mb-6">
                 <div className="w-12 h-12 rounded-xl bg-brand-gradient flex items-center justify-center text-white transition-all shadow-[0_0_15px_oklch(var(--primary)/0.3)]">
                   <FolderKanban className="w-6 h-6" />
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 block">Status</span>
-                  <span className={`text-xs font-bold ${campaign.isActive ? 'text-emerald-500' : 'text-zinc-500'}`}>
-                    {campaign.isActive ? 'Ativa' : 'Arquivada'}
-                  </span>
                 </div>
               </div>
 
@@ -177,10 +174,34 @@ export default function CampaignsPage() {
         )}
       </div>
 
-      <CreateCampaignModal 
-        isOpen={isModalOpen} 
-        onClose={handleCloseModal} 
+      <CreateCampaignModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
         initialData={editingCampaign}
+      />
+
+      <ConfirmDialog
+        isOpen={!!campaignPendingDelete}
+        onClose={() => !deleteMutation.isPending && setCampaignPendingDelete(undefined)}
+        onConfirm={() => campaignPendingDelete && deleteMutation.mutate(campaignPendingDelete.id)}
+        title="Excluir campanha permanentemente?"
+        description={
+          <>
+            <strong className="text-zinc-300">{campaignPendingDelete?.title}</strong>
+            {campaignPendingDelete && campaignPendingDelete.postsCount > 0 ? (
+              <>
+                {' '}e <strong className="text-red-400">todos os {campaignPendingDelete.postsCount} posts</strong> vinculados
+                a ela (incluindo artes, versões, comentários e histórico) serão excluídos permanentemente.
+              </>
+            ) : (
+              ' será excluída permanentemente.'
+            )}{' '}
+            Esta ação não pode ser desfeita.
+          </>
+        }
+        confirmLabel="Excluir Permanentemente"
+        confirmingLabel="Excluindo..."
+        isConfirming={deleteMutation.isPending}
       />
     </div>
   );

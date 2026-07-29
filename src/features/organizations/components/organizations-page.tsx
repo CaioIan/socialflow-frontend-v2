@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { GlassCard } from '@/shared/components/glass-card';
-import { Building2, ArrowRight, Plus, Loader2, Edit2, Trash2, Webhook, Sparkles } from 'lucide-react';
+import { Building2, ArrowRight, Plus, Loader2, Edit2, Trash2, Webhook } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/features/auth/api/auth-service';
@@ -10,7 +10,7 @@ import { organizationsService } from '../api/organizations-service';
 import { useNavigate } from 'react-router-dom';
 import { CreateOrganizationModal } from './create-organization-modal';
 import { WebhookConfigModal } from './webhook-config-modal';
-import { AiConfigModal } from './ai-config-modal';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
 
 export default function OrganizationsPage() {
@@ -20,10 +20,9 @@ export default function OrganizationsPage() {
   const { addToast } = useToastStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
-  const [isAiConfigModalOpen, setIsAiConfigModalOpen] = useState(false);
-  const [aiConfigOrg, setAiConfigOrg] = useState<{ id: string; name: string } | null>(null);
   const [editingOrg, setEditingOrg] = useState<{ id: string, name: string } | undefined>(undefined);
   const [webhookOrg, setWebhookOrg] = useState<{ id: string, name: string, n8nWebhookUrl?: string, webhookToken?: string, webhookHeaderName?: string } | undefined>(undefined);
+  const [orgPendingDelete, setOrgPendingDelete] = useState<{ id: string, name: string } | undefined>(undefined);
 
   const role = user?.role?.toUpperCase();
   const isAdmin = role === 'ADMIN';
@@ -73,9 +72,11 @@ export default function OrganizationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
       addToast('Organização desativada com sucesso!', 'success');
+      setOrgPendingDelete(undefined);
     },
     onError: () => {
       addToast('Erro ao desativar organização.', 'error');
+      setOrgPendingDelete(undefined);
     },
   });
 
@@ -143,18 +144,6 @@ export default function OrganizationsPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setAiConfigOrg({ id: orgId, name: org.name });
-                        setIsAiConfigModalOpen(true);
-                      }}
-                      title="Configurar IA"
-                      aria-label="Configurar IA"
-                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-brand-gradient text-white transition-all shadow-[0_5px_25px_oklch(var(--primary)/0.6)] active:scale-90 cursor-pointer"
-                    >
-                      <Sparkles className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
                         handleWebhookConfig({
                           id: orgId,
                           name: org.name,
@@ -183,9 +172,7 @@ export default function OrganizationsPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (window.confirm('Deseja realmente desativar esta organização?')) {
-                          deleteMutation.mutate(orgId);
-                        }
+                        setOrgPendingDelete({ id: orgId, name: org.name });
                       }}
                       title="Desativar Organização"
                       aria-label="Desativar Organização"
@@ -271,14 +258,21 @@ export default function OrganizationsPage() {
         />
       )}
 
-      {aiConfigOrg && (
-        <AiConfigModal
-          isOpen={isAiConfigModalOpen}
-          onClose={() => { setIsAiConfigModalOpen(false); setAiConfigOrg(null); }}
-          organizationId={aiConfigOrg.id}
-          organizationName={aiConfigOrg.name}
-        />
-      )}
+      <ConfirmDialog
+        isOpen={!!orgPendingDelete}
+        onClose={() => !deleteMutation.isPending && setOrgPendingDelete(undefined)}
+        onConfirm={() => orgPendingDelete && deleteMutation.mutate(orgPendingDelete.id)}
+        title="Desativar organização?"
+        description={
+          <>
+            <strong className="text-zinc-300">{orgPendingDelete?.name}</strong> deixará de aparecer na lista.
+            Essa ação pode ser revertida depois reativando a organização.
+          </>
+        }
+        confirmLabel="Confirmar Desativação"
+        confirmingLabel="Desativando..."
+        isConfirming={deleteMutation.isPending}
+      />
     </div>
   );
 }

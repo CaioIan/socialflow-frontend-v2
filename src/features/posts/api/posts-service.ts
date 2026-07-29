@@ -1,7 +1,6 @@
 import api from '@/api/axios';
 
 export type PostStatus = 'PENDING' | 'ALTERATION_REQUESTED' | 'APPROVED' | 'CANCELLED';
-export type AiGenerationStatus = 'IDLE' | 'GENERATING' | 'COMPLETED' | 'FAILED';
 
 export interface StatusHistoryRecord {
   id: string;
@@ -23,7 +22,6 @@ export interface Post {
   briefing: string | null;
   captionFixed: string;
   status: PostStatus;
-  aiGenerationStatus: AiGenerationStatus;
   assignedDesignerId: string | null;
   currentVersionId: string | null;
   createdAt: string;
@@ -185,11 +183,6 @@ export const postsService = {
     formData.append('campaignId', campaignId);
 
     const response = await api.post<ImportPostsResult>('/posts/import', formData);
-    return response.data;
-  },
-
-  generateWithClaude: async (postId: string) => {
-    const response = await api.post<Post>(`/posts/${postId}/generate`);
     return response.data;
   },
 };

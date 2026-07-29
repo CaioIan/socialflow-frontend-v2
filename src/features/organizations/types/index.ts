@@ -12,7 +12,8 @@ export interface Organization {
 
 export interface CreateOrganizationRequest {
   name: string;
-  slug: string;
+  /** Derivado do `name` pelo organizations-service; não enviar manualmente. */
+  slug?: string;
   n8nWebhookUrl?: string;
   webhookToken?: string;
   webhookHeaderName?: string;
@@ -20,7 +21,8 @@ export interface CreateOrganizationRequest {
 
 export interface UpdateOrganizationRequest {
   name: string;
-  slug: string;
+  /** Derivado do `name` pelo organizations-service; não enviar manualmente. */
+  slug?: string;
   n8nWebhookUrl?: string;
   webhookToken?: string;
   webhookHeaderName?: string;

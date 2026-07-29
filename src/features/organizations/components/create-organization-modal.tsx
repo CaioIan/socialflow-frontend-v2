@@ -21,17 +21,6 @@ interface CreateOrganizationModalProps {
 }
 
 // 🔥 Função de slug (centralizada no front)
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
 export function CreateOrganizationModal({
   isOpen,
   onClose,
@@ -62,7 +51,7 @@ export function CreateOrganizationModal({
   }, [initialData, setValue, reset]);
 
   const mutation = useMutation({
-    mutationFn: (data: any) =>
+    mutationFn: (data: CreateOrgForm) =>
       isEditing
         ? organizationsService.update(initialData!.id, data)
         : organizationsService.create(data),
@@ -75,13 +64,8 @@ export function CreateOrganizationModal({
   });
 
   const onSubmit: SubmitHandler<CreateOrgForm> = (data) => {
-    const payload = {
-      name: data.name,
-      slug: slugify(data.name),
-      isActive: true,
-    };
-
-    mutation.mutate(payload);
+    // O slug é derivado do nome dentro do organizations-service — não duplicar aqui.
+    mutation.mutate({ name: data.name });
   };
 
   return (
