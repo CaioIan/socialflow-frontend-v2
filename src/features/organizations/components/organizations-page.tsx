@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { GlassCard } from '@/shared/components/glass-card';
-import { Building2, ArrowRight, Plus, Loader2, Edit2, Trash2, Webhook } from 'lucide-react';
+import { Building2, ArrowRight, Plus, Loader2, Edit2, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/features/auth/api/auth-service';
 import { organizationsService } from '../api/organizations-service';
 import { useNavigate } from 'react-router-dom';
 import { CreateOrganizationModal } from './create-organization-modal';
-import { WebhookConfigModal } from './webhook-config-modal';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
 
@@ -19,9 +18,7 @@ export default function OrganizationsPage() {
   const { user, setCurrentOrganization, currentOrganizationId } = useAuthStore();
   const { addToast } = useToastStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<{ id: string, name: string } | undefined>(undefined);
-  const [webhookOrg, setWebhookOrg] = useState<{ id: string, name: string, n8nWebhookUrl?: string, webhookToken?: string, webhookHeaderName?: string } | undefined>(undefined);
   const [orgPendingDelete, setOrgPendingDelete] = useState<{ id: string, name: string } | undefined>(undefined);
 
   const role = user?.role?.toUpperCase();
@@ -40,19 +37,9 @@ export default function OrganizationsPage() {
     setIsCreateModalOpen(true);
   };
 
-  const handleWebhookConfig = (org: { id: string, name: string, n8nWebhookUrl?: string, webhookToken?: string, webhookHeaderName?: string }) => {
-    setWebhookOrg(org);
-    setIsWebhookModalOpen(true);
-  };
-
   const handleCloseModal = () => {
     setIsCreateModalOpen(false);
     setEditingOrg(undefined);
-  };
-
-  const handleCloseWebhookModal = () => {
-    setIsWebhookModalOpen(false);
-    setWebhookOrg(undefined);
   };
 
   const selectMutation = useMutation({
@@ -144,23 +131,6 @@ export default function OrganizationsPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleWebhookConfig({
-                          id: orgId,
-                          name: org.name,
-                          n8nWebhookUrl: org.n8nWebhookUrl,
-                          webhookToken: org.webhookToken,
-                          webhookHeaderName: org.webhookHeaderName
-                        });
-                      }}
-                      title="Configurar Webhook"
-                      aria-label="Configurar Webhook"
-                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-brand-gradient text-white transition-all shadow-[0_5px_25px_oklch(var(--primary)/0.6)] active:scale-90 cursor-pointer"
-                    >
-                      <Webhook className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
                         handleEdit({ id: orgId, name: org.name });
                       }}
                       title="Editar Organização"
@@ -249,14 +219,6 @@ export default function OrganizationsPage() {
         onClose={handleCloseModal}
         initialData={editingOrg}
       />
-
-      {webhookOrg && (
-        <WebhookConfigModal
-          isOpen={isWebhookModalOpen}
-          onClose={handleCloseWebhookModal}
-          organization={webhookOrg}
-        />
-      )}
 
       <ConfirmDialog
         isOpen={!!orgPendingDelete}

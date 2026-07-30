@@ -14,6 +14,7 @@ const STATUS_LABEL: Record<PostStatus, string> = {
   PENDING: 'Posts Pendentes',
   ALTERATION_REQUESTED: 'Posts com Solicitação de Ajuste',
   APPROVED: 'Posts Aprovados',
+  PUBLISHED: 'Posts Publicados',
   CANCELLED: 'Posts Cancelados',
 };
 
