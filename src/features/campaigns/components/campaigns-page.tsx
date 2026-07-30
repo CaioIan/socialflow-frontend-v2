@@ -19,7 +19,7 @@ export default function CampaignsPage() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
-  useOrganizationAccess(id);
+  const { hasAccess, isLoading: isSyncingOrg } = useOrganizationAccess(id);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | undefined>(undefined);
   const [campaignPendingDelete, setCampaignPendingDelete] = useState<{ id: string; title: string; postsCount: number } | undefined>(undefined);
@@ -40,13 +40,16 @@ export default function CampaignsPage() {
   const { data: activeOrg, isLoading: isLoadingOrg } = useQuery({
     queryKey: ['organization', id],
     queryFn: () => organizationsService.getById(id!),
-    enabled: !!id
+    enabled: !!id && hasAccess
   });
 
   // Busca a lista real de campanhas
   const { data: campaigns = [], isLoading: isLoadingCampaigns } = useQuery({
     queryKey: ['campaigns', id],
     queryFn: campaignsService.getAll,
+    // Só busca depois que o token aponta para a organização da URL, senão viria
+    // a lista da organização anterior.
+    enabled: hasAccess,
   });
 
   const deleteMutation = useMutation({
@@ -62,7 +65,7 @@ export default function CampaignsPage() {
     },
   });
 
-  if (isLoadingOrg || isLoadingCampaigns) {
+  if (isSyncingOrg || isLoadingOrg || isLoadingCampaigns) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-zinc-500">
         <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />

@@ -1,36 +1,57 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/use-auth-store';
-import { useQuery } from '@tanstack/react-query';
-import { organizationsService } from '@/features/organizations/api/organizations-service';
+import { authService } from '@/features/auth/api/auth-service';
 
+/**
+ * Mantém o contexto de organização do token alinhado com a organização da URL.
+ *
+ * Campanhas e posts são sempre listados no escopo de uma organização, e o
+ * backend usa a organização do token — não a da URL. Sem essa sincronização,
+ * abrir `/organizations/:id/...` direto (link salvo, refresh, voltar do
+ * navegador) mostraria os dados da organização anterior, ou nenhum dado quando
+ * não há nenhuma selecionada.
+ *
+ * A troca é feita pelo endpoint de seleção, que revalida no servidor se o
+ * usuário pertence à organização — quem não pertence é mandado de volta para a
+ * lista, sem depender de checagem no cliente.
+ */
 export function useOrganizationAccess(organizationId: string | undefined) {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
-  const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+  const queryClient = useQueryClient();
+  const { user, currentOrganizationId, setCurrentOrganization } = useAuthStore();
 
-  const { data: organizations = [] } = useQuery({
-    queryKey: ['organizations', user?.id],
-    queryFn: organizationsService.getAll,
-    enabled: !!user?.id && !isAdmin,
-  });
+  // Evita disparar a troca repetidas vezes enquanto a requisição está em voo.
+  const syncingRef = useRef<string | null>(null);
+
+  const isSynced = currentOrganizationId === organizationId;
 
   useEffect(() => {
     if (!user || !organizationId) return;
+    if (isSynced) return;
+    if (syncingRef.current === organizationId) return;
 
-    // ADMINs podem acessar qualquer organização
-    if (isAdmin) return;
+    syncingRef.current = organizationId;
 
-    // Verificar se o usuário tem acesso a essa organização
-    const hasAccess = organizations.some(org => org.id === organizationId);
-
-    if (!hasAccess) {
-      navigate('/organizations', { replace: true });
-    }
-  }, [organizationId, organizations, user, isAdmin, navigate]);
+    authService
+      .selectOrganization(organizationId)
+      .then(() => {
+        setCurrentOrganization(organizationId);
+        // O token mudou de organização: o cache anterior é de outro escopo.
+        queryClient.invalidateQueries();
+      })
+      .catch(() => {
+        navigate('/organizations', { replace: true });
+      })
+      .finally(() => {
+        syncingRef.current = null;
+      });
+  }, [organizationId, isSynced, user, setCurrentOrganization, queryClient, navigate]);
 
   return {
-    hasAccess: isAdmin || organizations.some(org => org.id === organizationId),
-    isLoading: !isAdmin && organizations.length === 0 && !!user?.id,
+    /** Só libera as queries da página depois que o token aponta para a organização certa. */
+    hasAccess: !!organizationId && isSynced,
+    isLoading: !!organizationId && !isSynced,
   };
 }

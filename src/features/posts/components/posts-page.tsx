@@ -31,7 +31,7 @@ type TabType = 'pending' | 'approved';
 export default function PostsPage() {
   const { orgId, id: campaignId } = useParams<{ orgId: string, id: string }>();
   const { user } = useAuthStore();
-  useOrganizationAccess(orgId);
+  const { hasAccess, isLoading: isSyncingOrg } = useOrganizationAccess(orgId);
   const [activeTab, setActiveTab] = useState<TabType>('pending');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -49,14 +49,14 @@ export default function PostsPage() {
   const { data: campaign } = useQuery({
     queryKey: ['campaign', campaignId],
     queryFn: () => campaignsService.getAll().then(res => res.find(c => c.id === campaignId)),
-    enabled: !!campaignId
+    enabled: !!campaignId && hasAccess
   });
 
   // Lista de Posts
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['posts', campaignId],
     queryFn: () => postsService.getByCampaign(campaignId!),
-    enabled: !!campaignId
+    enabled: !!campaignId && hasAccess
   });
 
   // Filtrar posts por status - ambos mantêm ordem cronológica
@@ -77,7 +77,7 @@ export default function PostsPage() {
     }
   };
 
-  if (isLoading) {
+  if (isSyncingOrg || isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-zinc-500">
         <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
