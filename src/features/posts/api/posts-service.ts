@@ -1,6 +1,6 @@
 import api from '@/api/axios';
 
-export type PostStatus = 'PENDING' | 'ALTERATION_REQUESTED' | 'APPROVED' | 'CANCELLED';
+export type PostStatus = 'PENDING' | 'ALTERATION_REQUESTED' | 'APPROVED' | 'PUBLISHED' | 'CANCELLED';
 
 export interface StatusHistoryRecord {
   id: string;

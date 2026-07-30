@@ -11,6 +11,7 @@ const STATUS_CONFIG: Record<PostStatus, { label: string; color: string }> = {
   PENDING: { label: 'Pendentes', color: '#60a5fa' },
   ALTERATION_REQUESTED: { label: 'Solicitação de Ajuste', color: '#fbbf24' },
   APPROVED: { label: 'Aprovados', color: '#34d399' },
+  PUBLISHED: { label: 'Publicados', color: '#a78bfa' },
   CANCELLED: { label: 'Cancelados', color: '#71717a' },
 };
 

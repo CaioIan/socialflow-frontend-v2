@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Building2, AlertCircle, Clock, CheckCircle2, XCircle, Users, Palette, FolderKanban } from 'lucide-react';
+import { Building2, AlertCircle, Clock, CheckCircle2, XCircle, Send, Users, Palette, FolderKanban } from 'lucide-react';
 import dashboardService, { type PostStatus, type PeriodDays } from '../api/dashboard-service';
 import { GlassCard } from '@/shared/components/glass-card';
 import { StatCard } from './stat-card';
@@ -32,7 +32,7 @@ export function AdminDashboardPage() {
           <h1 className="text-3xl font-bold text-white">Dashboard Administrativo</h1>
           <p className="text-zinc-400 mt-1">Carregando dados...</p>
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {Array.from({ length: 4 }).map((_, i) => (
             <GlassCard key={i} className="p-8 h-40 animate-pulse bg-white/5"><div /></GlassCard>
           ))}
@@ -45,7 +45,7 @@ export function AdminDashboardPage() {
     );
   }
 
-  const posts = overview?.posts ?? { PENDING: 0, ALTERATION_REQUESTED: 0, APPROVED: 0, CANCELLED: 0 };
+  const posts = overview?.posts ?? { PENDING: 0, ALTERATION_REQUESTED: 0, APPROVED: 0, PUBLISHED: 0, CANCELLED: 0 };
 
   return (
     <div className="space-y-8">
@@ -58,7 +58,7 @@ export function AdminDashboardPage() {
       </div>
 
       {/* Posts por status — clicáveis, abrem o drill-down */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
           title="Posts Pendentes"
           value={posts.PENDING}
@@ -82,6 +82,14 @@ export function AdminDashboardPage() {
           colorClass="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20"
           textColorClass="text-emerald-400"
           onClick={() => setDrilldownStatus('APPROVED')}
+        />
+        <StatCard
+          title="Posts Publicados"
+          value={posts.PUBLISHED}
+          icon={Send}
+          colorClass="bg-gradient-to-br from-violet-500/10 to-violet-600/5 border-violet-500/20"
+          textColorClass="text-violet-400"
+          onClick={() => setDrilldownStatus('PUBLISHED')}
         />
         <StatCard
           title="Posts Cancelados"

@@ -11,6 +11,7 @@ import {
   AlertCircle,
   XCircle,
   Image as ImageIcon,
+  Send,
   Loader2,
   FileUp
 } from 'lucide-react';
@@ -26,7 +27,7 @@ import { UploadVersionModal } from './upload-version-modal';
 import { PostActionsMenu } from './post-actions-menu';
 import { Upload } from 'lucide-react';
 
-type TabType = 'pending' | 'approved';
+type TabType = 'pending' | 'approved' | 'published';
 
 export default function PostsPage() {
   const { orgId, id: campaignId } = useParams<{ orgId: string, id: string }>();
@@ -62,12 +63,19 @@ export default function PostsPage() {
   // Filtrar posts por status - ambos mantêm ordem cronológica
   const pendingPosts = posts.filter(p => p.status === 'PENDING' || p.status === 'ALTERATION_REQUESTED');
   const approvedPosts = posts.filter(p => p.status === 'APPROVED');
-  const displayedPosts = activeTab === 'pending' ? pendingPosts : approvedPosts;
+  // PUBLISHED sai da aba de aprovados: já passou do horário agendado.
+  const publishedPosts = posts.filter(p => p.status === 'PUBLISHED');
+  const displayedPosts =
+    activeTab === 'pending' ? pendingPosts
+    : activeTab === 'approved' ? approvedPosts
+    : publishedPosts;
 
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'APPROVED':
         return { label: 'Aprovado', color: 'text-emerald-400', bg: 'bg-emerald-500/10', icon: CheckCircle2 };
+      case 'PUBLISHED':
+        return { label: 'Publicado', color: 'text-violet-400', bg: 'bg-violet-500/10', icon: Send };
       case 'ALTERATION_REQUESTED':
         return { label: 'Alteração Solicitada', color: 'text-amber-400', bg: 'bg-amber-500/10', icon: AlertCircle };
       case 'CANCELLED':
@@ -166,6 +174,27 @@ export default function PostsPage() {
           </div>
           {activeTab === 'approved' && (
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-400" />
+          )}        </button>
+
+        <button
+          onClick={() => setActiveTab('published')}
+          className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg shrink-0 ${activeTab === 'published'
+              ? 'bg-violet-500/20 text-violet-400'
+              : 'bg-violet-500/5 text-violet-300'
+            }`}
+        >
+          <div className="flex items-center gap-2">
+            <Send className="w-4 h-4" />
+            <span>Publicados</span>
+            <span className={`px-2 py-1 rounded-full text-xs font-bold ${activeTab === 'published'
+                ? 'bg-violet-500/30 text-violet-200'
+                : 'bg-violet-500/10 text-violet-300'
+              }`}>
+              {publishedPosts.length}
+            </span>
+          </div>
+          {activeTab === 'published' && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-violet-400" />
           )}
         </button>
       </div>
