@@ -228,7 +228,7 @@ export default function PostDetailPage() {
               {isClient && (
                 <div className="mt-10 pt-8 border-t border-white/5">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    {post.status !== 'APPROVED' && (
+                    {post.status !== 'APPROVED' && post.status !== 'PUBLISHED' && (
                       <button
                         onClick={() => updateStatusMutation.mutate({ 
                           status: 'APPROVED', 
@@ -248,7 +248,8 @@ export default function PostDetailPage() {
                           updateStatusMutation.isPending ||
                           !post.currentVersionId ||
                           post.status === 'ALTERATION_REQUESTED' ||
-                          post.status === 'APPROVED'
+                          post.status === 'APPROVED' ||
+                          post.status === 'PUBLISHED'
                         }
                         className="flex-1 bg-amber-500 hover:bg-amber-400 text-black px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_rgba(245,158,11,0.2)] disabled:opacity-50 disabled:grayscale"
                       >
@@ -268,7 +269,13 @@ export default function PostDetailPage() {
                       <span className="font-bold text-sm uppercase tracking-wider">Este post foi aprovado!</span>
                     </div>
                   )}
-                  {post.status === 'APPROVED' && post.statusHistory && (
+                  {post.status === 'PUBLISHED' && (
+                    <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-4 flex items-center justify-center gap-3 text-violet-400">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-bold text-sm uppercase tracking-wider">Este post já foi publicado!</span>
+                    </div>
+                  )}
+                  {(post.status === 'APPROVED' || post.status === 'PUBLISHED') && post.statusHistory && (
                     (() => {
                       const approval = post.statusHistory.find(h => h.toStatus === 'APPROVED');
                       return approval ? (
