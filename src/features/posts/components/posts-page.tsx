@@ -259,7 +259,8 @@ export default function PostsPage() {
                     </div>
                   </div>
 
-                  {post.status === 'APPROVED' && post.statusHistory && (
+                  {/* Continua valendo depois de publicado: quem aprovou não muda. */}
+                  {(post.status === 'APPROVED' || post.status === 'PUBLISHED') && post.statusHistory && (
                     (() => {
                       const approval = post.statusHistory.find(h => h.toStatus === 'APPROVED');
                       return approval ? (
