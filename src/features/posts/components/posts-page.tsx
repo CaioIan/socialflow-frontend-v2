@@ -13,7 +13,9 @@ import {
   Image as ImageIcon,
   Send,
   Loader2,
-  FileUp
+  FileUp,
+  AlertTriangle,
+  ExternalLink
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -27,7 +29,7 @@ import { UploadVersionModal } from './upload-version-modal';
 import { PostActionsMenu } from './post-actions-menu';
 import { Upload } from 'lucide-react';
 
-type TabType = 'pending' | 'approved' | 'published';
+type TabType = 'pending' | 'approved' | 'published' | 'failed';
 
 export default function PostsPage() {
   const { orgId, id: campaignId } = useParams<{ orgId: string, id: string }>();
@@ -65,10 +67,13 @@ export default function PostsPage() {
   const approvedPosts = posts.filter(p => p.status === 'APPROVED');
   // PUBLISHED sai da aba de aprovados: já passou do horário agendado.
   const publishedPosts = posts.filter(p => p.status === 'PUBLISHED');
+  // FAILED tem aba própria: é o único estado que exige alguém agir.
+  const failedPosts = posts.filter(p => p.status === 'FAILED');
   const displayedPosts =
     activeTab === 'pending' ? pendingPosts
     : activeTab === 'approved' ? approvedPosts
-    : publishedPosts;
+    : activeTab === 'published' ? publishedPosts
+    : failedPosts;
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -76,6 +81,8 @@ export default function PostsPage() {
         return { label: 'Aprovado', color: 'text-emerald-400', bg: 'bg-emerald-500/10', icon: CheckCircle2 };
       case 'PUBLISHED':
         return { label: 'Publicado', color: 'text-violet-400', bg: 'bg-violet-500/10', icon: Send };
+      case 'FAILED':
+        return { label: 'Falha ao publicar', color: 'text-red-400', bg: 'bg-red-500/10', icon: AlertTriangle };
       case 'ALTERATION_REQUESTED':
         return { label: 'Alteração Solicitada', color: 'text-amber-400', bg: 'bg-amber-500/10', icon: AlertCircle };
       case 'CANCELLED':
@@ -197,6 +204,31 @@ export default function PostsPage() {
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-violet-400" />
           )}
         </button>
+
+        {/* Só aparece quando há falha: uma aba vazia e permanente vira ruído. */}
+        {failedPosts.length > 0 && (
+          <button
+            onClick={() => setActiveTab('failed')}
+            className={`px-4 py-3 font-semibold text-sm transition-all relative rounded-t-lg shrink-0 ${activeTab === 'failed'
+                ? 'bg-red-500/20 text-red-400'
+                : 'bg-red-500/5 text-red-300'
+              }`}
+          >
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              <span>Falhas</span>
+              <span className={`px-2 py-1 rounded-full text-xs font-bold ${activeTab === 'failed'
+                  ? 'bg-red-500/30 text-red-200'
+                  : 'bg-red-500/10 text-red-300'
+                }`}>
+                {failedPosts.length}
+              </span>
+            </div>
+            {activeTab === 'failed' && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-red-400" />
+            )}
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
@@ -269,6 +301,31 @@ export default function PostsPage() {
                         </p>
                       ) : null;
                     })()
+                  )}
+
+                  {/* O motivo da falha vem da Meta e é o que diz o que corrigir. */}
+                  {post.status === 'FAILED' && post.publicationLog?.lastError && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 mb-3">
+                      <p className="text-[9px] text-red-300 leading-snug break-words">
+                        {post.publicationLog.lastError}
+                      </p>
+                      <p className="text-[8px] text-zinc-500 mt-1">
+                        Reenvie a arte para o post voltar à fila de publicação.
+                      </p>
+                    </div>
+                  )}
+
+                  {post.status === 'PUBLISHED' && post.publicationLog?.permalink && (
+                    <a
+                      href={post.publicationLog.permalink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[9px] text-violet-400 hover:text-violet-300 flex items-center gap-1 -mt-2 mb-3 transition-colors w-fit"
+                    >
+                      <ExternalLink className="w-2.5 h-2.5" />
+                      Ver no Instagram
+                    </a>
                   )}
 
                   <div className="flex-1 space-y-4">

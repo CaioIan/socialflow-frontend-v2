@@ -8,6 +8,7 @@ import PostsPage from '@/features/posts/components/posts-page';
 import PostDetailPage from '@/features/posts/components/post-detail-page';
 import TeamPage from '@/features/team/components/team-page';
 import { AdminDashboardPage } from '@/features/dashboard/components/admin-dashboard-page';
+import InstagramPage from '@/features/instagram/components/instagram-page';
 
 export const router = createBrowserRouter([
   {
@@ -41,6 +42,15 @@ export const router = createBrowserRouter([
       {
         path: 'organizations/:orgId/campaigns/:campId/posts/:postId',
         element: <PostDetailPage />,
+      },
+      {
+        // Credencial de publicação é configuração sensível: só ADMIN.
+        path: 'organizations/:id/instagram',
+        element: (
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <InstagramPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'team',

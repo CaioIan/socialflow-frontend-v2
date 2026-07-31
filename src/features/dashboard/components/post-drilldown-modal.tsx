@@ -15,6 +15,7 @@ const STATUS_LABEL: Record<PostStatus, string> = {
   ALTERATION_REQUESTED: 'Posts com Solicitação de Ajuste',
   APPROVED: 'Posts Aprovados',
   PUBLISHED: 'Posts Publicados',
+  FAILED: 'Posts com Falha ao Publicar',
   CANCELLED: 'Posts Cancelados',
 };
 

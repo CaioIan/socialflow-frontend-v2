@@ -1,6 +1,21 @@
 import api from '@/api/axios';
 
-export type PostStatus = 'PENDING' | 'ALTERATION_REQUESTED' | 'APPROVED' | 'PUBLISHED' | 'CANCELLED';
+export type PostStatus =
+  | 'PENDING'
+  | 'ALTERATION_REQUESTED'
+  | 'APPROVED'
+  | 'PUBLISHED'
+  | 'FAILED'
+  | 'CANCELLED';
+
+/** O que o cron fez com o post. Ausente enquanto o horário agendado não chega. */
+export interface PublicationLog {
+  outcome: 'PENDING' | 'PUBLISHED' | 'FAILED';
+  attempts: number;
+  lastError: string | null;
+  permalink: string | null;
+  publishedAt: string | null;
+}
 
 export interface StatusHistoryRecord {
   id: string;
@@ -40,6 +55,7 @@ export interface Post {
     email: string;
   };
   statusHistory?: StatusHistoryRecord[];
+  publicationLog?: PublicationLog | null;
 }
 
 export interface CreatePostRequest {

@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useOrganizationAccess } from '@/shared/hooks/use-organization-access';
 import { GlassCard } from '@/shared/components/glass-card';
-import { FolderKanban, Plus, Calendar, ArrowLeft, Loader2, Edit2, Trash2 } from 'lucide-react';
+import { FolderKanban, Plus, Calendar, ArrowLeft, Loader2, Edit2, Trash2, Camera as InstagramIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { organizationsService } from '@/features/organizations/api/organizations-service';
@@ -93,13 +93,22 @@ export default function CampaignsPage() {
         </div>
         
         {isAdmin && (
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
-          >
-            <Plus className="w-5 h-5" />
-            Nova Campanha
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <Link
+              to={`/organizations/${id}/instagram`}
+              className="border border-white/10 text-zinc-300 hover:text-white hover:bg-white/5 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
+            >
+              <InstagramIcon className="w-5 h-5" />
+              Instagram
+            </Link>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
+            >
+              <Plus className="w-5 h-5" />
+              Nova Campanha
+            </button>
+          </div>
         )}
       </header>
 
