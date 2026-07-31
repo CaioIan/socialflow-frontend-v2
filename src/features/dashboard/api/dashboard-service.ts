@@ -1,6 +1,12 @@
 import api from '@/api/axios';
 
-export type PostStatus = 'PENDING' | 'ALTERATION_REQUESTED' | 'APPROVED' | 'PUBLISHED' | 'CANCELLED';
+export type PostStatus =
+  | 'PENDING'
+  | 'ALTERATION_REQUESTED'
+  | 'APPROVED'
+  | 'PUBLISHED'
+  | 'FAILED'
+  | 'CANCELLED';
 
 export interface OverviewStats {
   totalOrganizations: number;

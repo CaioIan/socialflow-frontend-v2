@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Building2, AlertCircle, Clock, CheckCircle2, XCircle, Send, Users, Palette, FolderKanban } from 'lucide-react';
+import { Building2, AlertCircle, AlertTriangle, Clock, CheckCircle2, XCircle, Send, Users, Palette, FolderKanban } from 'lucide-react';
 import dashboardService, { type PostStatus, type PeriodDays } from '../api/dashboard-service';
 import { GlassCard } from '@/shared/components/glass-card';
 import { StatCard } from './stat-card';
@@ -9,6 +9,7 @@ import { PostsTimelineChart } from './posts-timeline-chart';
 import { PeriodFilter } from './period-filter';
 import { OrganizationFilter } from './organization-filter';
 import { PostDrilldownModal } from './post-drilldown-modal';
+import { InstagramPendenciasAlert } from './instagram-pendencias-alert';
 
 export function AdminDashboardPage() {
   const [organizationId, setOrganizationId] = useState<string | undefined>(undefined);
@@ -45,7 +46,14 @@ export function AdminDashboardPage() {
     );
   }
 
-  const posts = overview?.posts ?? { PENDING: 0, ALTERATION_REQUESTED: 0, APPROVED: 0, PUBLISHED: 0, CANCELLED: 0 };
+  const posts = overview?.posts ?? {
+    PENDING: 0,
+    ALTERATION_REQUESTED: 0,
+    APPROVED: 0,
+    PUBLISHED: 0,
+    FAILED: 0,
+    CANCELLED: 0,
+  };
 
   return (
     <div className="space-y-8">
@@ -56,6 +64,9 @@ export function AdminDashboardPage() {
         </div>
         <OrganizationFilter value={organizationId} onChange={setOrganizationId} />
       </div>
+
+      {/* Antes das métricas: é a única coisa aqui que exige ação imediata. */}
+      <InstagramPendenciasAlert />
 
       {/* Posts por status — clicáveis, abrem o drill-down */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -90,6 +101,14 @@ export function AdminDashboardPage() {
           colorClass="bg-gradient-to-br from-violet-500/10 to-violet-600/5 border-violet-500/20"
           textColorClass="text-violet-400"
           onClick={() => setDrilldownStatus('PUBLISHED')}
+        />
+        <StatCard
+          title="Falha ao Publicar"
+          value={posts.FAILED}
+          icon={AlertTriangle}
+          colorClass="bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20"
+          textColorClass="text-red-400"
+          onClick={() => setDrilldownStatus('FAILED')}
         />
         <StatCard
           title="Posts Cancelados"
