@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Camera as InstagramIcon } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import { InstagramIcon } from '@/shared/components/icons/instagram-icon';
 import api from '@/api/axios';
 import { GlassCard } from '@/shared/components/glass-card';
 
