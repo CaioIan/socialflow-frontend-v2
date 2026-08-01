@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  Camera as InstagramIcon,
   ArrowLeft,
   Loader2,
   CheckCircle2,
@@ -13,6 +12,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import axios from 'axios';
+import { InstagramIcon } from '@/shared/components/icons/instagram-icon';
 import { GlassCard } from '@/shared/components/glass-card';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
