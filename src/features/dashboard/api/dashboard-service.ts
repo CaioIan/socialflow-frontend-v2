@@ -13,7 +13,7 @@ export interface OverviewStats {
   totalUsers: number;
   totalDesigners: number;
   totalClients: number;
-  activeCampaigns: number;
+  totalCampaigns: number;
   posts: Record<PostStatus, number>;
   pendingPostsTotal: number;
 }

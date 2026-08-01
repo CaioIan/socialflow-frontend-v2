@@ -36,7 +36,18 @@ export const organizationsService = {
     return response.data;
   },
 
-  delete: async (id: string) => {
-    await api.delete(`/organizations/${id}`);
-  }
+  /**
+   * Desativa sem apagar. Nada é perdido: campanhas, posts e histórico
+   * continuam no banco e `reactivate` desfaz.
+   *
+   * Usuários que só trabalhavam nesta organização são desativados junto; quem
+   * atende outras empresas segue ativo e apenas deixa de ver esta.
+   */
+  deactivate: async (id: string) => {
+    await api.patch(`/organizations/${id}/deactivate`);
+  },
+
+  reactivate: async (id: string) => {
+    await api.patch(`/organizations/${id}/reactivate`);
+  },
 };

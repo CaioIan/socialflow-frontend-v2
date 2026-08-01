@@ -20,6 +20,18 @@ export const usersService = {
     return response.data;
   },
 
+  /**
+   * Desativa sem apagar: o usuário perde o acesso e todo o histórico dele —
+   * aprovações, comentários, artes enviadas — continua no lugar.
+   */
+  deactivate: async (id: string) => {
+    await api.patch(`/users/${id}/deactivate`);
+  },
+
+  reactivate: async (id: string) => {
+    await api.patch(`/users/${id}/reactivate`);
+  },
+
   linkToOrganization: async (data: { userId: string; organizationId: string; role: string }) => {
     const response = await api.post('/users/link', data);
     return response.data;

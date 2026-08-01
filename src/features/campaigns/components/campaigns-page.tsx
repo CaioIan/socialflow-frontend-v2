@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { organizationsService } from '@/features/organizations/api/organizations-service';
 import { campaignsService } from '../api/campaigns-service';
 import { CreateCampaignModal } from './create-campaign-modal';
-import { ConfirmDialog } from '@/shared/components/confirm-dialog';
+import { TypeToConfirmDialog } from '@/shared/components/type-to-confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
 import type { Campaign } from '../api/campaigns-service';
 
@@ -192,11 +192,14 @@ export default function CampaignsPage() {
         initialData={editingCampaign}
       />
 
-      <ConfirmDialog
+      {/* Campanha não tem desativação: ou fica, ou some do banco junto com tudo
+          que está pendurado nela. Por isso exige digitar o nome. */}
+      <TypeToConfirmDialog
         isOpen={!!campaignPendingDelete}
         onClose={() => !deleteMutation.isPending && setCampaignPendingDelete(undefined)}
         onConfirm={() => campaignPendingDelete && deleteMutation.mutate(campaignPendingDelete.id)}
         title="Excluir campanha permanentemente?"
+        confirmationText={campaignPendingDelete?.title ?? ''}
         description={
           <>
             <strong className="text-zinc-300">{campaignPendingDelete?.title}</strong>
@@ -208,7 +211,7 @@ export default function CampaignsPage() {
             ) : (
               ' será excluída permanentemente.'
             )}{' '}
-            Esta ação não pode ser desfeita.
+            Não existe desativação para campanhas e esta ação não pode ser desfeita.
           </>
         }
         confirmLabel="Excluir Permanentemente"
