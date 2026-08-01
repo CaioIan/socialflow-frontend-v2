@@ -11,7 +11,9 @@ import {
   Building,
   Plus,
   CheckCircle2,
-  Loader2
+  Loader2,
+  PowerOff,
+  RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreateUserModal } from './create-user-modal';
@@ -159,20 +161,38 @@ export default function TeamPage() {
                       </div>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      u.isActive ? setUsuarioParaDesativar(u) : reativar.mutate(u.id)
-                    }
-                    disabled={reativar.isPending}
-                    title={u.isActive ? 'Desativar usuário' : 'Reativar usuário'}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50 ${u.isActive
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20'
-                      : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20'
-                      }`}
-                  >
-                    {u.isActive ? 'Ativo' : 'Inativo'}
-                  </button>
+                  {/* Crachá informa; o botão ao lado age. Antes o próprio crachá
+                      era clicável, e ninguém adivinha isso olhando. */}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${u.isActive
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                        }`}
+                    >
+                      {u.isActive ? 'Ativo' : 'Inativo'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        u.isActive ? setUsuarioParaDesativar(u) : reativar.mutate(u.id)
+                      }
+                      disabled={reativar.isPending && reativar.variables === u.id}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors disabled:opacity-50 ${u.isActive
+                        ? 'border-white/10 text-zinc-400 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10'
+                        : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+                        }`}
+                    >
+                      {reativar.isPending && reativar.variables === u.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : u.isActive ? (
+                        <PowerOff className="w-3 h-3" />
+                      ) : (
+                        <RotateCcw className="w-3 h-3" />
+                      )}
+                      {u.isActive ? 'Desativar' : 'Reativar'}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-4 flex-1">
