@@ -9,7 +9,9 @@ interface OrganizationFilterProps {
 export function OrganizationFilter({ value, onChange }: OrganizationFilterProps) {
   const { data: organizations = [] } = useQuery({
     queryKey: ['organizations'],
-    queryFn: organizationsService.getAll,
+    // Envolvido numa arrow: passar a função direto faria o React Query mandar
+    // o contexto da query como primeiro argumento, que agora é `incluirInativas`.
+    queryFn: () => organizationsService.getAll(),
   });
 
   return (

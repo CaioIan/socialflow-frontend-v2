@@ -14,8 +14,15 @@ const slugify = (text: string) => {
 };
 
 export const organizationsService = {
-  getAll: async () => {
-    const response = await api.get<Organization[]>('/organizations');
+  /**
+   * `incluirInativas` só faz sentido na tela de administração: é lá que uma
+   * organização desativada precisa aparecer para poder ser reativada. O filtro
+   * do dashboard e o modal de vínculo continuam recebendo só as ativas.
+   */
+  getAll: async (incluirInativas = false) => {
+    const response = await api.get<Organization[]>('/organizations', {
+      params: incluirInativas ? { includeInactive: 'true' } : undefined,
+    });
     return response.data;
   },
 

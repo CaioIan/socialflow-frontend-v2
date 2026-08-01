@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { GlassCard } from '@/shared/components/glass-card';
-import { Building2, ArrowRight, Plus, Loader2, Edit2, Trash2 } from 'lucide-react';
+import { Building2, ArrowRight, Plus, Loader2, Edit2, PowerOff, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/features/auth/api/auth-service';
@@ -27,9 +27,11 @@ export default function OrganizationsPage() {
   const isClient = role === 'CLIENT';
 
   // Busca a lista real de organizações da API
+  // O ADMIN precisa ver as desativadas: é aqui que elas voltam. Para os demais
+  // papéis a API ignora o parâmetro e devolve só as organizações deles.
   const { data: organizations = [], isLoading, error } = useQuery({
-    queryKey: ['organizations', user?.id],
-    queryFn: organizationsService.getAll
+    queryKey: ['organizations', user?.id, 'com-inativas'],
+    queryFn: () => organizationsService.getAll(true),
   });
 
   const handleEdit = (org: { id: string, name: string }) => {
@@ -58,13 +60,22 @@ export default function OrganizationsPage() {
     mutationFn: organizationsService.deactivate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
-      addToast('Organização desativada com sucesso!', 'success');
+      addToast('Organização desativada. Quem só trabalhava nela também saiu.', 'success');
       setOrgPendingDelete(undefined);
     },
     onError: () => {
       addToast('Erro ao desativar organização.', 'error');
       setOrgPendingDelete(undefined);
     },
+  });
+
+  const reactivateMutation = useMutation({
+    mutationFn: organizationsService.reactivate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      addToast('Organização reativada. Quem caiu junto com ela voltou.', 'success');
+    },
+    onError: () => addToast('Erro ao reativar organização.', 'error'),
   });
 
   if (isLoading) {
@@ -110,7 +121,10 @@ export default function OrganizationsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {organizations.map((org, index) => {
           const orgId = org.id;
-          const isActive = orgId === currentOrganizationId;
+          // `selecionada` é a organização em uso agora; `desativada` é o estado
+          // dela no sistema. Eram os dois chamados de isActive, o que confundia.
+          const selecionada = orgId === currentOrganizationId;
+          const desativada = !org.isActive;
 
           return (
             <motion.div
@@ -118,50 +132,82 @@ export default function OrganizationsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              onClick={() => !selectMutation.isPending && selectMutation.mutate(orgId)}
-              className="cursor-pointer group"
+              onClick={() => {
+                // Entrar numa organização desativada levaria a telas vazias:
+                // ela existe, mas está fora do ar.
+                if (desativada || selectMutation.isPending) return;
+                selectMutation.mutate(orgId);
+              }}
+              className={desativada ? 'group' : 'cursor-pointer group'}
             >
               <GlassCard
-                className={`flex flex-col h-full border-t-4 transition-all duration-500 relative overflow-hidden active:scale-[0.98] ${isActive ? 'border-t-primary bg-primary/[0.03]' : 'border-t-transparent'
+                className={`flex flex-col h-full border-t-4 transition-all duration-500 relative overflow-hidden ${desativada
+                  ? 'border-t-zinc-700 opacity-60'
+                  : `active:scale-[0.98] ${selecionada ? 'border-t-primary bg-primary/[0.03]' : 'border-t-transparent'}`
                   }`}
               >
                 {/* Botões de Ação Rápida (Admin) */}
                 {isAdmin && (
                   <div className="absolute top-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit({ id: orgId, name: org.name });
-                      }}
-                      title="Editar Organização"
-                      aria-label="Editar Organização"
-                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-brand-gradient text-white transition-all shadow-[0_5px_25px_oklch(var(--primary)/0.6)] active:scale-90 cursor-pointer"
-                    >
-                      <Edit2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOrgPendingDelete({ id: orgId, name: org.name });
-                      }}
-                      title="Desativar Organização"
-                      aria-label="Desativar Organização"
-                      className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-brand-gradient text-white transition-all shadow-[0_5px_25px_oklch(var(--primary)/0.6)] active:scale-90 cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                    </button>
+                    {desativada ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          reactivateMutation.mutate(orgId);
+                        }}
+                        disabled={reactivateMutation.isPending}
+                        className="flex items-center gap-2 px-3 h-9 rounded-xl bg-emerald-500 text-white text-xs font-bold transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        Reativar
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit({ id: orgId, name: org.name });
+                          }}
+                          title="Editar Organização"
+                          aria-label="Editar Organização"
+                          className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-brand-gradient text-white transition-all shadow-[0_5px_25px_oklch(var(--primary)/0.6)] active:scale-90 cursor-pointer"
+                        >
+                          <Edit2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOrgPendingDelete({ id: orgId, name: org.name });
+                          }}
+                          title="Desativar Organização"
+                          aria-label="Desativar Organização"
+                          className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-brand-gradient text-white transition-all shadow-[0_5px_25px_oklch(var(--primary)/0.6)] active:scale-90 cursor-pointer"
+                        >
+                          <PowerOff className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
 
                 <div className="flex items-start justify-between mb-6">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isActive ? 'bg-brand-gradient text-white shadow-[0_0_20px_oklch(var(--primary)/0.3)]' : 'bg-white/5 text-zinc-400 group-hover:text-zinc-200'
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${desativada
+                    ? 'bg-white/5 text-zinc-600'
+                    : selecionada ? 'bg-brand-gradient text-white shadow-[0_0_20px_oklch(var(--primary)/0.3)]' : 'bg-white/5 text-zinc-400 group-hover:text-zinc-200'
                     }`}>
                     <Building2 className="w-7 h-7" />
                   </div>
                 </div>
 
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white group-hover:text-glow transition-all">{org.name}</h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-xl font-bold text-white group-hover:text-glow transition-all">{org.name}</h3>
+                    {desativada && (
+                      <span className="px-2 py-0.5 rounded-full bg-zinc-500/20 text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
+                        Desativada
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-zinc-500 mb-6 lowercase font-mono">@{org.slug}</p>
 
                   <div className="flex items-center gap-4 text-xs text-zinc-500">
@@ -172,10 +218,14 @@ export default function OrganizationsPage() {
                   <div
                     className={cn(
                       "w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm transition-all",
-                      isActive ? "bg-brand-gradient text-white shadow-[0_0_20px_oklch(var(--primary)/0.4)]" : "bg-white/5 group-hover:bg-brand-gradient hover:text-white"
+                      desativada
+                        ? "bg-white/[0.03] text-zinc-600"
+                        : selecionada ? "bg-brand-gradient text-white shadow-[0_0_20px_oklch(var(--primary)/0.4)]" : "bg-white/5 group-hover:bg-brand-gradient hover:text-white"
                     )}
                   >
-                    {selectMutation.isPending && selectMutation.variables === orgId ? (
+                    {desativada ? (
+                      'Fora do ar — reative para acessar'
+                    ) : selectMutation.isPending && selectMutation.variables === orgId ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
