@@ -1,3 +1,9 @@
+/** Situação do Instagram da organização. Nunca traz nada da credencial. */
+export interface OrganizationInstagramSummary {
+  status: 'CONNECTED' | 'REVOKED';
+  username: string | null;
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -5,6 +11,8 @@ export interface Organization {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  /** `null` quando a organização nunca conectou uma conta. */
+  instagram: OrganizationInstagramSummary | null;
 }
 
 export interface CreateOrganizationRequest {

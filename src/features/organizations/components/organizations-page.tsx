@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { GlassCard } from '@/shared/components/glass-card';
+import { InstagramIcon } from '@/shared/components/icons/instagram-icon';
 import { Building2, ArrowRight, Plus, Loader2, Edit2, PowerOff, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/features/auth/api/auth-service';
 import { organizationsService } from '../api/organizations-service';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CreateOrganizationModal } from './create-organization-modal';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
@@ -208,10 +209,35 @@ export default function OrganizationsPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-zinc-500 mb-6 lowercase font-mono">@{org.slug}</p>
+                  <p className="text-sm text-zinc-500 mb-4 lowercase font-mono">@{org.slug}</p>
 
-                  <div className="flex items-center gap-4 text-xs text-zinc-500">
-                  </div>
+                  {/* Conectar o Instagram é configuração da empresa, então mora
+                      aqui — antes só existia dentro da tela de campanhas, onde
+                      ninguém procuraria por isso. */}
+                  {isAdmin && (
+                    <Link
+                      to={`/organizations/${orgId}/instagram`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl border border-white/5 bg-black/20 hover:bg-black/40 hover:border-white/10 transition-colors group/ig"
+                    >
+                      <InstagramIcon className="w-4 h-4 shrink-0 text-zinc-400 group-hover/ig:text-white transition-colors" />
+                      {org.instagram === null ? (
+                        <span className="text-xs text-zinc-500">Instagram não conectado</span>
+                      ) : org.instagram.status === 'REVOKED' ? (
+                        <span className="text-xs text-red-400 font-semibold">Credencial recusada</span>
+                      ) : (
+                        <span className="text-xs text-zinc-300 truncate">
+                          {org.instagram.username ? `@${org.instagram.username}` : 'Conectado'}
+                        </span>
+                      )}
+                      <span
+                        className={`ml-auto w-2 h-2 rounded-full shrink-0 ${org.instagram === null
+                          ? 'bg-zinc-600'
+                          : org.instagram.status === 'REVOKED' ? 'bg-red-400' : 'bg-emerald-400'
+                          }`}
+                      />
+                    </Link>
+                  )}
                 </div>
 
                 <div className="mt-8">
