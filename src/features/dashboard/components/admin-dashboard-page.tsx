@@ -144,7 +144,7 @@ export function AdminDashboardPage() {
         <StatCard
           size="sm"
           title="Campanhas"
-          value={overview?.activeCampaigns ?? 0}
+          value={overview?.totalCampaigns ?? 0}
           icon={FolderKanban}
           colorClass="bg-white/[0.02] border-white/10"
           textColorClass="text-zinc-300"

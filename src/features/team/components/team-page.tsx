@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { usersService, type UserWithOrgs } from '../api/users-service';
 import { GlassCard } from '../../../shared/components/glass-card';
 import {
@@ -15,6 +16,15 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreateUserModal } from './create-user-modal';
 import { LinkOrganizationModal } from './link-organization-modal';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
+import { useToastStore } from '@/stores/use-toast-store';
+
+function mensagemDoErro(erro: unknown): string {
+  if (axios.isAxiosError(erro) && typeof erro.response?.data?.message === 'string') {
+    return erro.response.data.message;
+  }
+  return 'Não foi possível concluir a operação.';
+}
 
 export default function TeamPage() {
   const [activeTab, setActiveTab] = useState<'DESIGNER' | 'CLIENT'>('DESIGNER');
@@ -22,12 +32,35 @@ export default function TeamPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithOrgs | null>(null);
+  const [usuarioParaDesativar, setUsuarioParaDesativar] = useState<UserWithOrgs | null>(null);
 
-
+  const queryClient = useQueryClient();
+  const { addToast } = useToastStore();
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['team', activeTab],
     queryFn: () => usersService.getAll(activeTab)
+  });
+
+  const invalidarEquipe = () => queryClient.invalidateQueries({ queryKey: ['team'] });
+
+  const desativar = useMutation({
+    mutationFn: usersService.deactivate,
+    onSuccess: () => {
+      invalidarEquipe();
+      setUsuarioParaDesativar(null);
+      addToast('Usuário desativado. O acesso dele foi cortado.', 'success');
+    },
+    onError: (erro) => addToast(mensagemDoErro(erro), 'error'),
+  });
+
+  const reativar = useMutation({
+    mutationFn: usersService.reactivate,
+    onSuccess: () => {
+      invalidarEquipe();
+      addToast('Usuário reativado.', 'success');
+    },
+    onError: (erro) => addToast(mensagemDoErro(erro), 'error'),
   });
 
   const filteredUsers = users?.filter(u =>
@@ -126,10 +159,20 @@ export default function TeamPage() {
                       </div>
                     </div>
                   </div>
-                  <div className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${u.isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                    }`}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      u.isActive ? setUsuarioParaDesativar(u) : reativar.mutate(u.id)
+                    }
+                    disabled={reativar.isPending}
+                    title={u.isActive ? 'Desativar usuário' : 'Reativar usuário'}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50 ${u.isActive
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20'
+                      : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20'
+                      }`}
+                  >
                     {u.isActive ? 'Ativo' : 'Inativo'}
-                  </div>
+                  </button>
                 </div>
 
                 <div className="space-y-4 flex-1">
@@ -202,6 +245,25 @@ export default function TeamPage() {
           user={selectedUser}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={!!usuarioParaDesativar}
+        onClose={() => !desativar.isPending && setUsuarioParaDesativar(null)}
+        onConfirm={() => usuarioParaDesativar && desativar.mutate(usuarioParaDesativar.id)}
+        title="Desativar usuário?"
+        description={
+          <>
+            <strong className="text-zinc-300">
+              {usuarioParaDesativar?.name || usuarioParaDesativar?.email}
+            </strong>{' '}
+            perde o acesso imediatamente, mas nada é apagado: aprovações, comentários e artes
+            enviadas por ele continuam no histórico. Dá para reativar a qualquer momento.
+          </>
+        }
+        confirmLabel="Desativar"
+        confirmingLabel="Desativando..."
+        isConfirming={desativar.isPending}
+      />
     </div>
   );
 }

@@ -55,7 +55,7 @@ export default function OrganizationsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: organizationsService.delete,
+    mutationFn: organizationsService.deactivate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
       addToast('Organização desativada com sucesso!', 'success');
