@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://socialflow-api.vercel.app/:path*"
+      "destination": "https://SEU-SERVICO.up.railway.app/:path*"
     },
     {
       "source": "/(.*)",
