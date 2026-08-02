@@ -1,6 +1,8 @@
 import path from "path"
 import { fileURLToPath } from "url"
-import { defineConfig } from 'vite'
+// `defineConfig` do pacote `vitest/config`, e não do `vite`: só ele conhece a
+// chave `test` abaixo. Com o do `vite`, o `tsc -b` do build recusa o arquivo.
+import { defineConfig } from 'vitest/config'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
@@ -28,5 +30,14 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
+    // O fuso fica fixo em UTC, como o container de produção: sem isso um teste
+    // de data passa na máquina do dev (America/Sao_Paulo) e erra no deploy.
+    env: { TZ: 'UTC' },
+    css: false,
   },
 })
