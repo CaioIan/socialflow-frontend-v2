@@ -303,7 +303,14 @@ export default function OrganizationsPage() {
         title="Desativar organização?"
         description={
           <>
-            <strong className="text-zinc-300">{orgPendingDelete?.name}</strong> deixará de aparecer na lista.
+            <strong className="text-zinc-300">{orgPendingDelete?.name}</strong> deixará de aparecer na lista
+            e a publicação automática dela para.
+            {' '}
+            {/* A cascata é a parte que surpreende: quem trabalha só nesta empresa
+                perde o acesso junto. Avisar depois, pelo toast, é tarde. */}
+            Cada usuário que trabalha <strong className="text-zinc-300">somente nesta organização</strong> também
+            será desativado; quem atende outras empresas continua ativo e só deixa de ver esta.
+            {' '}
             Essa ação pode ser revertida depois reativando a organização.
           </>
         }
