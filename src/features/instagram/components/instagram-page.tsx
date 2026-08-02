@@ -115,12 +115,14 @@ export default function InstagramPage() {
   return (
     <div className="space-y-8 max-w-3xl">
       <header className="space-y-1">
+        {/* Volta para onde se chega aqui: o card da organização. Apontava para
+            campanhas de quando o acesso ficava no header daquela tela. */}
         <Link
-          to={`/organizations/${orgId}/campaigns`}
+          to="/organizations"
           className="text-xs text-zinc-500 hover:text-primary flex items-center gap-1 mb-2 transition-colors w-fit"
         >
           <ArrowLeft className="w-3 h-3" />
-          Voltar para Campanhas
+          Voltar para Organizações
         </Link>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-glow flex items-center gap-3">
           <InstagramIcon className="w-7 h-7 text-primary" />
