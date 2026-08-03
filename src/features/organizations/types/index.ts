@@ -9,6 +9,8 @@ export interface Organization {
   name: string;
   slug: string;
   isActive: boolean;
+  /** `null` quando não há foto — a interface cai no ícone padrão. */
+  logoUrl: string | null;
   createdAt: string;
   updatedAt: string;
   /** `null` quando a organização nunca conectou uma conta. */

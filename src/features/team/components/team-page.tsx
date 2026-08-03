@@ -146,24 +146,32 @@ export default function TeamPage() {
               exit={{ opacity: 0, scale: 0.9 }}
             >
               <GlassCard className="p-6 h-full flex flex-col group hover:bg-brand-gradient transition-all border-white/5">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-brand-gradient border border-white/10 flex items-center justify-center text-white text-xl font-bold shadow-[0_0_15px_oklch(var(--primary)/0.3)]">
+                {/* Nome longo empurrava o crachá e o botão para fora do card,
+                    cortando a única forma de ativar ou desativar a pessoa.
+                    `basis-48` dá um piso ao bloco do nome: quando ele e as ações
+                    não cabem lado a lado, as ações descem para a linha de baixo
+                    em vez de espremer o nome até virar reticências. */}
+                <div className="flex items-start justify-between gap-3 flex-wrap mb-6">
+                  <div className="flex items-center gap-4 min-w-0 flex-1 basis-48">
+                    <div className="w-12 h-12 shrink-0 rounded-2xl bg-brand-gradient border border-white/10 flex items-center justify-center text-white text-xl font-bold shadow-[0_0_15px_oklch(var(--primary)/0.3)]">
                       {u.name?.charAt(0) || 'U'}
                     </div>
-                    <div>
-                      <h3 className="font-bold text-white text-lg group-hover:text-white transition-colors">
+                    <div className="min-w-0">
+                      <h3
+                        title={u.name || 'Sem nome'}
+                        className="font-bold text-white text-lg group-hover:text-white transition-colors truncate"
+                      >
                         {u.name || 'Sem nome'}
                       </h3>
-                      <div className="flex items-center gap-1.5 text-zinc-500 group-hover:text-white/80 text-xs transition-colors">
-                        <Mail className="w-3 h-3" />
-                        {u.email}
+                      <div className="flex items-center gap-1.5 text-zinc-500 group-hover:text-white/80 text-xs transition-colors min-w-0">
+                        <Mail className="w-3 h-3 shrink-0" />
+                        <span className="truncate" title={u.email}>{u.email}</span>
                       </div>
                     </div>
                   </div>
                   {/* Crachá informa; o botão ao lado age. Antes o próprio crachá
                       era clicável, e ninguém adivinha isso olhando. */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <span
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${u.isActive
                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'

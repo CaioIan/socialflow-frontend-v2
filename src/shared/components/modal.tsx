@@ -44,11 +44,10 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
           />
 
-          {/* Scroll container — cobre toda a tela, scroll vertical, fecha ao clicar fora */}
-          <div
-            className="fixed inset-0 z-[101] overflow-y-auto overscroll-contain"
-            onClick={onClose}
-          >
+          {/* Fecha ao clicar fora. O scroll agora é do corpo do modal, não desta
+              camada: com `items-center`, um conteúdo mais alto que a tela vazava
+              para cima e a parte de cima ficava inalcançável. */}
+          <div className="fixed inset-0 z-[101]" onClick={onClose}>
             <div className="flex min-h-full items-center justify-center p-4">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -57,23 +56,29 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 onClick={(e) => e.stopPropagation()}
                 className={cn(
-                  "w-full max-w-md bg-zinc-900/90 border border-white/10 backdrop-blur-2xl rounded-3xl p-8 shadow-2xl relative",
+                  "w-full max-w-md bg-zinc-900/90 border border-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl relative",
+                  // Nunca mais alto que a viewport; o excedente rola por dentro.
+                  "flex flex-col max-h-[calc(100dvh-2rem)]",
                   className
                 )}
               >
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-white tracking-tight">{title}</h2>
+                {/* Fora da área rolável: o título e o X continuam visíveis
+                    enquanto o usuário percorre um formulário longo. */}
+                <div className="flex items-center justify-between gap-4 px-8 pt-8 pb-6 shrink-0">
+                  <h2 className="text-2xl font-bold text-white tracking-tight min-w-0">{title}</h2>
                   <button
                     title="Fechar"
                     aria-label="Fechar"
                     onClick={onClose}
-                    className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+                    className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all shrink-0"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                {children}
+                <div className="overflow-y-auto overscroll-contain px-8 pb-8">
+                  {children}
+                </div>
               </motion.div>
             </div>
           </div>

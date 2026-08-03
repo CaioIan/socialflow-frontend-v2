@@ -125,7 +125,7 @@ export function EditPostModal({ isOpen, onClose, postId, campaignId }: EditPostM
           <div className="space-y-2">
             <label htmlFor="captionFixed" className="text-sm font-medium text-zinc-400 flex items-center gap-2">
               <Type className="w-4 h-4" />
-              Legenda Fixa Oficial
+              Legenda do Post
             </label>
             <textarea
               id="captionFixed"

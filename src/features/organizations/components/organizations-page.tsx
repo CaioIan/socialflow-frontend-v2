@@ -3,13 +3,14 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { GlassCard } from '@/shared/components/glass-card';
 import { InstagramIcon } from '@/shared/components/icons/instagram-icon';
-import { Building2, ArrowRight, Plus, Loader2, Edit2, PowerOff, RotateCcw } from 'lucide-react';
+import { Building2, ArrowRight, Plus, Loader2, Edit2, Power, RotateCcw, ImageUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/features/auth/api/auth-service';
 import { organizationsService } from '../api/organizations-service';
 import { Link, useNavigate } from 'react-router-dom';
 import { CreateOrganizationModal } from './create-organization-modal';
+import { OrganizationLogoModal } from './organization-logo-modal';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
 
@@ -21,6 +22,7 @@ export default function OrganizationsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<{ id: string, name: string } | undefined>(undefined);
   const [orgPendingDelete, setOrgPendingDelete] = useState<{ id: string, name: string } | undefined>(undefined);
+  const [orgEditandoLogo, setOrgEditandoLogo] = useState<{ id: string, name: string, logoUrl: string | null } | undefined>(undefined);
 
   const role = user?.role?.toUpperCase();
   const isAdmin = role === 'ADMIN';
@@ -91,18 +93,20 @@ export default function OrganizationsPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-red-400 font-medium">
-        <p>Erro ao carregar organizações. Verifique o backend.</p>
+        <p>Não foi possível carregar as organizações. Tente novamente em instantes.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center justify-between">
+      {/* Empilha no mobile, como as demais telas: lado a lado, o botão não
+          cabia em 375px e vazava para fora da viewport. */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight text-glow">Organizações</h1>
           <p className="text-zinc-500">
-            {isAdmin && "Gerencie seus clientes e tenants do SocialFlow."}
+            {isAdmin && "Gerencie as empresas atendidas pelo estúdio."}
             {isDesigner && "Selecione uma empresa para visualizar suas pautas e demandas."}
             {isClient && "Selecione sua empresa para acompanhar o cronograma de posts."}
           </p>
@@ -111,7 +115,7 @@ export default function OrganizationsPage() {
         {isAdmin && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] active:scale-95"
+            className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] active:scale-95 w-full md:w-auto shrink-0"
           >
             <Plus className="w-5 h-5" />
             Nova Organização
@@ -182,9 +186,11 @@ export default function OrganizationsPage() {
                           }}
                           title="Desativar Organização"
                           aria-label="Desativar Organização"
-                          className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-brand-gradient text-white transition-all shadow-[0_5px_25px_oklch(var(--primary)/0.6)] active:scale-90 cursor-pointer"
+                          // Vermelho discreto e símbolo de power: a ação destrutiva
+                          // precisa se distinguir do editar sem gritar mais que ele.
+                          className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-300 transition-all active:scale-90 cursor-pointer"
                         >
-                          <PowerOff className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                          <Power className="w-4 h-4 md:w-3.5 md:h-3.5" />
                         </button>
                       </>
                     )}
@@ -192,12 +198,37 @@ export default function OrganizationsPage() {
                 )}
 
                 <div className="flex items-start justify-between mb-6">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${desativada
-                    ? 'bg-white/5 text-zinc-600'
-                    : selecionada ? 'bg-brand-gradient text-white shadow-[0_0_20px_oklch(var(--primary)/0.3)]' : 'bg-white/5 text-zinc-400 group-hover:text-zinc-200'
-                    }`}>
-                    <Building2 className="w-7 h-7" />
-                  </div>
+                  {/* O próprio avatar é o caminho para trocar a foto: é onde o
+                      admin procura, e evita mais um botão disputando o card. */}
+                  <button
+                    type="button"
+                    disabled={!isAdmin}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOrgEditandoLogo({ id: orgId, name: org.name, logoUrl: org.logoUrl });
+                    }}
+                    title={isAdmin ? 'Alterar foto de perfil' : undefined}
+                    aria-label={isAdmin ? `Alterar foto de perfil de ${org.name}` : undefined}
+                    className={`relative w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center transition-all group/avatar ${isAdmin ? 'cursor-pointer' : 'cursor-default'} ${desativada
+                      ? 'bg-white/5 text-zinc-600'
+                      : selecionada ? 'bg-brand-gradient text-white shadow-[0_0_20px_oklch(var(--primary)/0.3)]' : 'bg-white/5 text-zinc-400 group-hover:text-zinc-200'
+                      }`}
+                  >
+                    {org.logoUrl ? (
+                      <img
+                        src={org.logoUrl}
+                        alt=""
+                        className={`w-full h-full object-cover ${desativada ? 'grayscale' : ''}`}
+                      />
+                    ) : (
+                      <Building2 className="w-7 h-7" />
+                    )}
+                    {isAdmin && (
+                      <span className="absolute inset-0 bg-black/60 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center">
+                        <ImageUp className="w-5 h-5 text-white" />
+                      </span>
+                    )}
+                  </button>
                 </div>
 
                 <div className="flex-1">
@@ -294,6 +325,12 @@ export default function OrganizationsPage() {
         isOpen={isCreateModalOpen}
         onClose={handleCloseModal}
         initialData={editingOrg}
+      />
+
+      <OrganizationLogoModal
+        isOpen={!!orgEditandoLogo}
+        onClose={() => setOrgEditandoLogo(undefined)}
+        organization={orgEditandoLogo}
       />
 
       <ConfirmDialog

@@ -57,4 +57,21 @@ export const organizationsService = {
   reactivate: async (id: string) => {
     await api.patch(`/organizations/${id}/reactivate`);
   },
+
+  /**
+   * Foto de perfil da organização. Vai como multipart — o axios do projeto não
+   * força `Content-Type`, justamente para o FormData definir o boundary dele.
+   */
+  uploadLogo: async ({ id, file }: { id: string; file: File }) => {
+    const corpo = new FormData();
+    corpo.append('file', file);
+    const response = await api.put<Organization>(`/organizations/${id}/logo`, corpo);
+    return response.data;
+  },
+
+  /** Volta para a inicial do nome. */
+  removeLogo: async (id: string) => {
+    const response = await api.delete<Organization>(`/organizations/${id}/logo`);
+    return response.data;
+  },
 };

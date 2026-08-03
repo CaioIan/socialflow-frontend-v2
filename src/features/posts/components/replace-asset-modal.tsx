@@ -157,7 +157,7 @@ export function ReplaceAssetModal({
   const label = assetType === 'FEED' ? 'Feed (1:1)' : 'Stories (9:16)';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Reuplocar ${label}`} className="max-w-2xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={`Substituir ${label}`} className="max-w-2xl">
       {isSuccess ? (
         <div className="py-12 flex flex-col items-center justify-center space-y-4">
           <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/30">
@@ -172,7 +172,7 @@ export function ReplaceAssetModal({
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-blue-400">Reuplocar Imagem</p>
+              <p className="text-sm font-medium text-blue-400">Substituir imagem</p>
               <p className="text-xs text-blue-300/80 mt-1">
                 Selecione um novo arquivo para substituir. Visualize a mudança antes de confirmar.
               </p>

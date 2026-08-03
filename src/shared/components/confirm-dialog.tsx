@@ -42,7 +42,9 @@ export function ConfirmDialog({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="bg-zinc-900 border border-white/10 p-6 rounded-[2.5rem] w-full max-w-sm relative z-10 shadow-2xl"
+            // Descrições longas (a cascata de usuários, por exemplo) passavam da
+            // altura da tela sem nenhuma forma de rolar até os botões.
+            className="bg-zinc-900 border border-white/10 p-6 rounded-[2.5rem] w-full max-w-sm relative z-10 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain"
           >
             <div className="w-16 h-16 rounded-3xl bg-red-500/10 flex items-center justify-center mb-6 mx-auto">
               <AlertTriangle className="w-8 h-8 text-red-500" />

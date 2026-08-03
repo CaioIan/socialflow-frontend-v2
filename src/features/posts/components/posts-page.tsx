@@ -21,6 +21,7 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { campaignsService } from '@/features/campaigns/api/campaigns-service';
 import { postsService } from '../api/posts-service';
+import { ROTULO_DO_STATUS } from '../lib/post-status';
 import { CreatePostModal } from './create-post-modal';
 import { ImportPostsModal } from './import-posts-modal';
 import { EditPostModal } from './edit-post-modal';
@@ -78,17 +79,77 @@ export default function PostsPage() {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return { label: 'Aprovado', color: 'text-emerald-400', bg: 'bg-emerald-500/10', icon: CheckCircle2 };
+        return { label: ROTULO_DO_STATUS.APPROVED, color: 'text-emerald-400', bg: 'bg-emerald-500/10', icon: CheckCircle2 };
       case 'PUBLISHED':
-        return { label: 'Publicado', color: 'text-violet-400', bg: 'bg-violet-500/10', icon: Send };
+        return { label: ROTULO_DO_STATUS.PUBLISHED, color: 'text-violet-400', bg: 'bg-violet-500/10', icon: Send };
       case 'FAILED':
-        return { label: 'Falha ao publicar', color: 'text-red-400', bg: 'bg-red-500/10', icon: AlertTriangle };
+        return { label: ROTULO_DO_STATUS.FAILED, color: 'text-red-400', bg: 'bg-red-500/10', icon: AlertTriangle };
       case 'ALTERATION_REQUESTED':
-        return { label: 'Alteração Solicitada', color: 'text-amber-400', bg: 'bg-amber-500/10', icon: AlertCircle };
+        return { label: ROTULO_DO_STATUS.ALTERATION_REQUESTED, color: 'text-amber-400', bg: 'bg-amber-500/10', icon: AlertCircle };
       case 'CANCELLED':
-        return { label: 'Cancelado', color: 'text-red-400', bg: 'bg-red-500/10', icon: XCircle };
+        return { label: ROTULO_DO_STATUS.CANCELLED, color: 'text-red-400', bg: 'bg-red-500/10', icon: XCircle };
       default:
-        return { label: 'Pendente', color: 'text-blue-400', bg: 'bg-blue-500/10', icon: Clock };
+        return { label: ROTULO_DO_STATUS.PENDING, color: 'text-blue-400', bg: 'bg-blue-500/10', icon: Clock };
+    }
+  };
+
+  /**
+   * Cada aba tem um estado vazio próprio. Antes só existiam dois textos, e
+   * "Publicados" herdava o de aprovação — dizia "Nenhum post aprovado ainda"
+   * numa tela que não tem nada a ver com aprovação.
+   */
+  const getEmptyState = () => {
+    switch (activeTab) {
+      case 'published':
+        return {
+          icon: Send,
+          color: 'text-violet-700',
+          title: 'Nenhum post publicado ainda',
+          description:
+            'Quando um post aprovado chegar na data agendada, ele vai para o Instagram e aparece aqui com o link.',
+        };
+
+      case 'failed':
+        return {
+          icon: AlertTriangle,
+          color: 'text-red-800',
+          title: 'Nenhuma falha por aqui',
+          description:
+            'Se algum post não conseguir ir ao ar, ele aparece nesta aba com o motivo e o que fazer.',
+        };
+
+      case 'approved':
+        return {
+          icon: CheckCircle2,
+          color: 'text-emerald-700',
+          title: 'Nenhum post aprovado ainda',
+          description: isClient
+            ? 'Os posts que você aprovar ficam aqui até a data de publicação.'
+            : 'Os posts aprovados ficam aqui até chegar a data agendada.',
+        };
+
+      default:
+        if (posts.length > 0) {
+          return {
+            icon: Clock,
+            color: 'text-blue-700',
+            title: 'Tudo em dia por aqui',
+            description: isClient
+              ? 'Nenhum post aguardando sua aprovação no momento.'
+              : 'Nenhum post aguardando revisão no momento.',
+          };
+        }
+
+        return {
+          icon: Clock,
+          color: 'text-blue-700',
+          title: 'Nenhum post agendado',
+          description: isAdmin
+            ? 'Comece agendando o primeiro post deste cronograma.'
+            : isDesigner
+              ? 'Assim que o cronograma for cadastrado, os posts aparecem aqui.'
+              : 'Assim que houver post para aprovar, ele aparece aqui.',
+        };
     }
   };
 
@@ -396,32 +457,18 @@ export default function PostsPage() {
           );
         })}
 
-        {displayedPosts.length === 0 && (
+        {displayedPosts.length === 0 && (() => {
+          const vazio = getEmptyState();
+          const IconeVazio = vazio.icon;
+
+          return (
           <div className="col-span-full py-24 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.01]">
             <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              {activeTab === 'pending' ? (
-                <Clock className="w-10 h-10 text-blue-700" />
-              ) : (
-                <CheckCircle2 className="w-10 h-10 text-emerald-700" />
-              )}
+              <IconeVazio className={`w-10 h-10 ${vazio.color}`} />
             </div>
-            <h3 className="text-xl font-bold text-zinc-400 mb-2">
-              {activeTab === 'pending'
-                ? posts.length === 0
-                  ? 'Nenhum post agendado'
-                  : 'Aguardando próximos designs...'
-                : 'Nenhum post aprovado ainda'
-              }
-            </h3>
+            <h3 className="text-xl font-bold text-zinc-400 mb-2">{vazio.title}</h3>
             <p className="text-zinc-600 mb-8 max-w-xs mx-auto text-sm text-balance">
-              {activeTab === 'pending'
-                ? posts.length === 0
-                  ? isAdmin
-                    ? 'Comece agendando o primeiro post para este cronograma mensal.'
-                    : 'Aguardando o administrador cadastrar o cronograma de posts.'
-                  : 'Todos os posts estão aprovados! Envie novos designs para continuar.'
-                : 'Nenhum post foi aprovado até agora.'
-              }
+              {vazio.description}
             </p>
             {activeTab === 'pending' && posts.length === 0 && isAdmin && (
               <button
@@ -433,7 +480,8 @@ export default function PostsPage() {
               </button>
             )}
           </div>
-        )}
+          );
+        })()}
       </div>
 
       <CreatePostModal

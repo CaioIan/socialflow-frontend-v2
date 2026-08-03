@@ -60,7 +60,7 @@ function ConteudoDoDialogo({
         onClick={() => !isConfirming && onClose()}
       />
 
-      <div className="relative w-full max-w-md glass-card p-6 space-y-5 border-red-500/20">
+      <div className="relative w-full max-w-md glass-card p-6 space-y-5 border-red-500/20 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
             <AlertTriangle className="w-5 h-5 text-red-400" />

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useOrganizationAccess } from '@/shared/hooks/use-organization-access';
 import { postsService, type PostStatus } from '../api/posts-service';
+import { rotuloDoStatus } from '../lib/post-status';
 import { postCommentsService } from '../api/post-comments-service';
 import { GlassCard } from '@/shared/components/glass-card';
 import { ReplaceAssetModal } from './replace-asset-modal';
@@ -165,7 +166,7 @@ export default function PostDetailPage() {
 
         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
           <div className={`px-3 py-1 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-zinc-400`}>
-            Status: {post.status}
+            {rotuloDoStatus(post.status)}
           </div>
         </div>
       </header>
@@ -200,16 +201,22 @@ export default function PostDetailPage() {
               </div>
 
               <div className="space-y-6">
-                <div>
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-white mb-2">Briefing Operacional</h4>
-                  <p className="text-sm text-zinc-400 leading-relaxed bg-white/2 border border-white/5 rounded-2xl p-5 italic">
-                    {post.briefing || 'Nenhum briefing fornecido.'}
-                  </p>
-                </div>
+                {/* O briefing é instrução interna de execução, entre quem pediu
+                    e quem desenha. O cliente aprova a peça pronta; mostrar o
+                    passo a passo só ruidifica a decisão dele. A API também não
+                    envia o campo para este papel. */}
+                {!isClient && (
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-white mb-2">Briefing da Arte</h4>
+                    <p className="text-sm text-zinc-400 leading-relaxed bg-white/2 border border-white/5 rounded-2xl p-5 italic">
+                      {post.briefing || 'Nenhum briefing fornecido.'}
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-white">Legenda Fixa Oficial</h4>
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-white">Legenda do Post</h4>
                     <button
                       onClick={handleCopyCaption}
                       className="text-[10px] font-bold flex items-center gap-1.5 text-zinc-500 hover:text-white transition-colors"
@@ -260,7 +267,9 @@ export default function PostDetailPage() {
                   </div>
                   {!post.currentVersionId && (
                     <p className="text-[10px] text-zinc-500 text-center mt-4">
-                      Aguardando a designer fazer o upload da primeira versão para habilitar aprovação.
+                      {isClient
+                        ? 'A arte ainda não foi enviada. Assim que ela chegar, o botão de aprovar libera.'
+                        : 'A aprovação só libera depois que a primeira versão da arte for enviada.'}
                     </p>
                   )}
                   {post.status === 'APPROVED' && (
@@ -493,7 +502,7 @@ export default function PostDetailPage() {
                     className="w-full py-2 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 border border-blue-500/30 transition-all"
                   >
                     <RotateCw className="w-4 h-4" />
-                    Reuplocar Feed
+                    Substituir Feed
                   </button>
                 )}
 
@@ -507,7 +516,7 @@ export default function PostDetailPage() {
                     className="w-full py-2 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-purple-200 border border-purple-500/30 transition-all"
                   >
                     <RotateCw className="w-4 h-4" />
-                    Reuplocar Stories
+                    Substituir Stories
                   </button>
                 )}
               </div>
