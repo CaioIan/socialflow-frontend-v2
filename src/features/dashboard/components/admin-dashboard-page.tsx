@@ -40,7 +40,7 @@ export function AdminDashboardPage() {
           <h1 className="text-3xl font-bold text-white">Dashboard Administrativo</h1>
           <p className="text-zinc-400 mt-1">Carregando dados...</p>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <GlassCard key={i} className="p-8 h-40 animate-pulse bg-white/5"><div /></GlassCard>
           ))}
@@ -91,6 +91,14 @@ export function AdminDashboardPage() {
           onClick={() => abrirDrilldown('PENDING', false)}
         />
         <StatCard
+          title="Pendentes com Imagem"
+          value={pendentesComImagem}
+          icon={ImageIcon}
+          colorClass="bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-cyan-500/20"
+          textColorClass="text-cyan-400"
+          onClick={() => abrirDrilldown('PENDING', true)}
+        />
+        <StatCard
           title="Solicitação de Ajuste"
           value={posts.ALTERATION_REQUESTED}
           icon={Clock}
@@ -121,14 +129,6 @@ export function AdminDashboardPage() {
           colorClass="bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20"
           textColorClass="text-red-400"
           onClick={() => abrirDrilldown('FAILED')}
-        />
-        <StatCard
-          title="Pendentes com Imagem"
-          value={pendentesComImagem}
-          icon={ImageIcon}
-          colorClass="bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-cyan-500/20"
-          textColorClass="text-cyan-400"
-          onClick={() => abrirDrilldown('PENDING', true)}
         />
       </div>
 
