@@ -439,9 +439,29 @@ export default function PostsPage() {
                     (() => {
                       const approval = post.statusHistory.find(h => h.toStatus === 'APPROVED');
                       return approval ? (
-                        <p className="text-[8px] text-zinc-500 -mt-2 mb-3">
-                          Aprovado por: <span className="text-zinc-400 font-semibold">{approval.changedByUser.name || approval.changedByUser.email}</span>
-                        </p>
+                        <div className="flex items-center gap-1.5 text-[8px] text-zinc-500 -mt-2 mb-3 min-w-0">
+                          {/* Rosto antes do nome: num cronograma com vários posts,
+                              reconhecer quem aprovou é mais rápido pela foto. */}
+                          <span className="w-4 h-4 shrink-0 rounded-full overflow-hidden bg-brand-gradient border border-white/10 flex items-center justify-center text-[7px] font-bold text-white">
+                            {approval.changedByUser.avatarUrl ? (
+                              <img
+                                src={approval.changedByUser.avatarUrl}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              (approval.changedByUser.name || approval.changedByUser.email)
+                                .charAt(0)
+                                .toUpperCase()
+                            )}
+                          </span>
+                          <span className="truncate">
+                            Aprovado por{' '}
+                            <span className="text-zinc-400 font-semibold">
+                              {approval.changedByUser.name || approval.changedByUser.email}
+                            </span>
+                          </span>
+                        </div>
                       ) : null;
                     })()
                   )}
