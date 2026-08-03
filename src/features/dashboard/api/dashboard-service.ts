@@ -5,8 +5,7 @@ export type PostStatus =
   | 'ALTERATION_REQUESTED'
   | 'APPROVED'
   | 'PUBLISHED'
-  | 'FAILED'
-  | 'CANCELLED';
+  | 'FAILED';
 
 export interface OverviewStats {
   totalOrganizations: number;
@@ -15,6 +14,8 @@ export interface OverviewStats {
   totalClients: number;
   totalCampaigns: number;
   posts: Record<PostStatus, number>;
+  /** Quantos dos PENDING já receberam arte. Recorte só do dashboard. */
+  pendingWithArt: number;
   pendingPostsTotal: number;
 }
 
@@ -55,8 +56,16 @@ class DashboardService {
     organizationId?: string,
     skip = 0,
     take = 20,
+    /** Recorta os PENDING entre os que já têm arte e os que ainda esperam. */
+    comArte?: boolean,
   ): Promise<StatsPostsList> {
-    const params = { status, skip, take, ...(organizationId ? { organizationId } : {}) };
+    const params = {
+      status,
+      skip,
+      take,
+      ...(organizationId ? { organizationId } : {}),
+      ...(comArte === undefined ? {} : { comArte: String(comArte) }),
+    };
     const response = await api.get<StatsPostsList>('/stats/posts', { params });
     return response.data;
   }

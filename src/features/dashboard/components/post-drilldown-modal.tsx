@@ -7,6 +7,8 @@ import dashboardService, { type PostStatus } from '../api/dashboard-service';
 interface PostDrilldownModalProps {
   status: PostStatus | null;
   organizationId?: string;
+  /** Recorta os PENDING entre os que já têm arte e os que ainda esperam. */
+  comArte?: boolean;
   onClose: () => void;
 }
 
@@ -16,15 +18,21 @@ const STATUS_LABEL: Record<PostStatus, string> = {
   APPROVED: 'Posts Aprovados',
   PUBLISHED: 'Posts Publicados',
   FAILED: 'Posts com Falha ao Publicar',
-  CANCELLED: 'Posts Cancelados',
 };
 
-export function PostDrilldownModal({ status, organizationId, onClose }: PostDrilldownModalProps) {
+export function PostDrilldownModal({
+  status,
+  organizationId,
+  comArte,
+  onClose,
+}: PostDrilldownModalProps) {
   const navigate = useNavigate();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['dashboard-posts', status, organizationId],
-    queryFn: () => dashboardService.getPostsByStatus(status!, organizationId),
+    // `comArte` entra na chave: sem isso as duas filas de PENDING dividiriam o
+    // mesmo cache e a segunda mostraria o resultado da primeira.
+    queryKey: ['dashboard-posts', status, organizationId, comArte],
+    queryFn: () => dashboardService.getPostsByStatus(status!, organizationId, 0, 20, comArte),
     enabled: !!status,
   });
 
@@ -32,7 +40,15 @@ export function PostDrilldownModal({ status, organizationId, onClose }: PostDril
     <Modal
       isOpen={!!status}
       onClose={onClose}
-      title={status ? STATUS_LABEL[status] : ''}
+      title={
+        status === 'PENDING' && comArte === true
+          ? 'Pendentes com Imagem'
+          : status === 'PENDING' && comArte === false
+            ? 'Pendentes sem Imagem'
+            : status
+              ? STATUS_LABEL[status]
+              : ''
+      }
       className="max-w-2xl"
     >
       {isLoading ? (

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Building2, AlertCircle, AlertTriangle, Clock, CheckCircle2, XCircle, Send, Users, Palette, FolderKanban } from 'lucide-react';
+import { Building2, AlertCircle, AlertTriangle, Clock, CheckCircle2, Image as ImageIcon, Send, Users, Palette, FolderKanban } from 'lucide-react';
 import dashboardService, { type PostStatus, type PeriodDays } from '../api/dashboard-service';
 import { GlassCard } from '@/shared/components/glass-card';
 import { StatCard } from './stat-card';
@@ -15,6 +15,13 @@ export function AdminDashboardPage() {
   const [organizationId, setOrganizationId] = useState<string | undefined>(undefined);
   const [periodDays, setPeriodDays] = useState<PeriodDays>(30);
   const [drilldownStatus, setDrilldownStatus] = useState<PostStatus | null>(null);
+  // `undefined` = sem recorte; true/false separam os PENDING com e sem arte.
+  const [drilldownComArte, setDrilldownComArte] = useState<boolean | undefined>(undefined);
+
+  const abrirDrilldown = (status: PostStatus, comArte?: boolean) => {
+    setDrilldownComArte(comArte);
+    setDrilldownStatus(status);
+  };
 
   const { data: overview, isLoading: isLoadingOverview } = useQuery({
     queryKey: ['dashboard-overview', organizationId],
@@ -52,8 +59,13 @@ export function AdminDashboardPage() {
     APPROVED: 0,
     PUBLISHED: 0,
     FAILED: 0,
-    CANCELLED: 0,
   };
+
+  // Os PENDING são duas filas distintas: uma espera o designer enviar a arte, a
+  // outra espera o cliente aprovar. No banco o status é o mesmo — a diferença é
+  // ter versão atual ou não.
+  const pendentesComImagem = overview?.pendingWithArt ?? 0;
+  const pendentesSemImagem = Math.max(posts.PENDING - pendentesComImagem, 0);
 
   return (
     <div className="space-y-8">
@@ -72,11 +84,11 @@ export function AdminDashboardPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
           title="Posts Pendentes"
-          value={posts.PENDING}
+          value={pendentesSemImagem}
           icon={AlertCircle}
           colorClass="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20"
           textColorClass="text-blue-400"
-          onClick={() => setDrilldownStatus('PENDING')}
+          onClick={() => abrirDrilldown('PENDING', false)}
         />
         <StatCard
           title="Solicitação de Ajuste"
@@ -84,7 +96,7 @@ export function AdminDashboardPage() {
           icon={Clock}
           colorClass="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20"
           textColorClass="text-amber-400"
-          onClick={() => setDrilldownStatus('ALTERATION_REQUESTED')}
+          onClick={() => abrirDrilldown('ALTERATION_REQUESTED')}
         />
         <StatCard
           title="Posts Aprovados"
@@ -92,7 +104,7 @@ export function AdminDashboardPage() {
           icon={CheckCircle2}
           colorClass="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20"
           textColorClass="text-emerald-400"
-          onClick={() => setDrilldownStatus('APPROVED')}
+          onClick={() => abrirDrilldown('APPROVED')}
         />
         <StatCard
           title="Posts Publicados"
@@ -100,7 +112,7 @@ export function AdminDashboardPage() {
           icon={Send}
           colorClass="bg-gradient-to-br from-violet-500/10 to-violet-600/5 border-violet-500/20"
           textColorClass="text-violet-400"
-          onClick={() => setDrilldownStatus('PUBLISHED')}
+          onClick={() => abrirDrilldown('PUBLISHED')}
         />
         <StatCard
           title="Falha ao Publicar"
@@ -108,15 +120,15 @@ export function AdminDashboardPage() {
           icon={AlertTriangle}
           colorClass="bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20"
           textColorClass="text-red-400"
-          onClick={() => setDrilldownStatus('FAILED')}
+          onClick={() => abrirDrilldown('FAILED')}
         />
         <StatCard
-          title="Posts Cancelados"
-          value={posts.CANCELLED}
-          icon={XCircle}
-          colorClass="bg-gradient-to-br from-zinc-500/10 to-zinc-600/5 border-zinc-500/20"
-          textColorClass="text-zinc-400"
-          onClick={() => setDrilldownStatus('CANCELLED')}
+          title="Pendentes com Imagem"
+          value={pendentesComImagem}
+          icon={ImageIcon}
+          colorClass="bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-cyan-500/20"
+          textColorClass="text-cyan-400"
+          onClick={() => abrirDrilldown('PENDING', true)}
         />
       </div>
 
@@ -178,7 +190,11 @@ export function AdminDashboardPage() {
       <PostDrilldownModal
         status={drilldownStatus}
         organizationId={organizationId}
-        onClose={() => setDrilldownStatus(null)}
+        comArte={drilldownComArte}
+        onClose={() => {
+          setDrilldownStatus(null);
+          setDrilldownComArte(undefined);
+        }}
       />
     </div>
   );

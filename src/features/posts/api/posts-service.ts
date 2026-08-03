@@ -5,8 +5,7 @@ export type PostStatus =
   | 'ALTERATION_REQUESTED'
   | 'APPROVED'
   | 'PUBLISHED'
-  | 'FAILED'
-  | 'CANCELLED';
+  | 'FAILED';
 
 /** O que o cron fez com o post. Ausente enquanto o horário agendado não chega. */
 export interface PublicationLog {
@@ -214,6 +213,18 @@ export const postsService = {
   /** Só a hora muda; cada post mantém a própria data. */
   bulkReschedule: async ({ ids, hora, minuto }: { ids: string[]; hora: number; minuto: number }) => {
     const response = await api.patch<{ quantidade: number }>('/posts/bulk/schedule', { ids, hora, minuto });
+    return response.data;
+  },
+
+  /**
+   * Troca as artes de feed da versão atual de uma vez.
+   *
+   * Substitui a lista inteira: é o que faz um post que subiu com uma imagem só
+   * virar carrossel. Fica na mesma versão de propósito — trocar o arquivo não
+   * é o mesmo que enviar uma versão nova para o cliente reaprovar.
+   */
+  replaceFeedUrls: async ({ versionId, feedUrls }: { versionId: string; feedUrls: string[] }) => {
+    const response = await api.patch(`/post-versions/${versionId}`, { feedUrls });
     return response.data;
   },
 };

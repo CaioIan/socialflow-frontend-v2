@@ -291,8 +291,7 @@ export default function PostDetailPage() {
                     )}
                     {/* Aprovado ou publicado, a decisão está tomada: o botão sai
                         da tela em vez de ficar cinza pedindo clique. */}
-                    {post.status !== 'CANCELLED' &&
-                      post.status !== 'APPROVED' &&
+                    {post.status !== 'APPROVED' &&
                       post.status !== 'PUBLISHED' && (
                       <button
                         onClick={() => setIsAdjustmentModalOpen(true)}
@@ -577,10 +576,11 @@ export default function PostDetailPage() {
             setSelectedAssetId(null);
           }}
           assetId={selectedAssetId !== 'feed-placeholder' && selectedAssetId !== 'stories-placeholder' ? selectedAssetId : undefined}
-          currentAssetUrl={selectedAssetType === 'FEED' ? feedUrl || undefined : storiesUrl || undefined}
           assetType={selectedAssetType}
           postId={postId!}
           campaignId={campId!}
+          versionId={post.currentVersionId ?? undefined}
+          currentFeedUrls={feedUrls}
           currentImageUrl={selectedAssetType === 'FEED' ? feedUrl || undefined : storiesUrl || undefined}
         />
       )}

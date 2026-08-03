@@ -13,7 +13,6 @@ const STATUS_CONFIG: Record<PostStatus, { label: string; color: string }> = {
   APPROVED: { label: 'Aprovados', color: '#34d399' },
   PUBLISHED: { label: 'Publicados', color: '#a78bfa' },
   FAILED: { label: 'Falha ao publicar', color: '#f87171' },
-  CANCELLED: { label: 'Cancelados', color: '#71717a' },
 };
 
 export function PostsStatusDonutChart({ posts, onSliceClick }: PostsStatusDonutChartProps) {

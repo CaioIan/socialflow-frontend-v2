@@ -9,7 +9,6 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  XCircle,
   Image as ImageIcon,
   Send,
   Loader2,
@@ -145,8 +144,6 @@ export default function PostsPage() {
         return { label: ROTULO_DO_STATUS.FAILED, color: 'text-red-400', bg: 'bg-red-500/10', icon: AlertTriangle };
       case 'ALTERATION_REQUESTED':
         return { label: ROTULO_DO_STATUS.ALTERATION_REQUESTED, color: 'text-amber-400', bg: 'bg-amber-500/10', icon: AlertCircle };
-      case 'CANCELLED':
-        return { label: ROTULO_DO_STATUS.CANCELLED, color: 'text-red-400', bg: 'bg-red-500/10', icon: XCircle };
       default:
         return { label: ROTULO_DO_STATUS.PENDING, color: 'text-blue-400', bg: 'bg-blue-500/10', icon: Clock };
     }

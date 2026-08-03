@@ -12,7 +12,6 @@ export const ROTULO_DO_STATUS: Record<PostStatus, string> = {
   APPROVED: 'Aprovado',
   PUBLISHED: 'Publicado',
   FAILED: 'Falha ao publicar',
-  CANCELLED: 'Cancelado',
 };
 
 /** Nunca devolve vazio: status desconhecido vira o texto do próprio código. */
