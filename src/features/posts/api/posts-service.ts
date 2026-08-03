@@ -227,4 +227,16 @@ export const postsService = {
     const response = await api.patch(`/post-versions/${versionId}`, { feedUrls });
     return response.data;
   },
+
+  /**
+   * Troca a arte de stories da versão atual.
+   *
+   * Trocar só o Asset não bastava: a tela lê `currentVersion.storiesUrl` antes
+   * do asset, então a imagem antiga continuava aparecendo mesmo com o upload
+   * tendo dado certo.
+   */
+  replaceStoriesUrl: async ({ versionId, storiesUrl }: { versionId: string; storiesUrl: string }) => {
+    const response = await api.patch(`/post-versions/${versionId}`, { storiesUrl });
+    return response.data;
+  },
 };

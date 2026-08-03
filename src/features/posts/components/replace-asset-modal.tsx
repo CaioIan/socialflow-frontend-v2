@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle, Loader2, Upload, X } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
-import api from '@/api/axios';
 import { postsService } from '../api/posts-service';
 
 /** Teto do carrossel no Instagram. */
@@ -11,8 +10,6 @@ const MAXIMO_DE_IMAGENS = 10;
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  /** Arte específica a substituir. Usado só no caminho de Stories. */
-  assetId?: string;
   assetType: 'FEED' | 'STORIES';
   postId: string;
   campaignId: string;
@@ -36,7 +33,6 @@ interface Props {
 export function ReplaceAssetModal({
   isOpen,
   onClose,
-  assetId,
   assetType,
   postId,
   campaignId,
@@ -83,12 +79,21 @@ export function ReplaceAssetModal({
         return await postsService.replaceFeedUrls({ versionId, feedUrls: urls });
       }
 
-      if (!assetId) throw new Error('Arte não identificada');
+      // Stories: sobe a arte nova e reaponta a versão.
+      //
+      // Só trocar o Asset não resolvia: a tela lê `currentVersion.storiesUrl`
+      // antes de olhar o asset, então a imagem antiga continuava na tela mesmo
+      // com o upload tendo dado certo — o "trocou" era verdade no banco e
+      // mentira no que o usuário via.
+      if (!versionId) {
+        throw new Error('Este post ainda não tem uma versão para atualizar');
+      }
 
-      const corpo = new FormData();
-      corpo.append('file', arquivos[0]);
-      const response = await api.patch(`/assets/${assetId}`, corpo);
-      return response.data;
+      const asset = await postsService.uploadAsset(arquivos[0], postId, 'STORIES');
+      return await postsService.replaceStoriesUrl({
+        versionId,
+        storiesUrl: asset.cloudinaryUrl,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
@@ -269,7 +274,7 @@ export function ReplaceAssetModal({
             <button
               type="button"
               onClick={() => enviar.mutate()}
-              disabled={arquivos.length === 0 || enviar.isPending || (ehCarrossel && !versionId)}
+              disabled={arquivos.length === 0 || enviar.isPending || !versionId}
               className="flex-[2] bg-brand-gradient hover:opacity-90 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 text-sm"
             >
               {enviar.isPending ? (

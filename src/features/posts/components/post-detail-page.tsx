@@ -575,7 +575,6 @@ export default function PostDetailPage() {
             setIsReplaceAssetModalOpen(false);
             setSelectedAssetId(null);
           }}
-          assetId={selectedAssetId !== 'feed-placeholder' && selectedAssetId !== 'stories-placeholder' ? selectedAssetId : undefined}
           assetType={selectedAssetType}
           postId={postId!}
           campaignId={campId!}
