@@ -16,6 +16,9 @@ export function ImportPostsModal({ isOpen, onClose, campaignId }: ImportPostsMod
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<ImportPostsResult | null>(null);
 
+  // Importação parcial conta como sucesso: os posts criados já existem no banco.
+  const importouAlgo = (result?.created ?? 0) > 0;
+
   const mutation = useMutation({
     mutationFn: (selectedFile: File) => postsService.importPosts(campaignId, selectedFile),
     onSuccess: (data) => {
@@ -124,6 +127,10 @@ export function ImportPostsModal({ isOpen, onClose, campaignId }: ImportPostsMod
           >
             {result ? 'Fechar' : 'Cancelar'}
           </button>
+          {/* Some quando algo entrou: reimportar o mesmo arquivo duplicaria os
+              posts já criados. Se nada foi criado — arquivo inválido, todas as
+              linhas com erro — o botão fica, para corrigir e tentar de novo. */}
+          {!importouAlgo && (
           <button
             type="button"
             onClick={handleSubmit}
@@ -142,6 +149,7 @@ export function ImportPostsModal({ isOpen, onClose, campaignId }: ImportPostsMod
               </>
             )}
           </button>
+          )}
         </div>
       </div>
     </Modal>

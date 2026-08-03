@@ -113,22 +113,20 @@ describe('PostsPage — resultado da publicação', () => {
     expect(within(publicados).getByText('1')).toBeInTheDocument();
   });
 
-  it('mostra o link do Instagram no post publicado', async () => {
+  it('não expõe o link do Instagram, mesmo quando a Meta devolve o permalink', async () => {
+    // A API continua guardando o permalink — é útil para suporte —, mas ele saiu
+    // da interface por decisão de produto. Este teste é o que impede o link de
+    // voltar sem querer junto de outra mudança no card.
     servico.getByCampaign.mockResolvedValue([
       post({ id: 'post-pub', status: 'PUBLISHED', publicationLog: SUCESSO }),
     ]);
     montar();
 
     await userEvent.click(await screen.findByRole('button', { name: /publicados/i }));
-    await screen.findByText(/ver no instagram/i);
+    await screen.findByText('Publicado');
 
-    // Buscar pelo href: o card inteiro também é um link e o nome acessível dele
-    // engloba o texto deste, então por papel/nome os dois casam.
-    const link = document.querySelector('a[href^="https://www.instagram.com"]')!;
-    expect(link).toHaveAttribute('href', 'https://www.instagram.com/p/ABC123/');
-    // Sem `noopener` a aba aberta ganha acesso à janela do SocialFlow.
-    expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
-    expect(link).toHaveAttribute('target', '_blank');
+    expect(screen.queryByText(/ver no instagram/i)).not.toBeInTheDocument();
+    expect(document.querySelector('a[href^="https://www.instagram.com"]')).toBeNull();
   });
 
   it('post publicado sem permalink não quebra o card', async () => {

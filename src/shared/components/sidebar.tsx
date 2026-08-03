@@ -1,5 +1,7 @@
-import { LayoutDashboard, Building2, Users, LogOut, X, AlertTriangle, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, Building2, Users, LogOut, X, AlertTriangle, PanelLeftClose, PanelLeftOpen, ChevronDown, Check } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { UserAvatar } from '@/shared/components/user-avatar';
+import { useProfile } from '@/features/profile/api/use-profile';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/use-auth-store';
@@ -14,7 +16,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) {
-  const { user, logout, currentOrganizationId } = useAuthStore();
+  const { user, logout, currentOrganizationId, setCurrentOrganization } = useAuthStore();
   const [isMobile, setIsMobile] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
@@ -25,7 +27,28 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const navigate = useNavigate();
+  const { data: perfil } = useProfile();
+  const [seletorAberto, setSeletorAberto] = useState(false);
+
   const role = user?.role?.toUpperCase() || '';
+  const organizacoes = perfil?.organizations ?? [];
+  // O seletor só faz sentido para quem atende mais de uma empresa. O ADMIN tem
+  // a tela de Organizações para isso e não entra aqui.
+  const usaSeletor = (role === 'CLIENT' || role === 'DESIGNER') && organizacoes.length > 1;
+  const organizacaoAtual = organizacoes.find((o) => o.organizationId === currentOrganizationId);
+
+  const trocarOrganizacao = async (organizationId: string) => {
+    if (organizationId === currentOrganizationId) {
+      setSeletorAberto(false);
+      return;
+    }
+    await authService.selectOrganization(organizationId);
+    setCurrentOrganization(organizationId);
+    setSeletorAberto(false);
+    onClose?.();
+    navigate(`/organizations/${organizationId}/campaigns`);
+  };
 
   const menuItems = [
     {
@@ -38,13 +61,15 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
       icon: Building2,
       label: 'Minha Organização',
       href: currentOrganizationId ? `/organizations/${currentOrganizationId}/campaigns` : '/organizations',
-      roles: ['CLIENT'],
+      roles: ['CLIENT', 'DESIGNER'],
     },
-    { icon: Building2, label: 'Organizações', href: '/organizations', roles: ['ADMIN', 'DESIGNER'] },
+    { icon: Building2, label: 'Organizações', href: '/organizations', roles: ['ADMIN'] },
     { icon: Users, label: 'Equipe', href: '/team', roles: ['ADMIN'] },
   ];
 
-  const filteredItems = menuItems.filter(item => item.roles.includes(role));
+  const filteredItems = menuItems.filter(
+    (item) => item.roles.includes(role) && !(usaSeletor && item.label === 'Minha Organização'),
+  );
 
   const handleLogout = async () => {
     try {
@@ -113,6 +138,71 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
           </div>
         </div>
 
+        {/* Troca rápida de organização — só para quem atende mais de uma. */}
+        {usaSeletor && !collapsed && (
+          <div className="px-4 mb-3">
+            <button
+              type="button"
+              onClick={() => setSeletorAberto((v) => !v)}
+              aria-expanded={seletorAberto}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-left"
+            >
+              <span className="w-6 h-6 rounded-lg overflow-hidden bg-white/5 flex items-center justify-center shrink-0">
+                {organizacaoAtual?.logoUrl ? (
+                  <img src={organizacaoAtual.logoUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <Building2 className="w-3.5 h-3.5 text-zinc-400" />
+                )}
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-[9px] uppercase tracking-wider text-zinc-600 font-bold">
+                  Organização
+                </span>
+                <span className="block text-sm text-white truncate">
+                  {organizacaoAtual?.name ?? 'Selecionar'}
+                </span>
+              </span>
+              <ChevronDown
+                className={cn('w-4 h-4 text-zinc-500 shrink-0 transition-transform', seletorAberto && 'rotate-180')}
+              />
+            </button>
+
+            <AnimatePresence>
+              {seletorAberto && (
+                <motion.ul
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className="overflow-hidden mt-1 space-y-0.5"
+                >
+                  {organizacoes.map((org) => (
+                    <li key={org.organizationId}>
+                      <button
+                        type="button"
+                        onClick={() => trocarOrganizacao(org.organizationId)}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
+                      >
+                        <span className="w-5 h-5 rounded-md overflow-hidden bg-white/5 flex items-center justify-center shrink-0">
+                          {org.logoUrl ? (
+                            <img src={org.logoUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Building2 className="w-3 h-3 text-zinc-500" />
+                          )}
+                        </span>
+                        <span className="flex-1 text-sm text-zinc-300 truncate">{org.name}</span>
+                        {org.organizationId === currentOrganizationId && (
+                          <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
         {/* Nav */}
         <nav className={cn("flex-1 space-y-1", collapsed ? "px-2" : "px-4")}>
           {filteredItems.map((item) => (
@@ -159,8 +249,34 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
           ))}
         </nav>
 
-        {/* Footer: logout */}
-        <div className={cn("p-4 border-t border-white/5", collapsed ? "px-2" : "px-6")}>
+        {/* Footer: perfil + logout */}
+        <div className={cn("p-4 border-t border-white/5 space-y-1", collapsed ? "px-2" : "px-6")}>
+          <NavLink
+            to="/perfil"
+            onClick={onClose}
+            title={collapsed ? 'Meu perfil' : undefined}
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-xl transition-colors w-full",
+              collapsed && "justify-center px-0",
+              isActive ? "bg-white/10 text-white" : "text-zinc-400 hover:text-white hover:bg-white/5"
+            )}
+          >
+            <UserAvatar
+              nome={perfil?.name ?? user?.name}
+              email={perfil?.email}
+              avatarUrl={perfil?.avatarUrl}
+              organizacoes={perfil?.organizations}
+              tamanho="sm"
+            />
+            {!collapsed && (
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium truncate">
+                  {perfil?.name ?? user?.name ?? 'Meu perfil'}
+                </span>
+                <span className="block text-[10px] text-zinc-600 truncate">Ver perfil</span>
+              </span>
+            )}
+          </NavLink>
           <button
             onClick={() => setIsLogoutModalOpen(true)}
             title={collapsed ? 'Sair' : undefined}

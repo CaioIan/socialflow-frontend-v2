@@ -35,5 +35,18 @@ export const usersService = {
   linkToOrganization: async (data: { userId: string; organizationId: string; role: string }) => {
     const response = await api.post('/users/link', data);
     return response.data;
-  }
+  },
+
+  /**
+   * ⚠️ O e-mail é a credencial de login: trocá-lo muda por onde a pessoa entra.
+   * As sessões abertas seguem valendo até o token expirar.
+   */
+  update: async ({ id, ...data }: { id: string; name?: string; email?: string }) => {
+    const response = await api.patch<User>(`/users/${id}`, data);
+    return response.data;
+  },
+
+  unlinkFromOrganization: async ({ userId, organizationId }: { userId: string; organizationId: string }) => {
+    await api.delete(`/users/${userId}/organizations/${organizationId}`);
+  },
 };

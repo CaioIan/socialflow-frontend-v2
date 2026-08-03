@@ -15,7 +15,6 @@ import {
   Loader2,
   FileUp,
   AlertTriangle,
-  ExternalLink,
   CheckSquare,
   Square,
   Trash2,
@@ -460,19 +459,6 @@ export default function PostsPage() {
                         Reenvie a arte para o post voltar à fila de publicação.
                       </p>
                     </div>
-                  )}
-
-                  {post.status === 'PUBLISHED' && post.publicationLog?.permalink && (
-                    <a
-                      href={post.publicationLog.permalink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-[9px] text-violet-400 hover:text-violet-300 flex items-center gap-1 -mt-2 mb-3 transition-colors w-fit"
-                    >
-                      <ExternalLink className="w-2.5 h-2.5" />
-                      Ver no Instagram
-                    </a>
                   )}
 
                   <div className="flex-1 space-y-4">

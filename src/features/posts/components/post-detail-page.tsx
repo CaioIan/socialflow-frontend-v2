@@ -22,9 +22,11 @@ import {
   Download,
   Loader2,
   Layers,
+  FileText,
+  ChevronDown,
 } from 'lucide-react';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { useToastStore } from '@/stores/use-toast-store';
 import { getApiErrorMessage } from '@/api/api-error';
@@ -41,13 +43,14 @@ export default function PostDetailPage() {
   const [selectedAssetType, setSelectedAssetType] = useState<'FEED' | 'STORIES'>('FEED');
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
   const [isSubmittingAdjustment, setIsSubmittingAdjustment] = useState(false);
+  const [briefingAberto, setBriefingAberto] = useState(false);
 
   const role = user?.role?.toUpperCase();
   const isAdmin = role === 'ADMIN';
   const isDesigner = role === 'DESIGNER';
   const isClient = role === 'CLIENT';
 
-  const { data: post, isLoading } = useQuery({
+  const { data: post, isLoading, isFetching: recarregandoPost } = useQuery({
     queryKey: ['post', postId],
     queryFn: () => postsService.getById(postId!),
     enabled: !!postId && hasAccess,
@@ -72,6 +75,15 @@ export default function PostDetailPage() {
       addToast(getApiErrorMessage(error, 'Erro ao atualizar status.'), 'error');
     }
   });
+
+  /**
+   * Trava os botões de decisão do cliente.
+   *
+   * Só `isPending` não basta: quando a mutation termina, o `post` em mãos ainda
+   * é o antigo até a invalidação recarregar. Nessa fresta os botões voltavam a
+   * ficar clicáveis, e dava para aprovar duas vezes.
+   */
+  const decisaoEmAndamento = updateStatusMutation.isPending || recarregandoPost;
 
   const handleRequestAdjustment = async (comment: string) => {
     if (!post?.currentVersionId) return;
@@ -207,10 +219,39 @@ export default function PostDetailPage() {
                     envia o campo para este papel. */}
                 {!isClient && (
                   <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-white mb-2">Briefing da Arte</h4>
-                    <p className="text-sm text-zinc-400 leading-relaxed bg-white/2 border border-white/5 rounded-2xl p-5 italic">
-                      {post.briefing || 'Nenhum briefing fornecido.'}
-                    </p>
+                    {/* Recolhido por padrão: quem abre o post costuma vir olhar a
+                        arte, não reler a instrução. Fica a um toque de distância
+                        para quando for preciso. */}
+                    <button
+                      type="button"
+                      onClick={() => setBriefingAberto((v) => !v)}
+                      aria-expanded={briefingAberto}
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-white/2 border border-white/5 hover:bg-white/5 hover:border-white/10 transition-colors group/briefing"
+                    >
+                      <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400 group-hover/briefing:text-white transition-colors">
+                        <FileText className="w-3.5 h-3.5" />
+                        Ver briefing de design
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-zinc-500 shrink-0 transition-transform ${briefingAberto ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {briefingAberto && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <p className="text-sm text-zinc-400 leading-relaxed bg-white/2 border border-white/5 rounded-2xl p-5 italic mt-2">
+                            {post.briefing || 'Nenhum briefing fornecido.'}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )}
 
@@ -241,22 +282,24 @@ export default function PostDetailPage() {
                           status: 'APPROVED', 
                           versionId: post.currentVersionId || undefined 
                         })}
-                        disabled={updateStatusMutation.isPending || !post.currentVersionId}
+                        disabled={decisaoEmAndamento || !post.currentVersionId}
                         className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_rgba(16,185,129,0.2)] disabled:opacity-50 disabled:grayscale"
                       >
                         <CheckCircle className="w-5 h-5" />
                         Aprovar Post
                       </button>
                     )}
-                    {post.status !== 'CANCELLED' && (
+                    {/* Aprovado ou publicado, a decisão está tomada: o botão sai
+                        da tela em vez de ficar cinza pedindo clique. */}
+                    {post.status !== 'CANCELLED' &&
+                      post.status !== 'APPROVED' &&
+                      post.status !== 'PUBLISHED' && (
                       <button
                         onClick={() => setIsAdjustmentModalOpen(true)}
                         disabled={
-                          updateStatusMutation.isPending ||
+                          decisaoEmAndamento ||
                           !post.currentVersionId ||
-                          post.status === 'ALTERATION_REQUESTED' ||
-                          post.status === 'APPROVED' ||
-                          post.status === 'PUBLISHED'
+                          post.status === 'ALTERATION_REQUESTED'
                         }
                         className="flex-1 bg-amber-500 hover:bg-amber-400 text-black px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_rgba(245,158,11,0.2)] disabled:opacity-50 disabled:grayscale"
                       >

@@ -10,6 +10,7 @@ import {
   Mail,
   Building,
   Plus,
+  Pencil,
   CheckCircle2,
   Loader2,
   PowerOff,
@@ -18,6 +19,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreateUserModal } from './create-user-modal';
 import { LinkOrganizationModal } from './link-organization-modal';
+import { EditUserModal } from './edit-user-modal';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
 
@@ -35,6 +37,7 @@ export default function TeamPage() {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithOrgs | null>(null);
   const [usuarioParaDesativar, setUsuarioParaDesativar] = useState<UserWithOrgs | null>(null);
+  const [usuarioParaEditar, setUsuarioParaEditar] = useState<UserWithOrgs | undefined>(undefined);
 
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
@@ -172,6 +175,15 @@ export default function TeamPage() {
                   {/* Crachá informa; o botão ao lado age. Antes o próprio crachá
                       era clicável, e ninguém adivinha isso olhando. */}
                   <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setUsuarioParaEditar(u)}
+                      title={`Editar ${u.name || u.email}`}
+                      aria-label={`Editar ${u.name || u.email}`}
+                      className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
                     <span
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${u.isActive
                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
@@ -273,6 +285,12 @@ export default function TeamPage() {
           user={selectedUser}
         />
       )}
+
+      <EditUserModal
+        isOpen={!!usuarioParaEditar}
+        onClose={() => setUsuarioParaEditar(undefined)}
+        user={usuarioParaEditar}
+      />
 
       <ConfirmDialog
         isOpen={!!usuarioParaDesativar}

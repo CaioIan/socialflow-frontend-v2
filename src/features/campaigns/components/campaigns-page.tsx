@@ -204,30 +204,35 @@ export default function CampaignsPage() {
                 </div>
               )}
 
-              <div className="flex items-start justify-between mb-6">
-                <div className="w-12 h-12 rounded-xl bg-brand-gradient flex items-center justify-center text-white transition-all shadow-[0_0_15px_oklch(var(--primary)/0.3)]">
+              <div className="flex items-center gap-3 mb-6 min-w-0">
+                <div className="w-12 h-12 shrink-0 rounded-xl bg-brand-gradient flex items-center justify-center text-white transition-all shadow-[0_0_15px_oklch(var(--primary)/0.3)]">
                   <FolderKanban className="w-6 h-6" />
                 </div>
+                {/* O mês é o que distingue uma campanha da outra num painel de
+                    cronogramas mensais — por isso grande. Em cinza fechado para
+                    pesar como fundo, não competir com o nome. */}
+                <span className="text-3xl font-black tracking-tight text-zinc-700 leading-none truncate capitalize select-none">
+                  {campaign.referenceMonth && campaign.referenceYear
+                    ? new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(
+                        new Date(2024, campaign.referenceMonth - 1),
+                      )
+                    : '—'}
+                </span>
               </div>
 
               <h3 className="text-lg font-bold text-white mb-1 group-hover:text-glow transition-all">
                 {campaign.title}
               </h3>
-              
+
               <div className="flex items-center gap-2 text-zinc-500 text-sm mb-6">
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-4 h-4 shrink-0" />
                 <span>
-                  {campaign.referenceMonth && campaign.referenceYear 
+                  {campaign.referenceMonth && campaign.referenceYear
                     ? `${new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(new Date(2024, campaign.referenceMonth - 1))} ${campaign.referenceYear}`
                     : 'Sem data definida'}
                 </span>
               </div>
 
-              <div className="pt-4 border-t border-white/5 flex items-center justify-end">
-                <div className="w-6 h-6 rounded-full border border-zinc-900 bg-zinc-800 flex items-center justify-center text-[8px] font-bold text-zinc-500">
-                  SF
-                </div>
-              </div>
             </GlassCard>
           </motion.div>
         ))}

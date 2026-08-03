@@ -9,6 +9,7 @@ import PostDetailPage from '@/features/posts/components/post-detail-page';
 import TeamPage from '@/features/team/components/team-page';
 import { AdminDashboardPage } from '@/features/dashboard/components/admin-dashboard-page';
 import InstagramPage from '@/features/instagram/components/instagram-page';
+import ProfilePage from '@/features/profile/components/profile-page';
 
 export const router = createBrowserRouter([
   {
@@ -51,6 +52,11 @@ export const router = createBrowserRouter([
             <InstagramPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        // Qualquer papel: cada um mexe só na própria foto.
+        path: 'perfil',
+        element: <ProfilePage />,
       },
       {
         path: 'team',

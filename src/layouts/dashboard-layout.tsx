@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { OrganizationSelector } from '@/features/auth/components/organization-selector';
 import { Menu } from 'lucide-react';
+import { UserAvatar } from '@/shared/components/user-avatar';
+import { useProfile } from '@/features/profile/api/use-profile';
 
 const COLLAPSED_KEY = 'sidebar-collapsed';
 
@@ -22,6 +24,7 @@ export function DashboardLayout() {
     return () => window.removeEventListener('resize', check);
   }, []);
   const location = useLocation();
+  const { data: perfil } = useProfile();
 
   const userRole = user?.role?.toUpperCase();
   const isClient = userRole === 'CLIENT';
@@ -111,9 +114,23 @@ export function DashboardLayout() {
                 {user?.role || 'Usuário'}
               </span>
             </div>
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-brand-gradient border border-white/10 flex items-center justify-center text-white font-bold shadow-[0_0_15px_oklch(var(--primary)/0.3)]">
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
-            </div>
+            {/* O avatar abre o menu: no mobile, a gaveta; no desktop, expande a
+                barra recolhida. É o alvo que a mão procura primeiro. */}
+            <button
+              type="button"
+              onClick={() => (isMobile ? setIsMobileMenuOpen(true) : setIsCollapsed(false))}
+              title="Abrir menu"
+              aria-label="Abrir menu"
+              className="rounded-full transition-transform active:scale-90 hover:opacity-90 cursor-pointer"
+            >
+              <UserAvatar
+                nome={perfil?.name ?? user?.name}
+                email={perfil?.email}
+                avatarUrl={perfil?.avatarUrl}
+                organizacoes={perfil?.organizations}
+                tamanho="md"
+              />
+            </button>
           </div>
         </header>
 
