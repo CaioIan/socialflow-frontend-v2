@@ -201,4 +201,19 @@ export const postsService = {
     const response = await api.post<ImportPostsResult>('/posts/import', formData);
     return response.data;
   },
+
+  /**
+   * Ações em massa. `POST` em vez de `DELETE` com corpo: corpo em DELETE é mal
+   * suportado por proxies e clientes HTTP.
+   */
+  bulkDelete: async (ids: string[]) => {
+    const response = await api.post<{ quantidade: number }>('/posts/bulk/delete', { ids });
+    return response.data;
+  },
+
+  /** Só a hora muda; cada post mantém a própria data. */
+  bulkReschedule: async ({ ids, hora, minuto }: { ids: string[]; hora: number; minuto: number }) => {
+    const response = await api.patch<{ quantidade: number }>('/posts/bulk/schedule', { ids, hora, minuto });
+    return response.data;
+  },
 };

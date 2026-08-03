@@ -34,5 +34,11 @@ export const campaignsService = {
 
   deleteCampaign: async (id: string) => {
     await api.delete(`/campaigns/${id}`);
-  }
+  },
+
+  /** Cascateia: cada campanha leva junto todos os posts dela. */
+  bulkDelete: async (ids: string[]) => {
+    const response = await api.post<{ quantidade: number }>('/campaigns/bulk/delete', { ids });
+    return response.data;
+  },
 };

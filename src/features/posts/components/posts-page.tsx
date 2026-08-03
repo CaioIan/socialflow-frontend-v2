@@ -15,14 +15,23 @@ import {
   Loader2,
   FileUp,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  CheckSquare,
+  Square,
+  Trash2,
+  Clock3
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { campaignsService } from '@/features/campaigns/api/campaigns-service';
 import { postsService } from '../api/posts-service';
+import { useToastStore } from '@/stores/use-toast-store';
+import { getApiErrorMessage } from '@/api/api-error';
 import { ROTULO_DO_STATUS } from '../lib/post-status';
 import { CreatePostModal } from './create-post-modal';
+import { BulkRescheduleModal } from './bulk-reschedule-modal';
+import { SelectionBar } from '@/shared/components/selection-bar';
+import { TypeToConfirmDialog } from '@/shared/components/type-to-confirm-dialog';
 import { ImportPostsModal } from './import-posts-modal';
 import { EditPostModal } from './edit-post-modal';
 import { DeletePostModal } from './delete-post-modal';
@@ -43,6 +52,10 @@ export default function PostsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [modoSelecao, setModoSelecao] = useState(false);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
   const role = user?.role?.toUpperCase();
   const isAdmin = role === 'ADMIN';
@@ -75,6 +88,53 @@ export default function PostsPage() {
     : activeTab === 'approved' ? approvedPosts
     : activeTab === 'published' ? publishedPosts
     : failedPosts;
+
+  const queryClient = useQueryClient();
+  const { addToast } = useToastStore();
+
+  const idsSelecionados = [...selecionados];
+  // Só faz sentido selecionar o que está à vista: a barra age sobre a aba atual.
+  const selecionaveis = displayedPosts.map((p) => p.id);
+  const tudoMarcado =
+    selecionaveis.length > 0 && selecionaveis.every((id) => selecionados.has(id));
+
+  const alternarSelecao = (id: string) => {
+    setSelecionados((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(id)) proximo.delete(id);
+      else proximo.add(id);
+      return proximo;
+    });
+  };
+
+  const sairDaSelecao = () => {
+    setModoSelecao(false);
+    setSelecionados(new Set());
+  };
+
+  const aposAcaoEmMassa = (mensagem: string) => {
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
+    addToast(mensagem, 'success');
+    sairDaSelecao();
+  };
+
+  const excluirEmMassa = useMutation({
+    mutationFn: postsService.bulkDelete,
+    onSuccess: (r) => {
+      setIsBulkDeleteOpen(false);
+      aposAcaoEmMassa(`${r.quantidade} post(s) excluídos.`);
+    },
+    onError: (erro) => addToast(getApiErrorMessage(erro, 'Erro ao excluir os posts.'), 'error'),
+  });
+
+  const reagendarEmMassa = useMutation({
+    mutationFn: postsService.bulkReschedule,
+    onSuccess: (r) => {
+      setIsRescheduleOpen(false);
+      aposAcaoEmMassa(`Horário alterado em ${r.quantidade} post(s).`);
+    },
+    onError: (erro) => addToast(getApiErrorMessage(erro, 'Erro ao alterar o horário.'), 'error'),
+  });
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -181,6 +241,16 @@ export default function PostsPage() {
 
         {isAdmin && (
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button
+              onClick={() => (modoSelecao ? sairDaSelecao() : setModoSelecao(true))}
+              className={`px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all w-full sm:w-auto border ${modoSelecao
+                ? 'border-primary/50 bg-primary/15 text-white'
+                : 'border-white/10 text-zinc-300 hover:text-white hover:bg-white/5'
+                }`}
+            >
+              <CheckSquare className="w-5 h-5" />
+              {modoSelecao ? 'Cancelar seleção' : 'Selecionar'}
+            </button>
             <button
               onClick={() => setIsImportModalOpen(true)}
               className="border border-white/10 text-zinc-300 hover:text-white hover:bg-white/5 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
@@ -318,9 +388,25 @@ export default function PostsPage() {
             >
               <Link
                 to={`/organizations/${orgId}/campaigns/${campaignId}/posts/${post.id}`}
-                className="block h-full group"
+                onClick={(e) => {
+                  // Em modo de seleção o card marca em vez de navegar.
+                  if (!modoSelecao) return;
+                  e.preventDefault();
+                  alternarSelecao(post.id);
+                }}
+                aria-pressed={modoSelecao ? selecionados.has(post.id) : undefined}
+                className="block h-full group relative"
               >
-                <GlassCard className="hover:border-white/20 transition-all flex flex-col h-full active:scale-[0.98] transition-transform">
+                {modoSelecao && (
+                  <span className="absolute top-3 left-3 z-20 pointer-events-none">
+                    {selecionados.has(post.id) ? (
+                      <CheckSquare className="w-5 h-5 text-primary drop-shadow-[0_0_6px_oklch(var(--primary)/0.8)]" />
+                    ) : (
+                      <Square className="w-5 h-5 text-zinc-500" />
+                    )}
+                  </span>
+                )}
+                <GlassCard className={`hover:border-white/20 transition-all flex flex-col h-full active:scale-[0.98] transition-transform ${modoSelecao && selecionados.has(post.id) ? 'ring-2 ring-primary border-primary/40' : ''}`}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <div className={`px-3 py-1 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${status.bg} ${status.color}`}>
@@ -483,6 +569,66 @@ export default function PostsPage() {
           );
         })()}
       </div>
+
+      <SelectionBar
+        quantidade={idsSelecionados.length}
+        substantivo={{ singular: 'post selecionado', plural: 'posts selecionados' }}
+        tudoMarcado={tudoMarcado}
+        onAlternarTudo={() =>
+          setSelecionados(tudoMarcado ? new Set() : new Set(selecionaveis))
+        }
+        onSair={sairDaSelecao}
+      >
+        <button
+          type="button"
+          onClick={() => setIsRescheduleOpen(true)}
+          className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-200 hover:text-white text-sm font-bold flex items-center gap-2 transition-all"
+        >
+          <Clock3 className="w-4 h-4" />
+          Alterar horário
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsBulkDeleteOpen(true)}
+          className="px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 hover:border-red-500/50 text-red-400 hover:text-red-300 text-sm font-bold flex items-center gap-2 transition-all"
+        >
+          <Trash2 className="w-4 h-4" />
+          Excluir
+        </button>
+      </SelectionBar>
+
+      <BulkRescheduleModal
+        isOpen={isRescheduleOpen}
+        onClose={() => !reagendarEmMassa.isPending && setIsRescheduleOpen(false)}
+        onConfirm={(hora, minuto) =>
+          reagendarEmMassa.mutate({ ids: idsSelecionados, hora, minuto })
+        }
+        quantidade={idsSelecionados.length}
+        isConfirming={reagendarEmMassa.isPending}
+      />
+
+      {/* Digitar a quantidade: e a unica acao da tela que apaga varios registros
+          de uma vez, sem volta. */}
+      <TypeToConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        onClose={() => !excluirEmMassa.isPending && setIsBulkDeleteOpen(false)}
+        onConfirm={() => excluirEmMassa.mutate(idsSelecionados)}
+        title="Excluir posts permanentemente?"
+        confirmationText={String(idsSelecionados.length)}
+        description={
+          <>
+            <strong className="text-zinc-300">
+              {idsSelecionados.length} {idsSelecionados.length === 1 ? 'post' : 'posts'}
+            </strong>{' '}
+            e tudo que está preso a eles — artes, versões, comentários e histórico —
+            serão excluídos permanentemente. Esta ação não pode ser desfeita.
+            {' '}Digite <strong className="text-zinc-300">{idsSelecionados.length}</strong> para confirmar.
+          </>
+        }
+        confirmLabel="Excluir Permanentemente"
+        confirmingLabel="Excluindo..."
+        isConfirming={excluirEmMassa.isPending}
+      />
 
       <CreatePostModal
         isOpen={isCreateModalOpen}

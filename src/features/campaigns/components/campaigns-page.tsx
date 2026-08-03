@@ -3,13 +3,14 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useOrganizationAccess } from '@/shared/hooks/use-organization-access';
 import { GlassCard } from '@/shared/components/glass-card';
-import { FolderKanban, Plus, Calendar, ArrowLeft, Loader2, Edit2, Trash2 } from 'lucide-react';
+import { FolderKanban, Plus, Calendar, ArrowLeft, Loader2, Edit2, Trash2, CheckSquare, Square } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { organizationsService } from '@/features/organizations/api/organizations-service';
 import { campaignsService } from '../api/campaigns-service';
 import { CreateCampaignModal } from './create-campaign-modal';
 import { TypeToConfirmDialog } from '@/shared/components/type-to-confirm-dialog';
+import { SelectionBar } from '@/shared/components/selection-bar';
 import { useToastStore } from '@/stores/use-toast-store';
 import type { Campaign } from '../api/campaigns-service';
 
@@ -23,6 +24,9 @@ export default function CampaignsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | undefined>(undefined);
   const [campaignPendingDelete, setCampaignPendingDelete] = useState<{ id: string; title: string; postsCount: number } | undefined>(undefined);
+  const [modoSelecao, setModoSelecao] = useState(false);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
 
@@ -65,6 +69,39 @@ export default function CampaignsPage() {
     },
   });
 
+  const idsSelecionados = [...selecionados];
+  const tudoMarcado =
+    campaigns.length > 0 && campaigns.every((c) => selecionados.has(c.id));
+  // Quantos posts somem junto — é o número que o operador precisa ver antes.
+  const postsAtingidos = campaigns
+    .filter((c) => selecionados.has(c.id))
+    .reduce((soma, c) => soma + c.postsCount, 0);
+
+  const alternarSelecao = (idCampanha: string) => {
+    setSelecionados((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(idCampanha)) proximo.delete(idCampanha);
+      else proximo.add(idCampanha);
+      return proximo;
+    });
+  };
+
+  const sairDaSelecao = () => {
+    setModoSelecao(false);
+    setSelecionados(new Set());
+  };
+
+  const excluirEmMassa = useMutation({
+    mutationFn: campaignsService.bulkDelete,
+    onSuccess: (r) => {
+      queryClient.invalidateQueries({ queryKey: ['campaigns', id] });
+      addToast(`${r.quantidade} campanha(s) excluída(s).`, 'success');
+      setIsBulkDeleteOpen(false);
+      sairDaSelecao();
+    },
+    onError: () => addToast('Erro ao excluir as campanhas.', 'error'),
+  });
+
   if (isSyncingOrg || isLoadingOrg || isLoadingCampaigns) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-zinc-500">
@@ -95,13 +132,25 @@ export default function CampaignsPage() {
         {/* A conexão do Instagram saiu daqui: é configuração da empresa, e o
             lugar dela é o card da organização, na tela de Organizações. */}
         {isAdmin && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
-          >
-            <Plus className="w-5 h-5" />
-            Nova Campanha
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button
+              onClick={() => (modoSelecao ? sairDaSelecao() : setModoSelecao(true))}
+              className={`px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all w-full sm:w-auto border ${modoSelecao
+                ? 'border-primary/50 bg-primary/15 text-white'
+                : 'border-white/10 text-zinc-300 hover:text-white hover:bg-white/5'
+                }`}
+            >
+              <CheckSquare className="w-5 h-5" />
+              {modoSelecao ? 'Cancelar seleção' : 'Selecionar'}
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-brand-gradient hover:opacity-90 px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_oklch(var(--primary)/0.3)] w-full sm:w-auto"
+            >
+              <Plus className="w-5 h-5" />
+              Nova Campanha
+            </button>
+          </div>
         )}
       </header>
 
@@ -112,9 +161,22 @@ export default function CampaignsPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            onClick={() => navigate(`/organizations/${id}/campaigns/${campaign.id}/posts`)}
+            onClick={() =>
+              modoSelecao
+                ? alternarSelecao(campaign.id)
+                : navigate(`/organizations/${id}/campaigns/${campaign.id}/posts`)
+            }
           >
-            <GlassCard className="group hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden h-full active:scale-[0.98] transition-transform">
+            <GlassCard className={`group hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden h-full active:scale-[0.98] transition-transform ${modoSelecao && selecionados.has(campaign.id) ? 'ring-2 ring-primary border-primary/40' : ''}`}>
+              {modoSelecao && (
+                <span className="absolute top-4 left-4 z-20 pointer-events-none">
+                  {selecionados.has(campaign.id) ? (
+                    <CheckSquare className="w-5 h-5 text-primary drop-shadow-[0_0_6px_oklch(var(--primary)/0.8)]" />
+                  ) : (
+                    <Square className="w-5 h-5 text-zinc-500" />
+                  )}
+                </span>
+              )}
               {isAdmin && (
                 <div className="absolute top-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                   <button 
@@ -161,8 +223,7 @@ export default function CampaignsPage() {
                 </span>
               </div>
 
-              <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                <span className="text-xs text-zinc-500">Clique para abrir posts</span>
+              <div className="pt-4 border-t border-white/5 flex items-center justify-end">
                 <div className="w-6 h-6 rounded-full border border-zinc-900 bg-zinc-800 flex items-center justify-center text-[8px] font-bold text-zinc-500">
                   SF
                 </div>
@@ -187,6 +248,58 @@ export default function CampaignsPage() {
 
       {/* Campanha não tem desativação: ou fica, ou some do banco junto com tudo
           que está pendurado nela. Por isso exige digitar o nome. */}
+      <SelectionBar
+        quantidade={idsSelecionados.length}
+        substantivo={{ singular: 'campanha selecionada', plural: 'campanhas selecionadas' }}
+        tudoMarcado={tudoMarcado}
+        onAlternarTudo={() =>
+          setSelecionados(tudoMarcado ? new Set() : new Set(campaigns.map((c) => c.id)))
+        }
+        onSair={sairDaSelecao}
+      >
+        <button
+          type="button"
+          onClick={() => setIsBulkDeleteOpen(true)}
+          className="px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 hover:border-red-500/50 text-red-400 hover:text-red-300 text-sm font-bold flex items-center gap-2 transition-all"
+        >
+          <Trash2 className="w-4 h-4" />
+          Excluir
+        </button>
+      </SelectionBar>
+
+      <TypeToConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        onClose={() => !excluirEmMassa.isPending && setIsBulkDeleteOpen(false)}
+        onConfirm={() => excluirEmMassa.mutate(idsSelecionados)}
+        title="Excluir campanhas permanentemente?"
+        confirmationText={String(idsSelecionados.length)}
+        description={
+          <>
+            <strong className="text-zinc-300">
+              {idsSelecionados.length}{' '}
+              {idsSelecionados.length === 1 ? 'campanha' : 'campanhas'}
+            </strong>
+            {postsAtingidos > 0 ? (
+              <>
+                {' '}e <strong className="text-red-400">
+                  {postsAtingidos === 1 ? 'o post vinculado' : `todos os ${postsAtingidos} posts vinculados`}
+                </strong>{' '}
+                a {idsSelecionados.length === 1 ? 'ela' : 'elas'} (incluindo artes, versões,
+                comentários e histórico) {postsAtingidos === 1 ? 'será excluído' : 'serão excluídos'}{' '}
+                permanentemente.
+              </>
+            ) : (
+              idsSelecionados.length === 1 ? ' será excluída permanentemente.' : ' serão excluídas permanentemente.'
+            )}{' '}
+            Esta ação não pode ser desfeita. Digite{' '}
+            <strong className="text-zinc-300">{idsSelecionados.length}</strong> para confirmar.
+          </>
+        }
+        confirmLabel="Excluir Permanentemente"
+        confirmingLabel="Excluindo..."
+        isConfirming={excluirEmMassa.isPending}
+      />
+
       <TypeToConfirmDialog
         isOpen={!!campaignPendingDelete}
         onClose={() => !deleteMutation.isPending && setCampaignPendingDelete(undefined)}
