@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Building2, AlertCircle, AlertTriangle, Clock, CheckCircle2, Image as ImageIcon, Send, Users, Palette, FolderKanban } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Building2, AlertCircle, AlertTriangle, Clock, CheckCircle2, Image as ImageIcon, RefreshCw, Send, Users, Palette, FolderKanban } from 'lucide-react';
 import dashboardService, { type PostStatus, type PeriodDays } from '../api/dashboard-service';
 import { GlassCard } from '@/shared/components/glass-card';
 import { StatCard } from './stat-card';
@@ -12,8 +12,10 @@ import { PostDrilldownModal } from './post-drilldown-modal';
 import { InstagramPendenciasAlert } from './instagram-pendencias-alert';
 
 export function AdminDashboardPage() {
+  const queryClient = useQueryClient();
   const [organizationId, setOrganizationId] = useState<string | undefined>(undefined);
   const [periodDays, setPeriodDays] = useState<PeriodDays>(30);
+  const [recarregando, setRecarregando] = useState(false);
   const [drilldownStatus, setDrilldownStatus] = useState<PostStatus | null>(null);
   // `undefined` = sem recorte; true/false separam os PENDING com e sem arte.
   const [drilldownComArte, setDrilldownComArte] = useState<boolean | undefined>(undefined);
@@ -23,7 +25,7 @@ export function AdminDashboardPage() {
     setDrilldownStatus(status);
   };
 
-  const { data: overview, isLoading: isLoadingOverview } = useQuery({
+  const { data: overview, isLoading: isLoadingOverview, dataUpdatedAt } = useQuery({
     queryKey: ['dashboard-overview', organizationId],
     queryFn: () => dashboardService.getOverview(organizationId),
   });
@@ -32,6 +34,24 @@ export function AdminDashboardPage() {
     queryKey: ['dashboard-timeline', organizationId, periodDays],
     queryFn: () => dashboardService.getPostsTimeline(periodDays, organizationId),
   });
+
+  /**
+   * Refaz todas as buscas que estão em tela.
+   *
+   * `type: 'active'` em vez de uma lista de chaves: o que o dashboard mostra
+   * hoje são cinco consultas espalhadas por quatro componentes, e uma lista
+   * escrita à mão silenciosamente deixaria de fora o próximo card que alguém
+   * acrescentar. Aqui "recarregar o dashboard" é literalmente refazer o que
+   * está montado — o mesmo que o F5 fazia, sem perder filtro nem rolagem.
+   */
+  const recarregar = async () => {
+    setRecarregando(true);
+    try {
+      await queryClient.refetchQueries({ type: 'active' });
+    } finally {
+      setRecarregando(false);
+    }
+  };
 
   if (isLoadingOverview) {
     return (
@@ -72,9 +92,36 @@ export function AdminDashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white">Dashboard Administrativo</h1>
-          <p className="text-zinc-400 mt-1">Visão geral do sistema</p>
+          {/* A hora do último dado é o que dá sentido ao botão: sem ela, não há
+              como saber se vale a pena apertá-lo. */}
+          <p className="text-zinc-400 mt-1">
+            Visão geral do sistema
+            {dataUpdatedAt > 0 && (
+              <span className="text-zinc-600">
+                {' · '}
+                atualizado às{' '}
+                {new Date(dataUpdatedAt).toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            )}
+          </p>
         </div>
-        <OrganizationFilter value={organizationId} onChange={setOrganizationId} />
+
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <OrganizationFilter value={organizationId} onChange={setOrganizationId} />
+          <button
+            type="button"
+            onClick={recarregar}
+            disabled={recarregando}
+            title="Recarregar dados"
+            aria-label="Recarregar dados"
+            className="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-wait"
+          >
+            <RefreshCw className={`w-4 h-4 ${recarregando ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {/* Antes das métricas: é a única coisa aqui que exige ação imediata. */}
