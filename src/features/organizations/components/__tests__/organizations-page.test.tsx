@@ -104,17 +104,37 @@ describe('OrganizationsPage', () => {
   describe('organização desativada', () => {
     beforeEach(() => servico.getAll.mockResolvedValue([org({ isActive: false })]));
 
-    it('continua na lista, marcada como desativada', async () => {
+    /**
+     * Desativada saiu da lista principal e ganhou aba própria. `Desativada` é
+     * comparada como texto exato de propósito: a aba se chama `Desativadas` e um
+     * regex casaria com as duas.
+     */
+    async function abrirDesativadas() {
+      await userEvent.click(await screen.findByRole('button', { name: /desativadas/i }));
+    }
+
+    it('sai da aba de ativas, mas a aba vazia aponta para onde ela foi', async () => {
+      // Sem a pista, o vazio parece "nada cadastrado" e manda cadastrar de novo
+      // uma empresa que já existe.
+      montar();
+
+      expect(await screen.findByText(/há uma organização desativada/i)).toBeInTheDocument();
+      expect(screen.queryByText('Radiogenesis')).not.toBeInTheDocument();
+    });
+
+    it('aparece na aba de desativadas, marcada', async () => {
       // Regressão: ela sumia da listagem e o endpoint de reativar existia sem
       // nenhum caminho até ele pela interface.
       montar();
+      await abrirDesativadas();
 
-      expect(await screen.findByText(/desativada/i)).toBeInTheDocument();
+      expect(await screen.findByText('Desativada')).toBeInTheDocument();
       expect(screen.getByText('Radiogenesis')).toBeInTheDocument();
     });
 
     it('oferece Reativar no lugar de Desativar', async () => {
       montar();
+      await abrirDesativadas();
 
       expect(await screen.findByRole('button', { name: /reativar/i })).toBeInTheDocument();
       expect(screen.queryByTitle(/desativar organização/i)).not.toBeInTheDocument();
@@ -122,7 +142,8 @@ describe('OrganizationsPage', () => {
 
     it('não deixa entrar numa organização fora do ar', async () => {
       montar();
-      await screen.findByText(/desativada/i);
+      await abrirDesativadas();
+      await screen.findByText('Desativada');
 
       expect(screen.getByText(/fora do ar/i)).toBeInTheDocument();
       expect(screen.queryByText(/entrar na organização/i)).not.toBeInTheDocument();
@@ -131,6 +152,7 @@ describe('OrganizationsPage', () => {
     it('chama reactivate ao clicar', async () => {
       servico.reactivate.mockResolvedValue(undefined);
       montar();
+      await abrirDesativadas();
 
       await userEvent.click(await screen.findByRole('button', { name: /reativar/i }));
 

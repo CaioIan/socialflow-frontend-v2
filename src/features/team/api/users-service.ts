@@ -7,6 +7,12 @@ export interface UserWithOrgs extends User {
     organization: Organization;
     role: string;
   }[];
+  /**
+   * Por que a pessoa está desativada. `ORGANIZATION` é a cascata — ninguém
+   * desligou essa pessoa diretamente, ela caiu junto com a única empresa em que
+   * trabalhava. `null` em usuário ativo.
+   */
+  deactivationCause?: 'ADMIN' | 'ORGANIZATION' | null;
 }
 
 export const usersService = {

@@ -23,6 +23,7 @@ export default function OrganizationsPage() {
   const [editingOrg, setEditingOrg] = useState<{ id: string, name: string } | undefined>(undefined);
   const [orgPendingDelete, setOrgPendingDelete] = useState<{ id: string, name: string } | undefined>(undefined);
   const [orgEditandoLogo, setOrgEditandoLogo] = useState<{ id: string, name: string, logoUrl: string | null } | undefined>(undefined);
+  const [aba, setAba] = useState<'ativas' | 'desativadas'>('ativas');
 
   const role = user?.role?.toUpperCase();
   const isAdmin = role === 'ADMIN';
@@ -98,6 +99,14 @@ export default function OrganizationsPage() {
     );
   }
 
+  // As desativadas saem da lista principal e ganham aba própria: elas não são
+  // trabalho do dia a dia, mas precisam ser alcançáveis para reativar.
+  const ativas = organizations.filter((org) => org.isActive);
+  const desativadas = organizations.filter((org) => !org.isActive);
+  // Só o ADMIN recebe organizações desativadas da API — para os outros papéis a
+  // aba existiria sempre vazia.
+  const visiveis = isAdmin && aba === 'desativadas' ? desativadas : ativas;
+
   return (
     <div className="space-y-8">
       {/* Empilha no mobile, como as demais telas: lado a lado, o botão não
@@ -123,8 +132,31 @@ export default function OrganizationsPage() {
         )}
       </header>
 
+      {isAdmin && (
+        <div className="flex gap-1 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-md w-full md:w-fit">
+          {([
+            { chave: 'ativas', rotulo: 'Ativas', total: ativas.length },
+            { chave: 'desativadas', rotulo: 'Desativadas', total: desativadas.length },
+          ] as const).map(({ chave, rotulo, total }) => (
+            <button
+              key={chave}
+              onClick={() => setAba(chave)}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${aba === chave
+                ? 'bg-brand-gradient text-white shadow-lg'
+                : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
+                }`}
+            >
+              {rotulo}
+              <span className={`ml-2 text-xs ${aba === chave ? 'text-white/70' : 'text-zinc-600'}`}>
+                {total}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {organizations.map((org, index) => {
+        {visiveis.map((org, index) => {
           const orgId = org.id;
           // `selecionada` é a organização em uso agora; `desativada` é o estado
           // dela no sistema. Eram os dois chamados de isActive, o que confundia.
@@ -153,7 +185,11 @@ export default function OrganizationsPage() {
               >
                 {/* Botões de Ação Rápida (Admin) */}
                 {isAdmin && (
-                  <div className="absolute top-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
+                  // Editar e desativar aparecem no hover para não poluir o card.
+                  // Reativar não: numa aba que existe para reativar, esconder a
+                  // única ação disponível atrás do mouse é esconder a aba.
+                  <div className={`absolute top-4 right-4 flex gap-2 transition-opacity z-10 ${desativada ? 'opacity-100' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'
+                    }`}>
                     {desativada ? (
                       <button
                         onClick={(e) => {
@@ -297,25 +333,53 @@ export default function OrganizationsPage() {
           );
         })}
 
-        {organizations.length === 0 && (
+        {visiveis.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="col-span-full py-24 text-center border-2 border-dashed border-white/5 rounded-[2rem] bg-white/[0.01]"
           >
             <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <Building2 className="w-10 h-10 text-zinc-700" />
+              {aba === 'desativadas' ? (
+                <Power className="w-10 h-10 text-zinc-700" />
+              ) : (
+                <Building2 className="w-10 h-10 text-zinc-700" />
+              )}
             </div>
-            <h3 className="text-xl font-bold text-zinc-400 mb-2">Nenhuma organização</h3>
-            <p className="text-zinc-600 mb-8 max-w-xs mx-auto text-sm">Nenhuma empresa cliente cadastrada para gerenciar campanhas.</p>
-            {isAdmin && (
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center gap-2 text-primary hover:text-white transition-colors font-bold"
-              >
-                <Plus className="w-4 h-4" />
-                Cadastrar Agora
-              </button>
+            {aba === 'desativadas' ? (
+              // Lista vazia aqui é boa notícia, não falta de cadastro.
+              <>
+                <h3 className="text-xl font-bold text-zinc-400 mb-2">Nenhuma organização desativada</h3>
+                <p className="text-zinc-600 max-w-xs mx-auto text-sm">
+                  Todas as empresas cadastradas estão no ar.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-xl font-bold text-zinc-400 mb-2">Nenhuma organização</h3>
+                {/* Dizer "nada cadastrado" com empresas desativadas existindo é
+                    falso, e manda cadastrar de novo o que já existe. */}
+                {desativadas.length > 0 ? (
+                  <p className="text-zinc-600 mb-8 max-w-xs mx-auto text-sm">
+                    Nenhuma empresa no ar.{' '}
+                    {desativadas.length === 1
+                      ? 'Há uma organização desativada'
+                      : `Há ${desativadas.length} organizações desativadas`}{' '}
+                    na aba ao lado.
+                  </p>
+                ) : (
+                  <p className="text-zinc-600 mb-8 max-w-xs mx-auto text-sm">Nenhuma empresa cliente cadastrada para gerenciar campanhas.</p>
+                )}
+                {isAdmin && (
+                  <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="inline-flex items-center gap-2 text-primary hover:text-white transition-colors font-bold"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Cadastrar Agora
+                  </button>
+                )}
+              </>
             )}
           </motion.div>
         )}

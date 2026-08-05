@@ -25,7 +25,7 @@ import {
   FileText,
   ChevronDown,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useToastStore } from '@/stores/use-toast-store';
@@ -44,6 +44,43 @@ export default function PostDetailPage() {
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
   const [isSubmittingAdjustment, setIsSubmittingAdjustment] = useState(false);
   const [briefingAberto, setBriefingAberto] = useState(false);
+
+  // Carrossel do mobile: a bolinha acesa era sempre a primeira, então depois de
+  // arrastar ela indicava a imagem errada.
+  const trilhoRef = useRef<HTMLDivElement>(null);
+  const [slideAtual, setSlideAtual] = useState(0);
+
+  /**
+   * Descobre o slide visível pelo que está mais perto do centro da janela.
+   *
+   * Dividir `scrollLeft` pela largura de um slide seria mais curto, mas quebra
+   * assim que os slides deixam de ter a mesma largura — é o caso aqui, onde a
+   * arte de Stories é mais alta que a de Feed.
+   */
+  const aoRolarCarrossel = () => {
+    const trilho = trilhoRef.current;
+    if (!trilho) return;
+
+    const centro = trilho.scrollLeft + trilho.clientWidth / 2;
+    let maisProximo = 0;
+    let menorDistancia = Infinity;
+
+    Array.from(trilho.children).forEach((filho, i) => {
+      const slide = filho as HTMLElement;
+      const distancia = Math.abs(slide.offsetLeft + slide.offsetWidth / 2 - centro);
+      if (distancia < menorDistancia) {
+        menorDistancia = distancia;
+        maisProximo = i;
+      }
+    });
+
+    setSlideAtual(maisProximo);
+  };
+
+  const irParaSlide = (indice: number) => {
+    const slide = trilhoRef.current?.children[indice] as HTMLElement | undefined;
+    slide?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+  };
 
   const role = user?.role?.toUpperCase();
   const isAdmin = role === 'ADMIN';
@@ -160,6 +197,11 @@ export default function PostDetailPage() {
   const feedUrl = feedUrls[0] || feedAsset?.cloudinaryUrl || null;
   const storiesUrl = post.currentVersion?.storiesUrl || storiesAsset?.cloudinaryUrl || null;
   const isCarousel = feedUrls.length > 1;
+
+  // No mobile a arte de Stories divide o mesmo trilho das artes de Feed, então
+  // ela conta como slide para as bolinhas e para a sobra lateral.
+  const totalSlides = feedUrls.length + (storiesUrl ? 1 : 0);
+  const temMaisDeUmSlide = totalSlides > 1;
 
   const feedAssetId = feedAsset?.id || null;
   const storiesAssetId = storiesAsset?.id || null;
@@ -473,9 +515,25 @@ export default function PostDetailPage() {
             {/* Art preview — Mobile */}
             <div className="lg:hidden">
               <div className="relative group/carousel">
-                <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-4">
+                {/* Cada slide é mais estreito que a tela e o trilho tem folga à
+                    direita: sobra um pedaço da próxima arte na lateral, que é o
+                    único aviso de que existe mais de uma imagem antes de o dedo
+                    arrastar. Com um slide só a folga sai, senão a arte única
+                    ficaria desalinhada à toa.
+
+                    `snap-start` em vez de `snap-center` de propósito: centrado,
+                    o último slide não alcança o próprio ponto de parada e o
+                    carrossel volta sozinho. */}
+                <div
+                  ref={trilhoRef}
+                  onScroll={aoRolarCarrossel}
+                  className={`flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3 pb-4 ${temMaisDeUmSlide ? 'pr-12' : ''}`}
+                >
                   {feedUrls.map((url, i) => (
-                    <div key={i} className="min-w-full snap-center space-y-2 relative">
+                    <div
+                      key={i}
+                      className={`${temMaisDeUmSlide ? 'w-[calc(100%-3rem)]' : 'w-full'} shrink-0 snap-start space-y-2 relative`}
+                    >
                       <div className="flex items-center justify-between px-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                           {isCarousel ? `Feed ${i + 1}/${feedUrls.length}` : 'Arte do Feed'}
@@ -492,7 +550,9 @@ export default function PostDetailPage() {
                   ))}
 
                   {storiesUrl && (
-                    <div className="min-w-full snap-center space-y-2 relative">
+                    <div
+                      className={`${temMaisDeUmSlide ? 'w-[calc(100%-3rem)]' : 'w-full'} shrink-0 snap-start space-y-2 relative`}
+                    >
                       <div className="flex items-center justify-between px-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Arte do Stories</span>
                         <button onClick={() => handleDownload(storiesUrl, 'stories')} className="flex items-center gap-1.5 text-primary hover:text-white transition-colors text-[10px] font-bold uppercase">
@@ -507,25 +567,43 @@ export default function PostDetailPage() {
                   )}
 
                   {feedUrls.length === 0 && !storiesUrl && (
-                    <div className="min-w-full py-20 text-center border-2 border-dashed border-white/5 rounded-[2rem] bg-white/[0.01]">
+                    <div className="w-full shrink-0 py-20 text-center border-2 border-dashed border-white/5 rounded-[2rem] bg-white/[0.01]">
                       <p className="text-zinc-600 text-sm">Nenhuma arte disponível para esta versão.</p>
                     </div>
                   )}
                 </div>
 
-                {(feedUrls.length + (storiesUrl ? 1 : 0)) > 1 && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none animate-pulse">
-                    <div className="bg-black/40 backdrop-blur-md border border-white/10 p-2 rounded-full text-white/70 shadow-2xl">
+                {/* Some no último slide: uma seta que aponta para o nada sugere
+                    que ainda falta arte a ver. */}
+                {temMaisDeUmSlide && slideAtual < totalSlides - 1 && (
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2 z-10 pointer-events-none animate-pulse">
+                    <div className="bg-black/50 backdrop-blur-md border border-white/10 p-2 rounded-full text-white/70 shadow-2xl">
                       <ChevronRight className="w-4 h-4" />
                     </div>
                   </div>
                 )}
               </div>
 
-              {(feedUrls.length + (storiesUrl ? 1 : 0)) > 1 && (
+              {temMaisDeUmSlide && (
                 <div className="flex justify-center gap-2 mt-2">
-                  {[...Array(feedUrls.length + (storiesUrl ? 1 : 0))].map((_, i) => (
-                    <div key={i} className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-primary shadow-[0_0_10px_oklch(var(--primary)/0.5)]' : 'bg-white/10'}`} />
+                  {Array.from({ length: totalSlides }).map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => irParaSlide(i)}
+                      aria-label={`Ver arte ${i + 1} de ${totalSlides}`}
+                      aria-current={i === slideAtual}
+                      // Alvo de toque de 24px em volta de uma bolinha de 8px: no
+                      // dedo, acertar 8px não acontece.
+                      className="p-2 -m-1 flex items-center justify-center"
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full block transition-all ${i === slideAtual
+                          ? 'bg-primary shadow-[0_0_10px_oklch(var(--primary)/0.5)] scale-125'
+                          : 'bg-white/20'
+                          }`}
+                      />
+                    </button>
                   ))}
                 </div>
               )}

@@ -101,10 +101,41 @@ describe('TeamPage', () => {
   describe('usuário inativo', () => {
     beforeEach(() => servico.getAll.mockResolvedValue([usuario({ isActive: false })]));
 
+    /** Desativado não aparece mais nas abas de papel: mora na aba própria. */
+    async function abrirDesativados() {
+      await userEvent.click(await screen.findByRole('button', { name: /^desativados$/i }));
+    }
+
+    it('some das abas de papel — a lista do dia a dia é só de quem tem acesso', async () => {
+      montar();
+
+      expect(await screen.findByText(/nenhum usuário encontrado/i)).toBeInTheDocument();
+      expect(screen.queryByText('Ana Designer')).not.toBeInTheDocument();
+    });
+
+    it('a aba de desativados pede todos os papéis, não só o da aba anterior', async () => {
+      // Um cliente desligado não pode sumir só porque a aba aberta era Designers.
+      montar();
+      await abrirDesativados();
+
+      await waitFor(() => expect(servico.getAll.mock.calls.at(-1)![0]).toBeUndefined());
+    });
+
+    it('mostra por que a pessoa caiu quando foi a organização que a derrubou', async () => {
+      servico.getAll.mockResolvedValue([
+        usuario({ isActive: false, deactivationCause: 'ORGANIZATION' }),
+      ]);
+      montar();
+      await abrirDesativados();
+
+      expect(await screen.findByText(/caiu junto com a organização/i)).toBeInTheDocument();
+    });
+
     it('o crachá Inativo não é botão — quem age é o Reativar ao lado', async () => {
       // Regressão do relato: clicar no próprio crachá dava erro, porque ele
       // parecia clicável sem ser o controle de verdade.
       montar();
+      await abrirDesativados();
 
       const cracha = await screen.findByText('Inativo');
 
@@ -116,6 +147,7 @@ describe('TeamPage', () => {
     it('reativar não pede confirmação: é a ação que devolve acesso', async () => {
       servico.reactivate.mockResolvedValue(undefined);
       montar();
+      await abrirDesativados();
 
       await userEvent.click(await screen.findByRole('button', { name: /reativar/i }));
 
@@ -131,6 +163,7 @@ describe('TeamPage', () => {
         response: { data: { message: 'Reative a organização antes de reativar este usuário.' } },
       });
       montar();
+      await abrirDesativados();
 
       await userEvent.click(await screen.findByRole('button', { name: /reativar/i }));
 

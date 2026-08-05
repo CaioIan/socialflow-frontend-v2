@@ -30,8 +30,11 @@ function mensagemDoErro(erro: unknown): string {
   return 'Não foi possível concluir a operação.';
 }
 
+/** As duas abas de papel mostram só gente ativa; a terceira junta os desativados. */
+type Aba = 'DESIGNER' | 'CLIENT' | 'INATIVOS';
+
 export default function TeamPage() {
-  const [activeTab, setActiveTab] = useState<'DESIGNER' | 'CLIENT'>('DESIGNER');
+  const [activeTab, setActiveTab] = useState<Aba>('DESIGNER');
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
@@ -42,9 +45,13 @@ export default function TeamPage() {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
 
+  const naAbaDeInativos = activeTab === 'INATIVOS';
+
   const { data: users, isLoading } = useQuery({
     queryKey: ['team', activeTab],
-    queryFn: () => usersService.getAll(activeTab)
+    // Desativado não é um papel: a aba pede todo mundo e separa por `isActive`,
+    // senão um cliente desligado sumiria da tela junto com os designers.
+    queryFn: () => (naAbaDeInativos ? usersService.getAll() : usersService.getAll(activeTab)),
   });
 
   const invalidarEquipe = () => queryClient.invalidateQueries({ queryKey: ['team'] });
@@ -68,10 +75,12 @@ export default function TeamPage() {
     onError: (erro) => addToast(mensagemDoErro(erro), 'error'),
   });
 
-  const filteredUsers = users?.filter(u =>
-    u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users
+    ?.filter((u) => (naAbaDeInativos ? !u.isActive : u.isActive))
+    .filter(u =>
+      u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   if (isLoading) {
     return (
@@ -104,25 +113,25 @@ export default function TeamPage() {
 
       {/* Tabs & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-md">
-        <div className="flex gap-1">
-          <button
-            onClick={() => setActiveTab('DESIGNER')}
-            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'DESIGNER'
-              ? 'bg-brand-gradient text-white shadow-lg'
-              : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
-              }`}
-          >
-            Designers
-          </button>
-          <button
-            onClick={() => setActiveTab('CLIENT')}
-            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'CLIENT'
-              ? 'bg-brand-gradient text-white shadow-lg'
-              : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
-              }`}
-          >
-            Clientes (Contatos)
-          </button>
+        {/* Rolagem horizontal: em 375px as três abas não cabem lado a lado e a
+            última ficava fora da tela, inalcançável. */}
+        <div className="flex gap-1 overflow-x-auto no-scrollbar">
+          {([
+            { chave: 'DESIGNER', rotulo: 'Designers' },
+            { chave: 'CLIENT', rotulo: 'Clientes (Contatos)' },
+            { chave: 'INATIVOS', rotulo: 'Desativados' },
+          ] as const).map(({ chave, rotulo }) => (
+            <button
+              key={chave}
+              onClick={() => setActiveTab(chave)}
+              className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === chave
+                ? 'bg-brand-gradient text-white shadow-lg'
+                : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
+                }`}
+            >
+              {rotulo}
+            </button>
+          ))}
         </div>
 
         <div className="relative flex-1 max-w-md">
@@ -216,6 +225,23 @@ export default function TeamPage() {
                 </div>
 
                 <div className="space-y-4 flex-1">
+                  {/* Esta aba mistura designers e clientes, então o papel deixa
+                      de ser dado pela aba e precisa aparecer no card. */}
+                  {naAbaDeInativos && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-wider text-zinc-400 group-hover:text-white/80 transition-colors">
+                        {u.role === 'DESIGNER' ? 'Designer' : u.role === 'CLIENT' ? 'Cliente' : 'Admin'}
+                      </span>
+                      {/* Sem isto, quem caiu na cascata da organização parece um
+                          desligamento que ninguém se lembra de ter feito. */}
+                      {u.deactivationCause === 'ORGANIZATION' && (
+                        <span className="px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-400">
+                          Caiu junto com a organização
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[10px] font-bold text-zinc-500 group-hover:text-white/80 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
@@ -264,7 +290,12 @@ export default function TeamPage() {
       {filteredUsers?.length === 0 && (
         <div className="py-20 text-center text-zinc-600">
           <Users className="w-12 h-12 mx-auto mb-4 opacity-20" />
-          <p>Nenhum usuário encontrado para esta categoria.</p>
+          <p>
+            {naAbaDeInativos
+              // Vazio aqui significa que ninguém está sem acesso — é bom.
+              ? 'Ninguém está desativado. Toda a equipe tem acesso.'
+              : 'Nenhum usuário encontrado para esta categoria.'}
+          </p>
         </div>
       )}
 
@@ -272,7 +303,8 @@ export default function TeamPage() {
       <CreateUserModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        defaultRole={activeTab}
+        // "Desativados" não é um papel: criar a partir dali cai no padrão.
+        defaultRole={naAbaDeInativos ? 'DESIGNER' : activeTab}
       />
 
       {selectedUser && (
