@@ -102,13 +102,20 @@ deixaria o botão de excluir liberado para o alvo errado.
 npm run build
 ```
 
-Deploy na Vercel. O `vercel.json` faz duas coisas: reescreve `/api/*` para o
-domínio da API na Railway e devolve `index.html` para qualquer rota — sem isso,
-recarregar a página numa rota interna dá 404.
+Deploy na Vercel, em **`www.socialflow.app.br`** (a raiz redireciona para o
+`www`). O `vercel.json` faz duas coisas: reescreve `/api/*` para o domínio da
+API na Railway e devolve `index.html` para qualquer rota — sem isso, recarregar
+a página numa rota interna dá 404.
 
 Ao trocar o domínio da API, atualize o `destination` no `vercel.json`. Ele
 precisa do esquema `https://` e do sufixo `/:path*`; sem um dos dois, toda
 chamada falha.
+
+O domínio próprio não é enfeite: em `*.vercel.app` o antivírus de um dos
+usuários bloqueava o site inteiro, incluindo o `/favicon.ico` — bloqueio por
+reputação do domínio compartilhado, não pelo conteúdo. Configuração de DNS e as
+armadilhas do registro.br estão em
+[`../socialflow-api-v2/DEPLOY.md`](../socialflow-api-v2/DEPLOY.md).
 
 ## Documentação relacionada
 
