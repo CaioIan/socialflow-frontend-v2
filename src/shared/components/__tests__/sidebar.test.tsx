@@ -1,0 +1,113 @@
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { Sidebar } from '../sidebar';
+
+const sessao = {
+  user: { id: 'u1', role: 'CLIENT', name: 'João' },
+  logout: vi.fn(),
+  currentOrganizationId: 'org-1',
+  setCurrentOrganization: vi.fn(),
+};
+
+vi.mock('@/stores/use-auth-store', () => ({
+  useAuthStore: () => sessao,
+}));
+
+const perfil: { organizations: Array<{ organizationId: string; name: string; logoUrl: null }> } = {
+  organizations: [],
+};
+
+vi.mock('@/features/profile/api/use-profile', () => ({
+  useProfile: () => ({ data: perfil }),
+}));
+
+vi.mock('@/features/auth/api/auth-service', () => ({
+  authService: { logout: vi.fn(), selectOrganization: vi.fn() },
+}));
+
+vi.mock('@/shared/components/user-avatar', () => ({
+  UserAvatar: () => null,
+}));
+
+function montar() {
+  return render(
+    <MemoryRouter>
+      <Sidebar />
+    </MemoryRouter>,
+  );
+}
+
+function comOrganizacoes(quantas: number) {
+  perfil.organizations = Array.from({ length: quantas }, (_, i) => ({
+    organizationId: `org-${i + 1}`,
+    name: `Empresa ${i + 1}`,
+    logoUrl: null,
+  }));
+}
+
+describe('Sidebar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessao.user.role = 'CLIENT';
+  });
+
+  describe('cliente com uma organização só', () => {
+    beforeEach(() => comOrganizacoes(1));
+
+    it('mostra "Minha Organização" e não oferece "Início"', () => {
+      // Com uma empresa só, a lista de organizações não tem o que escolher —
+      // um atalho para ela seria um beco sem saída.
+      montar();
+
+      expect(screen.getByText('Minha Organização')).toBeInTheDocument();
+      expect(screen.queryByText('Início')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('cliente em várias organizações', () => {
+    beforeEach(() => comOrganizacoes(2));
+
+    it('troca "Minha Organização" por "Início"', () => {
+      // Regressão do relato: com o seletor no lugar de "Minha Organização",
+      // sumia o caminho de volta para a lista completa.
+      montar();
+
+      expect(screen.getByText('Início')).toBeInTheDocument();
+      expect(screen.queryByText('Minha Organização')).not.toBeInTheDocument();
+    });
+
+    it('"Início" aponta para a lista de organizações', () => {
+      montar();
+
+      expect(screen.getByText('Início').closest('a')).toHaveAttribute('href', '/organizations');
+    });
+  });
+
+  describe('designer em várias organizações', () => {
+    beforeEach(() => {
+      sessao.user.role = 'DESIGNER';
+      comOrganizacoes(2);
+    });
+
+    it('também recebe o "Início" — o problema dele é o mesmo', () => {
+      montar();
+
+      expect(screen.getByText('Início')).toBeInTheDocument();
+    });
+  });
+
+  describe('administrador', () => {
+    beforeEach(() => {
+      sessao.user.role = 'ADMIN';
+      comOrganizacoes(2);
+    });
+
+    it('não vê "Início": ele já tem a tela de Organizações', () => {
+      montar();
+
+      expect(screen.queryByText('Início')).not.toBeInTheDocument();
+      expect(screen.getByText('Organizações')).toBeInTheDocument();
+    });
+  });
+});

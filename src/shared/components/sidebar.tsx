@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, LogOut, X, AlertTriangle, PanelLeftClose, PanelLeftOpen, ChevronDown, Check } from 'lucide-react';
+import { LayoutDashboard, Building2, Home, Users, LogOut, X, AlertTriangle, PanelLeftClose, PanelLeftOpen, ChevronDown, Check } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserAvatar } from '@/shared/components/user-avatar';
 import { useProfile } from '@/features/profile/api/use-profile';
@@ -58,6 +58,16 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
       roles: ['ADMIN'],
     },
     {
+      // Só para quem atende várias empresas: com o seletor no lugar de "Minha
+      // Organização", some o caminho de volta para a lista completa. Quem tem
+      // uma organização só nunca precisa dessa tela.
+      icon: Home,
+      label: 'Início',
+      href: '/organizations',
+      roles: ['CLIENT', 'DESIGNER'],
+      apenasComSeletor: true,
+    },
+    {
       icon: Building2,
       label: 'Minha Organização',
       href: currentOrganizationId ? `/organizations/${currentOrganizationId}/campaigns` : '/organizations',
@@ -67,9 +77,14 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
     { icon: Users, label: 'Equipe', href: '/team', roles: ['ADMIN'] },
   ];
 
-  const filteredItems = menuItems.filter(
-    (item) => item.roles.includes(role) && !(usaSeletor && item.label === 'Minha Organização'),
-  );
+  const filteredItems = menuItems.filter((item) => {
+    if (!item.roles.includes(role)) return false;
+    // "Minha Organização" e "Início" são mutuamente exclusivos: um aponta para a
+    // empresa em uso, o outro para a lista. Mostrar os dois juntos daria duas
+    // entradas concorrentes para a mesma ideia.
+    if (item.apenasComSeletor) return usaSeletor;
+    return !(usaSeletor && item.label === 'Minha Organização');
+  });
 
   const handleLogout = async () => {
     try {

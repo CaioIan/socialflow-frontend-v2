@@ -8,7 +8,7 @@ uma enxerga só o que lhe diz respeito.
   <img alt="Vite" src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white">
   <img alt="Tailwind 4" src="https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white">
   <img alt="TanStack Query 5" src="https://img.shields.io/badge/TanStack_Query-5-FF4154?logo=reactquery&logoColor=white">
-  <img alt="72 testes" src="https://img.shields.io/badge/testes-72%20passando-3fb950">
+  <img alt="77 testes" src="https://img.shields.io/badge/testes-77%20passando-3fb950">
 </p>
 
 ---
@@ -73,7 +73,7 @@ npm run test:watch
 npm run test:cov
 ```
 
-72 testes em Vitest + Testing Library, cobrindo as telas onde um erro custa
+77 testes em Vitest + Testing Library, cobrindo as telas onde um erro custa
 caro: credencial do Instagram, desativação de organização e de usuário,
 exclusão de campanha e o resultado da publicação automática.
 
