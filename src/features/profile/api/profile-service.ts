@@ -15,6 +15,8 @@ export interface Profile {
   email: string;
   role: 'ADMIN' | 'DESIGNER' | 'CLIENT';
   avatarUrl: string | null;
+  /** Desligado, nenhum e-mail de notificação é enviado para esta pessoa. */
+  emailNotifications: boolean;
   createdAt: string;
   organizations: ProfileOrganization[];
 }
@@ -40,5 +42,16 @@ export const profileService = {
   removeAvatar: async () => {
     const response = await api.delete<Profile>('/profile/avatar');
     return response.data;
+  },
+
+  /**
+   * Liga e desliga os e-mails de notificação de quem está logado.
+   *
+   * Vive fora de `/profile` porque o backend expõe isso no módulo de
+   * notificações — o mesmo lugar que atende o link de descadastro do rodapé
+   * dos e-mails, que precisa funcionar sem sessão.
+   */
+  definirNotificacoes: async (emailNotifications: boolean) => {
+    await api.patch('/notifications/preference', { emailNotifications });
   },
 };

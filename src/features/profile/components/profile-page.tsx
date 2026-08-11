@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Building2, ImageUp, Loader2, Mail, Shield, Trash2, User as UserIcon } from 'lucide-react';
+import { Bell, Building2, ImageUp, Loader2, Mail, Shield, Trash2, User as UserIcon } from 'lucide-react';
 import { GlassCard } from '@/shared/components/glass-card';
 import { useToastStore } from '@/stores/use-toast-store';
 import { useAuthStore } from '@/stores/use-auth-store';
@@ -67,6 +67,20 @@ export default function ProfilePage() {
       addToast('Foto removida.', 'success');
     },
     onError: () => addToast('Não foi possível remover a foto.', 'error'),
+  });
+
+  const definirNotificacoes = useMutation({
+    mutationFn: profileService.definirNotificacoes,
+    onSuccess: (_, ligado) => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      addToast(
+        ligado
+          ? 'Você voltará a receber avisos por e-mail.'
+          : 'Não enviaremos mais avisos por e-mail.',
+        'success',
+      );
+    },
+    onError: () => addToast('Não foi possível alterar a preferência.', 'error'),
   });
 
   function aoEscolher(arquivo: File | undefined) {
@@ -183,6 +197,43 @@ export default function ProfilePage() {
             rotulo="Perfil de acesso"
             valor={ROTULO_DO_PAPEL[perfil.role] ?? perfil.role}
           />
+        </div>
+
+        <div className="pt-6 border-t border-white/5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Bell className="w-4 h-4 text-zinc-500 shrink-0" />
+                Avisos por e-mail
+              </h2>
+              <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
+                {perfil.role === 'CLIENT' &&
+                  'Avisamos quando chega arte nova para aprovar e quando um post vai ao ar.'}
+                {perfil.role === 'DESIGNER' &&
+                  'Avisamos quando um cliente pede ajuste em alguma arte sua.'}
+                {perfil.role === 'ADMIN' &&
+                  'Avisamos quando uma publicação falha ou o Instagram de um cliente é recusado.'}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={perfil.emailNotifications}
+              aria-label="Receber avisos por e-mail"
+              disabled={definirNotificacoes.isPending}
+              onClick={() => definirNotificacoes.mutate(!perfil.emailNotifications)}
+              className={`relative shrink-0 w-12 h-7 rounded-full transition-colors disabled:opacity-50 ${
+                perfil.emailNotifications ? 'bg-primary' : 'bg-white/10'
+              }`}
+            >
+              <span
+                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${
+                  perfil.emailNotifications ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         </div>
 
         {perfil.organizations.length > 0 && (
