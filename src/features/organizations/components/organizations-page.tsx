@@ -13,6 +13,7 @@ import { CreateOrganizationModal } from './create-organization-modal';
 import { OrganizationLogoModal } from './organization-logo-modal';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
+import { MuralFeed } from '@/features/mural/components/mural-feed';
 
 export default function OrganizationsPage() {
   const navigate = useNavigate();
@@ -82,23 +83,6 @@ export default function OrganizationsPage() {
     onError: () => addToast('Erro ao reativar organização.', 'error'),
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-zinc-500">
-        <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-        <p>Carregando organizações...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-red-400 font-medium">
-        <p>Não foi possível carregar as organizações. Tente novamente em instantes.</p>
-      </div>
-    );
-  }
-
   // As desativadas saem da lista principal e ganham aba própria: elas não são
   // trabalho do dia a dia, mas precisam ser alcançáveis para reativar.
   const ativas = organizations.filter((org) => org.isActive);
@@ -108,7 +92,11 @@ export default function OrganizationsPage() {
   const visiveis = isAdmin && aba === 'desativadas' ? desativadas : ativas;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12 max-w-7xl mx-auto">
+      {/* O mural abre a página: os recados chegam antes da escolha da empresa. */}
+      <MuralFeed />
+
+      <section className="space-y-8 border-t border-white/5 pt-10">
       {/* Empilha no mobile, como as demais telas: lado a lado, o botão não
           cabia em 375px e vazava para fora da viewport. */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -132,7 +120,7 @@ export default function OrganizationsPage() {
         )}
       </header>
 
-      {isAdmin && (
+      {!isLoading && !error && isAdmin && (
         <div className="flex gap-1 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-md w-full md:w-fit">
           {([
             { chave: 'ativas', rotulo: 'Ativas', total: ativas.length },
@@ -155,7 +143,17 @@ export default function OrganizationsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center min-h-[300px] text-zinc-500">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+          <p>Carregando organizações...</p>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center min-h-[300px] text-red-400 font-medium">
+          <p>Não foi possível carregar as organizações. Tente novamente em instantes.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {visiveis.map((org, index) => {
           const orgId = org.id;
           // `selecionada` é a organização em uso agora; `desativada` é o estado
@@ -383,7 +381,9 @@ export default function OrganizationsPage() {
             )}
           </motion.div>
         )}
-      </div>
+        </div>
+      )}
+      </section>
 
       <CreateOrganizationModal
         isOpen={isCreateModalOpen}

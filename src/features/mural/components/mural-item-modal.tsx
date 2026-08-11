@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Image as ImageIcon, Loader2, Type, Upload } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Plus, Tag, Trash2, Type, Upload } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
 import { useToastStore } from '@/stores/use-toast-store';
 import { organizationsService } from '@/features/organizations/api/organizations-service';
 import { recortarImagem, RECORTE_MURAL } from '@/shared/lib/recortar-imagem';
-import { muralService } from '../api/mural-service';
+import { muralService, type MuralBadge } from '../api/mural-service';
 import { MuralItemCard } from './mural-item-card';
 
 /** Mesmos limites do backend, para o erro aparecer antes de subir o arquivo. */
@@ -14,8 +14,18 @@ const TAMANHO_MAXIMO = 5 * 1024 * 1024;
 const TIPOS_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
 const RESOLUCAO_MINIMA = { largura: 800, altura: 450 };
 const MAXIMO_DE_CARACTERES = 1200;
+const MAXIMO_DE_BADGES = 4;
 
 const CORES_SUGERIDAS = ['#7c3aed', '#0891b2', '#16a34a', '#db2777', '#ea580c', '#18181b'];
+
+const CORES_DE_BADGE = [
+  { nome: 'Vermelha', backgroundColor: '#dc2626', textColor: '#ffffff' },
+  { nome: 'Cinza', backgroundColor: '#d4d4d8', textColor: '#18181b' },
+  { nome: 'Violeta', backgroundColor: '#7c3aed', textColor: '#ffffff' },
+  { nome: 'Azul', backgroundColor: '#2563eb', textColor: '#ffffff' },
+  { nome: 'Verde', backgroundColor: '#16a34a', textColor: '#ffffff' },
+  { nome: 'Âmbar', backgroundColor: '#f59e0b', textColor: '#18181b' },
+] as const;
 
 interface Props {
   isOpen: boolean;
@@ -32,6 +42,7 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
   const [markdown, setMarkdown] = useState('');
   const [corDeFundo, setCorDeFundo] = useState('#7c3aed');
   const [corDoTexto, setCorDoTexto] = useState('#ffffff');
+  const [badges, setBadges] = useState<MuralBadge[]>([]);
   const [erro, setErro] = useState<string | undefined>(undefined);
 
   const [imagemEscolhida, setImagemEscolhida] = useState<string | undefined>(undefined);
@@ -56,6 +67,7 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
     if (imagemEscolhida) URL.revokeObjectURL(imagemEscolhida);
     setImagemEscolhida(undefined);
     setMarkdown('');
+    setBadges([]);
     setErro(undefined);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
@@ -75,6 +87,7 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
           markdown,
           backgroundColor: corDeFundo,
           textColor: corDoTexto,
+          badges: badges.map((badge) => ({ ...badge, label: badge.label.trim() })),
           organizationId: org,
         });
       }
@@ -141,8 +154,11 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
 
   const podeSalvar =
     tipo === 'CARD'
-      ? markdown.trim().length > 0 && markdown.length <= MAXIMO_DE_CARACTERES
+      ? markdown.trim().length > 0 &&
+        markdown.length <= MAXIMO_DE_CARACTERES &&
+        badges.every((badge) => badge.label.trim().length > 0)
       : Boolean(imagemEscolhida && area);
+  const organizacaoSelecionada = organizacoes.find((org) => org.id === organizationId);
 
   return (
     <Modal isOpen={isOpen} onClose={() => !salvar.isPending && fechar()} title="Novo item do mural" className="max-w-3xl">
@@ -210,7 +226,7 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
                 value={markdown}
                 onChange={(e) => setMarkdown(e.target.value)}
                 rows={6}
-                placeholder={'## Título do aviso\n\nTexto com **negrito**, *itálico* e listas:\n\n- primeiro item\n- segundo item'}
+                placeholder={'## Nova pauta disponível\n\nRevise os conteúdos da próxima campanha e envie sua aprovação pelo SocialFlow.'}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-primary/50 resize-y"
               />
               <p className="text-xs text-zinc-600">
@@ -218,6 +234,8 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
                 <code>## título</code>, listas e links.
               </p>
             </div>
+
+            <EditorDeBadges badges={badges} onChange={setBadges} />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <SeletorDeCor rotulo="Cor do card" valor={corDeFundo} onChange={setCorDeFundo} />
@@ -232,14 +250,17 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
                 item={{
                   id: 'previa',
                   type: 'CARD',
-                  organizationId: null,
-                  organizationName: null,
+                  organizationId: organizacaoSelecionada?.id ?? null,
+                  organizationName: organizacaoSelecionada?.name ?? null,
+                  organizationLogoUrl: organizacaoSelecionada?.logoUrl ?? null,
                   imageUrl: null,
-                  markdown: markdown || '_O aviso aparece aqui conforme você escreve._',
+                  markdown: markdown || '_O aviso do SocialFlow aparece aqui conforme você escreve._',
                   backgroundColor: corDeFundo,
                   textColor: corDoTexto,
+                  badges: badges.filter((badge) => badge.label.trim().length > 0),
                   createdAt: '',
                 }}
+                showOrganizationBadge={Boolean(organizacaoSelecionada)}
               />
             </div>
           </div>
@@ -341,6 +362,139 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
         </div>
       </div>
     </Modal>
+  );
+}
+
+function EditorDeBadges({
+  badges,
+  onChange,
+}: {
+  badges: MuralBadge[];
+  onChange: (badges: MuralBadge[]) => void;
+}) {
+  const adicionar = () => {
+    if (badges.length >= MAXIMO_DE_BADGES) return;
+    const cor = CORES_DE_BADGE[badges.length % CORES_DE_BADGE.length];
+    onChange([
+      ...badges,
+      {
+        label: '',
+        backgroundColor: cor.backgroundColor,
+        textColor: cor.textColor,
+      },
+    ]);
+  };
+
+  const atualizar = (index: number, badge: MuralBadge) => {
+    onChange(badges.map((atual, i) => (i === index ? badge : atual)));
+  };
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="min-w-0">
+          <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-zinc-400">
+            <Tag className="w-3.5 h-3.5 text-primary" />
+            Badges do aviso
+          </span>
+          <p className="text-xs text-zinc-600 mt-1">
+            Marcações curtas que aparecem antes do título.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={adicionar}
+          disabled={badges.length >= MAXIMO_DE_BADGES}
+          className="inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-zinc-300 transition-colors hover:border-primary/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 sm:w-auto"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Adicionar badge
+        </button>
+      </div>
+
+      {badges.length === 0 ? (
+        <button
+          type="button"
+          onClick={adicionar}
+          className="w-full rounded-xl border border-dashed border-white/10 py-4 text-xs text-zinc-600 transition-colors hover:border-primary/30 hover:text-zinc-400"
+        >
+          Nenhuma badge. Use uma para destacar status, canal ou prazo da publicação.
+        </button>
+      ) : (
+        <div className="space-y-3">
+          {badges.map((badge, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-xl border border-white/5 bg-black/20 p-3"
+            >
+              <div className="space-y-2 min-w-0">
+                <div className="space-y-1">
+                  <input
+                    type="text"
+                    value={badge.label}
+                    maxLength={40}
+                    onChange={(e) => atualizar(index, { ...badge, label: e.target.value })}
+                    aria-label={`Texto da badge ${index + 1}`}
+                    placeholder={index === 0 ? 'Ex.: Aprovação pendente' : 'Ex.: Publica hoje'}
+                    className={`w-full min-w-0 rounded-lg border bg-black/30 px-3 py-2 text-sm text-white placeholder:text-zinc-700 focus:outline-none ${
+                      badge.label.trim().length === 0
+                        ? 'border-amber-500/30 focus:border-amber-500/60'
+                        : 'border-white/10 focus:border-primary/50'
+                    }`}
+                  />
+                  <span className="block text-right text-[10px] tabular-nums text-zinc-700">
+                    {badge.label.length}/40
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2" aria-label={`Cor da badge ${index + 1}`}>
+                  {CORES_DE_BADGE.map((cor) => {
+                    const selecionada =
+                      badge.backgroundColor === cor.backgroundColor && badge.textColor === cor.textColor;
+                    return (
+                      <button
+                        key={cor.nome}
+                        type="button"
+                        onClick={() =>
+                          atualizar(index, {
+                            ...badge,
+                            backgroundColor: cor.backgroundColor,
+                            textColor: cor.textColor,
+                          })
+                        }
+                        aria-label={`Usar badge ${cor.nome.toLowerCase()}`}
+                        aria-pressed={selecionada}
+                        title={cor.nome}
+                        className={`h-7 min-w-7 rounded-md border px-2 text-[10px] font-bold transition-transform hover:scale-105 ${
+                          selecionada ? 'ring-2 ring-primary ring-offset-2 ring-offset-zinc-950' : 'border-white/15'
+                        }`}
+                        style={{ backgroundColor: cor.backgroundColor, color: cor.textColor }}
+                      >
+                        Aa
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onChange(badges.filter((_, i) => i !== index))}
+                aria-label={`Remover badge ${index + 1}`}
+                title="Remover badge"
+                className="self-start rounded-lg p-2 text-zinc-600 transition-colors hover:bg-red-500/10 hover:text-red-400"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+
+          <p className="text-[11px] text-zinc-700">
+            {badges.length}/{MAXIMO_DE_BADGES} badges
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
 

@@ -52,6 +52,18 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
 
   const menuItems = [
     {
+      icon: Megaphone,
+      label: 'Mural de Informações',
+      href: '/mural',
+      roles: ['CLIENT', 'DESIGNER'],
+    },
+    {
+      icon: Megaphone,
+      label: 'Gerenciar mural',
+      href: '/mural/gerenciar',
+      roles: ['ADMIN'],
+    },
+    {
       icon: LayoutDashboard,
       label: 'Dashboard Administrativo',
       href: '/dashboard',
@@ -73,16 +85,8 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
       href: currentOrganizationId ? `/organizations/${currentOrganizationId}/campaigns` : '/organizations',
       roles: ['CLIENT', 'DESIGNER'],
     },
-    {
-      icon: Megaphone,
-      label: 'Mural de Informações',
-      href: '/mural',
-      roles: ['CLIENT', 'DESIGNER'],
-    },
     { icon: Building2, label: 'Organizações', href: '/organizations', roles: ['ADMIN'] },
     { icon: Users, label: 'Equipe', href: '/team', roles: ['ADMIN'] },
-    // O ADMIN gerencia; os outros só leem. Rotas diferentes, mesmo mural.
-    { icon: Megaphone, label: 'Mural', href: '/mural/gerenciar', roles: ['ADMIN'] },
   ];
 
   const filteredItems = menuItems.filter((item) => {
@@ -232,6 +236,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
             <NavLink
               key={item.href}
               to={item.href}
+              end={item.href === '/mural'}
               onClick={onClose}
               title={collapsed ? item.label : undefined}
               className={({ isActive }) => cn(

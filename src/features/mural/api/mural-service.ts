@@ -2,6 +2,12 @@ import api from '@/api/axios';
 
 export type MuralItemType = 'IMAGE' | 'CARD';
 
+export interface MuralBadge {
+  label: string;
+  backgroundColor: string;
+  textColor: string;
+}
+
 export interface MuralItem {
   id: string;
   type: MuralItemType;
@@ -9,10 +15,13 @@ export interface MuralItem {
   organizationId: string | null;
   /** Nome da empresa, para o crachá na tela de gestão. `null` quando global. */
   organizationName: string | null;
+  /** Foto da empresa exibida no crachá. `null` quando global ou sem foto. */
+  organizationLogoUrl: string | null;
   imageUrl: string | null;
   markdown: string | null;
   backgroundColor: string | null;
   textColor: string | null;
+  badges: MuralBadge[];
   createdAt: string;
 }
 
@@ -20,8 +29,9 @@ export const muralService = {
   /**
    * O que a pessoa pode ver.
    *
-   * O recorte é do servidor: ele devolve os globais mais os da organização em
-   * uso. O front não filtra nada — não teria como garantir.
+   * O recorte é do servidor: ele devolve os globais mais os de todas as
+   * organizações às quais a pessoa pertence. O front não filtra nada — não
+   * teria como garantir autorização.
    */
   listar: async () => {
     const response = await api.get<MuralItem[]>('/mural');
@@ -32,6 +42,7 @@ export const muralService = {
     markdown: string;
     backgroundColor: string;
     textColor: string;
+    badges: MuralBadge[];
     organizationId: string | null;
   }) => {
     const response = await api.post<MuralItem>('/mural/cards', data);

@@ -43,6 +43,7 @@ export function DashboardLayout() {
     if (path.includes('/campaigns')) return 'Campanhas';
     if (path.includes('/posts')) return 'Cronograma';
     if (path.includes('/organizations')) return 'Organizações';
+    if (path.includes('/mural')) return 'Mural de avisos';
     if (path.includes('/team')) return 'Equipe';
     if (path === '/dashboard') {
       if (userRole === 'CLIENT') return 'Minhas Aprovações';
@@ -52,7 +53,10 @@ export function DashboardLayout() {
     return 'SocialFlow';
   };
 
-  if (isClient && !currentOrganizationId) {
+  // Mural e listagem existem antes da escolha de uma empresa. As telas internas
+  // continuam exigindo o contexto de organização do cliente.
+  const permiteSemOrganizacao = location.pathname === '/mural' || location.pathname === '/organizations';
+  if (isClient && !currentOrganizationId && !permiteSemOrganizacao) {
     return <OrganizationSelector />;
   }
 

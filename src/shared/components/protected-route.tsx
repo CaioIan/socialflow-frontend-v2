@@ -17,8 +17,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    // Se o usuário não tiver a role necessária, manda para organizações
-    return <Navigate to="/organizations" replace />;
+    const fallbackPath = user.role === 'ADMIN' ? '/mural/gerenciar' : '/mural';
+    return <Navigate to={fallbackPath} replace />;
   }
 
   return <>{children}</>;

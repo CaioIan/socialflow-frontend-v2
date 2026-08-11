@@ -27,7 +27,11 @@ export default function LoginPage() {
     onSuccess: (data) => {
       setAuth(data.user, data.organizations);
       addToast('Login realizado com sucesso!', 'success');
-      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/organizations';
+      const requestedPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+      const defaultPath = data.user.role === 'ADMIN' ? '/mural/gerenciar' : '/mural';
+      const from = data.user.role === 'ADMIN' && requestedPath === '/mural'
+        ? '/mural/gerenciar'
+        : requestedPath ?? defaultPath;
       navigate(from, { replace: true });
     },
     onError: (error: unknown) => {

@@ -16,7 +16,7 @@ import MuralAdminPage from '@/features/mural/components/mural-admin-page';
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/organizations" replace />,
+    element: <Navigate to="/mural" replace />,
   },
   {
     path: '/login',
@@ -65,8 +65,8 @@ export const router = createBrowserRouter([
         element: <TeamPage />,
       },
       {
-        // Leitura para cliente e designer. O ADMIN tem a tela de gestão em
-        // /mural/gerenciar; mandá-lo para cá seria tirar dele o que ele precisa.
+        // A leitura é a entrada de clientes e designers. O ADMIN usa somente a
+        // gestão em /mural/gerenciar.
         path: 'mural',
         element: (
           <ProtectedRoute allowedRoles={['CLIENT', 'DESIGNER']}>

@@ -109,5 +109,16 @@ describe('Sidebar', () => {
       expect(screen.queryByText('Início')).not.toBeInTheDocument();
       expect(screen.getByText('Organizações')).toBeInTheDocument();
     });
+
+    it('vê somente "Gerenciar mural", como primeira opção do menu', () => {
+      const { container } = montar();
+
+      expect(screen.queryByText('Mural de Informações')).not.toBeInTheDocument();
+      expect(screen.getByText('Gerenciar mural').closest('a')).toHaveAttribute(
+        'href',
+        '/mural/gerenciar',
+      );
+      expect(container.querySelector('nav a')).toHaveTextContent('Gerenciar mural');
+    });
   });
 });

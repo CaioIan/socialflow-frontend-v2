@@ -25,6 +25,10 @@ vi.mock('@/stores/use-auth-store', () => ({
 
 vi.mock('@/stores/use-toast-store', () => ({ useToastStore: () => ({ addToast: vi.fn() }) }));
 
+vi.mock('@/features/mural/components/mural-feed', () => ({
+  MuralFeed: () => <section aria-label="Mural de avisos">Mural de avisos</section>,
+}));
+
 const servico = vi.mocked(organizationsService);
 
 function org(overrides: Partial<Organization> = {}): Organization {
@@ -60,6 +64,15 @@ describe('OrganizationsPage', () => {
     // e contaminar a contagem de chamadas deste aqui.
     vi.clearAllMocks();
     servico.getAll.mockResolvedValue([org()]);
+  });
+
+  it('exibe o mural antes da listagem de organizações', async () => {
+    montar();
+
+    const mural = screen.getByRole('region', { name: /mural de avisos/i });
+    const titulo = await screen.findByRole('heading', { name: 'Organizações' });
+
+    expect(mural.compareDocumentPosition(titulo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   describe('situação do Instagram no card', () => {

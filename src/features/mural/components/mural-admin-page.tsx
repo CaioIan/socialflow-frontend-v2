@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Globe, Loader2, Megaphone, Plus, Trash2 } from 'lucide-react';
-import { GlassCard } from '@/shared/components/glass-card';
+import { Loader2, Megaphone, Plus, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
 import { muralService, type MuralItem } from '../api/mural-service';
@@ -64,12 +63,16 @@ export default function MuralAdminPage() {
 
       {/* O mesmo componente que o cliente vê. Publicar às cegas e só descobrir o
           resultado entrando com outra conta seria trabalhar no escuro. */}
-      <GlassCard className="p-6 sm:p-8">
+      <section>
         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block mb-5">
           Como o cliente vê
         </span>
-        <MuralCarousel itens={itens} isLoading={isLoading} />
-      </GlassCard>
+        <MuralCarousel
+          itens={itens}
+          isLoading={isLoading}
+          showOrganizationBadge
+        />
+      </section>
 
       <div className="space-y-4">
         <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">
@@ -94,20 +97,9 @@ export default function MuralAdminPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {itens.map((item) => (
               <div key={item.id} className="space-y-2.5 group">
-                <MuralItemCard item={item} />
+                <MuralItemCard item={item} showOrganizationBadge />
 
-                <div className="flex items-center justify-between gap-2">
-                  {item.organizationId ? (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-bold text-zinc-400 truncate">
-                      {item.organizationName}
-                    </span>
-                  ) : (
-                    <span className="px-2 py-1 rounded-lg bg-primary/10 border border-primary/25 text-[10px] font-bold text-primary flex items-center gap-1.5 shrink-0">
-                      <Globe className="w-3 h-3" />
-                      Global
-                    </span>
-                  )}
-
+                <div className="flex justify-end">
                   <button
                     type="button"
                     onClick={() => setParaExcluir(item)}
