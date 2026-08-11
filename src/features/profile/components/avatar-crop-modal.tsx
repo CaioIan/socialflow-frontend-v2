@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
 import { Loader2, ZoomIn } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
-import { recortarImagem } from '../lib/recortar-imagem';
+import { recortarImagem } from '@/shared/lib/recortar-imagem';
 
 interface Props {
   isOpen: boolean;

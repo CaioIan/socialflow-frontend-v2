@@ -46,7 +46,7 @@ src/
 ```
 
 **Áreas:** `auth` · `organizations` · `campaigns` · `posts` · `team` ·
-`instagram` · `dashboard`
+`instagram` · `dashboard` · `profile` · `mural`
 
 ## Como rodar
 

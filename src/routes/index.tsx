@@ -10,6 +10,8 @@ import TeamPage from '@/features/team/components/team-page';
 import { AdminDashboardPage } from '@/features/dashboard/components/admin-dashboard-page';
 import InstagramPage from '@/features/instagram/components/instagram-page';
 import ProfilePage from '@/features/profile/components/profile-page';
+import MuralPage from '@/features/mural/components/mural-page';
+import MuralAdminPage from '@/features/mural/components/mural-admin-page';
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +63,24 @@ export const router = createBrowserRouter([
       {
         path: 'team',
         element: <TeamPage />,
+      },
+      {
+        // Leitura para cliente e designer. O ADMIN tem a tela de gestão em
+        // /mural/gerenciar; mandá-lo para cá seria tirar dele o que ele precisa.
+        path: 'mural',
+        element: (
+          <ProtectedRoute allowedRoles={['CLIENT', 'DESIGNER']}>
+            <MuralPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'mural/gerenciar',
+        element: (
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <MuralAdminPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'dashboard',

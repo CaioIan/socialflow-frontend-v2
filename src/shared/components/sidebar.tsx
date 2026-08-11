@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Home, Users, LogOut, X, AlertTriangle, PanelLeftClose, PanelLeftOpen, ChevronDown, Check } from 'lucide-react';
+import { LayoutDashboard, Building2, Home, Megaphone, Users, LogOut, X, AlertTriangle, PanelLeftClose, PanelLeftOpen, ChevronDown, Check } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserAvatar } from '@/shared/components/user-avatar';
 import { useProfile } from '@/features/profile/api/use-profile';
@@ -73,8 +73,16 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
       href: currentOrganizationId ? `/organizations/${currentOrganizationId}/campaigns` : '/organizations',
       roles: ['CLIENT', 'DESIGNER'],
     },
+    {
+      icon: Megaphone,
+      label: 'Mural de Informações',
+      href: '/mural',
+      roles: ['CLIENT', 'DESIGNER'],
+    },
     { icon: Building2, label: 'Organizações', href: '/organizations', roles: ['ADMIN'] },
     { icon: Users, label: 'Equipe', href: '/team', roles: ['ADMIN'] },
+    // O ADMIN gerencia; os outros só leem. Rotas diferentes, mesmo mural.
+    { icon: Megaphone, label: 'Mural', href: '/mural/gerenciar', roles: ['ADMIN'] },
   ];
 
   const filteredItems = menuItems.filter((item) => {
