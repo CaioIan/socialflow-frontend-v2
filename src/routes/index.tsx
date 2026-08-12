@@ -17,7 +17,7 @@ import MuralAdminPage from '@/features/mural/components/mural-admin-page';
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/mural" replace />,
+    element: <Navigate to="/organizations" replace />,
   },
   {
     path: '/login',
@@ -66,8 +66,8 @@ export const router = createBrowserRouter([
         element: <TeamPage />,
       },
       {
-        // A leitura é a entrada de clientes e designers. O ADMIN usa somente a
-        // gestão em /mural/gerenciar.
+        // Clientes e designers ainda podem abrir a leitura dedicada, embora a
+        // entrada padrão agora seja /organizations, que já começa pelo mural.
         path: 'mural',
         element: (
           <ProtectedRoute allowedRoles={['CLIENT', 'DESIGNER']}>

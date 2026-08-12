@@ -7,6 +7,9 @@ let promptPendente: BeforeInstallPromptEvent | null = null;
 const ouvintes = new Set<() => void>();
 let inicializado = false;
 
+export const MENSAGEM_INSTALACAO_INICIADA =
+  'Instalação iniciada. Aguarde o dispositivo concluir a instalação do SocialFlow.';
+
 function avisar() {
   ouvintes.forEach((ouvinte) => ouvinte());
 }

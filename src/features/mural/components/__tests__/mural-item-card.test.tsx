@@ -15,6 +15,10 @@ function aviso(overrides: Partial<MuralItem> = {}): MuralItem {
     markdown: 'Aviso importante',
     backgroundColor: '#18181b',
     textColor: '#ffffff',
+    showMoreEnabled: false,
+    showMoreBackgroundColor: '#ffffff',
+    showMoreTextColor: '#18181b',
+    showMoreIconColor: '#18181b',
     badges: [],
     createdAt: '2026-08-11T10:00:00.000Z',
     ...overrides,
@@ -85,10 +89,11 @@ describe('MuralItemCard', () => {
 
     expect(vermelha).toHaveStyle({ backgroundColor: '#dc2626', color: '#ffffff' });
     expect(cinza).toHaveStyle({ backgroundColor: '#d4d4d8', color: '#18181b' });
-    expect(vermelha).toHaveClass('rounded-[4px]', 'px-2', 'py-1', 'text-[10px]');
+    expect(vermelha).toHaveClass('rounded-[4px]', 'px-2.5', 'py-1', 'text-[11px]');
 
     const marcacoes = screen.getByLabelText('Marcações do aviso');
     const texto = screen.getByText('Aviso importante');
+    expect(texto).toHaveClass('text-xs', 'leading-[1.5]');
     expect(marcacoes.compareDocumentPosition(texto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(texto.closest('[role="button"]')).toHaveClass('items-start', 'aspect-[3/2]');
   });
@@ -118,6 +123,32 @@ describe('MuralItemCard', () => {
       ),
     ).toHaveLength(2);
     expect(screen.getByText(/Publicado em/)).toBeInTheDocument();
+  });
+
+  it('usa o botão Ver mais configurado pelo admin mesmo quando o aviso é curto', async () => {
+    const user = userEvent.setup();
+    render(
+      <MuralItemCard
+        item={aviso({
+          markdown: 'Aviso curto',
+          showMoreEnabled: true,
+          showMoreBackgroundColor: '#7c3aed',
+          showMoreTextColor: '#ffffff',
+          showMoreIconColor: '#f59e0b',
+        })}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Abrir aviso completo' })).not.toBeInTheDocument();
+
+    const botao = screen.getByRole('button', { name: 'Ver mais sobre este aviso' });
+    expect(botao).toHaveStyle({ backgroundColor: '#7c3aed', color: '#ffffff' });
+    expect(botao.querySelector('svg')).toHaveStyle({ color: '#f59e0b' });
+
+    await user.click(botao);
+
+    expect(screen.getByRole('heading', { name: 'Aviso do mural' })).toBeInTheDocument();
+    expect(screen.getAllByText('Aviso curto')).toHaveLength(2);
   });
 
   it('quebra sequências longas e mantém scroll de contingência no modal', async () => {

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Home, Megaphone, Users, LogOut, X, AlertTriangle, PanelLeftClose, PanelLeftOpen, ChevronDown, Check } from 'lucide-react';
+import { LayoutDashboard, Building2, Home, Megaphone, Users, LogOut, X, AlertTriangle, PanelLeftClose, PanelLeftOpen, ChevronDown, Check, Download } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserAvatar } from '@/shared/components/user-avatar';
 import { useProfile } from '@/features/profile/api/use-profile';
@@ -8,6 +8,13 @@ import { useAuthStore } from '@/stores/use-auth-store';
 import { authService } from '@/features/auth/api/auth-service';
 import { desvincularPushAoSair } from '@/shared/lib/push-notifications';
 import { useState, useEffect } from 'react';
+import {
+  MENSAGEM_INSTALACAO_INICIADA,
+  observarInstalacao,
+  obterPromptDeInstalacao,
+  solicitarInstalacao,
+} from '@/shared/lib/pwa-install';
+import { useToastStore } from '@/stores/use-toast-store';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -20,12 +27,20 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
   const { user, logout, currentOrganizationId, setCurrentOrganization } = useAuthStore();
   const [isMobile, setIsMobile] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [podeInstalar, setPodeInstalar] = useState(Boolean(obterPromptDeInstalacao()));
+  const { addToast } = useToastStore();
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    return observarInstalacao(() => {
+      setPodeInstalar(Boolean(obterPromptDeInstalacao()));
+    });
   }, []);
 
   const navigate = useNavigate();
@@ -58,8 +73,14 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
       icon: Home,
       label: 'Início',
       href: '/organizations',
-      roles: ['CLIENT', 'DESIGNER'],
+      roles: ['CLIENT'],
       apenasComSeletor: true,
+    },
+    {
+      icon: Home,
+      label: 'Início',
+      href: '/organizations',
+      roles: ['DESIGNER'],
     },
     {
       icon: Home,
@@ -74,6 +95,12 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
       roles: ['ADMIN'],
     },
     {
+      icon: LayoutDashboard,
+      label: 'Dashboard',
+      href: '/dashboard/designer',
+      roles: ['DESIGNER'],
+    },
+    {
       icon: Megaphone,
       label: 'Mural de Informações',
       href: '/mural',
@@ -86,18 +113,12 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
       roles: ['ADMIN'],
     },
     {
-      icon: LayoutDashboard,
-      label: 'Dashboard da Designer',
-      href: '/dashboard/designer',
-      roles: ['DESIGNER'],
-    },
-    {
       icon: Building2,
       label: 'Minha Organização',
       // Mesmo com um único vínculo, primeiro mostra a organização. Entrar nas
       // campanhas continua sendo uma escolha feita no card da listagem.
       href: '/organizations',
-      roles: ['CLIENT', 'DESIGNER'],
+      roles: ['CLIENT'],
     },
     { icon: Users, label: 'Equipe', href: '/team', roles: ['ADMIN'] },
   ];
@@ -118,6 +139,15 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
     } finally {
       logout();
       setIsLogoutModalOpen(false);
+    }
+  };
+
+  const instalarSocialFlow = async () => {
+    const resultado = await solicitarInstalacao();
+    setPodeInstalar(Boolean(obterPromptDeInstalacao()));
+
+    if (resultado === 'accepted') {
+      addToast(MENSAGEM_INSTALACAO_INICIADA, 'info');
     }
   };
 
@@ -289,6 +319,34 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
               )}
             </NavLink>
           ))}
+
+          {podeInstalar && (
+            <button
+              type="button"
+              onClick={() => void instalarSocialFlow()}
+              title={collapsed ? 'Instalar SocialFlow' : undefined}
+              className={cn(
+                'group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-zinc-500 transition-all duration-200 hover:bg-white/5 hover:text-zinc-300',
+                collapsed && 'justify-center px-0',
+              )}
+            >
+              <Download className="h-5 w-5 shrink-0 group-hover:text-zinc-300" />
+              <AnimatePresence mode="wait">
+                {!collapsed && (
+                  <motion.span
+                    key="install-label"
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="overflow-hidden whitespace-nowrap text-sm font-medium"
+                  >
+                    Instalar SocialFlow
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+          )}
         </nav>
 
         {/* Footer: perfil + logout */}

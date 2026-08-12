@@ -15,6 +15,10 @@ function aviso(id: string, titulo: string): MuralItem {
     markdown: `## ${titulo}`,
     backgroundColor: '#f4f4f5',
     textColor: '#18181b',
+    showMoreEnabled: false,
+    showMoreBackgroundColor: '#ffffff',
+    showMoreTextColor: '#18181b',
+    showMoreIconColor: '#18181b',
     badges: [],
     createdAt: '2026-08-11T10:00:00.000Z',
   };
@@ -36,7 +40,7 @@ describe('MuralCarousel', () => {
     expect(screen.getByText('Entenda o mural')).toBeInTheDocument();
 
     const primeiroSlide = screen.getByText('Aprovação pendente').closest('[data-mural-slide]');
-    expect(primeiroSlide).toHaveClass('w-[86%]', 'sm:w-[29.5rem]');
+    expect(primeiroSlide).toHaveClass('w-[90%]', 'sm:w-[29.5rem]');
     expect(primeiroSlide).not.toHaveClass('w-full');
     expect(primeiroSlide).not.toHaveClass('snap-start');
     expect(primeiroSlide?.parentElement).not.toHaveClass('snap-x', 'snap-mandatory');

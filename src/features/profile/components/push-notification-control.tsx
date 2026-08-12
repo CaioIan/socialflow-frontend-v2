@@ -11,6 +11,7 @@ import { useToastStore } from '@/stores/use-toast-store';
 import {
   ehIos,
   estaEmModoAplicativo,
+  MENSAGEM_INSTALACAO_INICIADA,
   observarInstalacao,
   obterPromptDeInstalacao,
   solicitarInstalacao,
@@ -143,7 +144,7 @@ export function PushNotificationControl() {
     setPodeInstalar(Boolean(obterPromptDeInstalacao()));
 
     if (resultado === 'accepted') {
-      addToast('SocialFlow instalado. Abra pelo novo ícone do aplicativo.', 'success');
+      addToast(MENSAGEM_INSTALACAO_INICIADA, 'info');
     }
   };
 

@@ -28,7 +28,7 @@ export default function LoginPage() {
       setAuth(data.user, data.organizations);
       addToast('Login realizado com sucesso!', 'success');
       const requestedPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
-      const defaultPath = data.user.role === 'ADMIN' ? '/mural/gerenciar' : '/mural';
+      const defaultPath = '/organizations';
       const from = data.user.role === 'ADMIN' && requestedPath === '/mural'
         ? '/mural/gerenciar'
         : requestedPath ?? defaultPath;

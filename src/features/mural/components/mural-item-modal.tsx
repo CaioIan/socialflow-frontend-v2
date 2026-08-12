@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Image as ImageIcon, Loader2, Plus, Tag, Trash2, Type, Upload, Users } from 'lucide-react';
+import { ArrowRight, Image as ImageIcon, Loader2, Plus, Tag, Trash2, Type, Upload, Users } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
 import { getApiErrorMessage } from '@/api/api-error';
 import { useToastStore } from '@/stores/use-toast-store';
@@ -14,6 +14,7 @@ import {
   type MuralItem,
 } from '../api/mural-service';
 import { MuralItemCard } from './mural-item-card';
+import { ToggleSwitch } from '@/shared/components/toggle-switch';
 
 /** Mesmos limites do backend, para o erro aparecer antes de subir o arquivo. */
 const TAMANHO_MAXIMO = 5 * 1024 * 1024;
@@ -52,6 +53,16 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
   const [corDeFundo, setCorDeFundo] = useState(item?.backgroundColor ?? '#7c3aed');
   const [corDoTexto, setCorDoTexto] = useState(item?.textColor ?? '#ffffff');
   const [badges, setBadges] = useState<MuralBadge[]>(item?.badges.map((badge) => ({ ...badge })) ?? []);
+  const [showMoreEnabled, setShowMoreEnabled] = useState(item?.showMoreEnabled ?? false);
+  const [showMoreBackgroundColor, setShowMoreBackgroundColor] = useState(
+    item?.showMoreBackgroundColor ?? '#ffffff',
+  );
+  const [showMoreTextColor, setShowMoreTextColor] = useState(
+    item?.showMoreTextColor ?? '#18181b',
+  );
+  const [showMoreIconColor, setShowMoreIconColor] = useState(
+    item?.showMoreIconColor ?? '#18181b',
+  );
   const [erro, setErro] = useState<string | undefined>(undefined);
 
   const [imagemEscolhida, setImagemEscolhida] = useState<string | undefined>(undefined);
@@ -106,6 +117,10 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
           badges: badges.map((badge) => ({ ...badge, label: badge.label.trim() })),
           organizationId: org,
           audienceUserIds,
+          showMoreEnabled,
+          showMoreBackgroundColor,
+          showMoreTextColor,
+          showMoreIconColor,
         };
 
         return item
@@ -305,6 +320,45 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
               <SeletorDeCor rotulo="Cor do texto" valor={corDoTexto} onChange={setCorDoTexto} />
             </div>
 
+            <section className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-zinc-400">
+                    <ArrowRight className="h-3.5 w-3.5 text-primary" />
+                    Botão Ver mais
+                  </span>
+                  <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+                    Opcional. Quando ativado, o aviso completo abre por este botão, mesmo se o texto for curto.
+                  </p>
+                </div>
+                <ToggleSwitch
+                  checked={showMoreEnabled}
+                  ariaLabel="Exibir botão Ver mais"
+                  onClick={() => setShowMoreEnabled((atual) => !atual)}
+                />
+              </div>
+
+              {showMoreEnabled && (
+                <div className="grid grid-cols-1 gap-4 border-t border-white/5 pt-4 sm:grid-cols-3">
+                  <SeletorDeCor
+                    rotulo="Cor do botão Ver mais"
+                    valor={showMoreBackgroundColor}
+                    onChange={setShowMoreBackgroundColor}
+                  />
+                  <SeletorDeCor
+                    rotulo="Cor do texto Ver mais"
+                    valor={showMoreTextColor}
+                    onChange={setShowMoreTextColor}
+                  />
+                  <SeletorDeCor
+                    rotulo="Cor do ícone Ver mais"
+                    valor={showMoreIconColor}
+                    onChange={setShowMoreIconColor}
+                  />
+                </div>
+              )}
+            </section>
+
             <div className="space-y-2">
               <span className="text-xs font-bold text-zinc-400 uppercase tracking-wide">
                 Como vai ficar
@@ -321,6 +375,10 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
                   markdown: markdown || '_O aviso do SocialFlow aparece aqui conforme você escreve._',
                   backgroundColor: corDeFundo,
                   textColor: corDoTexto,
+                  showMoreEnabled,
+                  showMoreBackgroundColor,
+                  showMoreTextColor,
+                  showMoreIconColor,
                   badges: badges.filter((badge) => badge.label.trim().length > 0),
                   createdAt: '',
                 }}

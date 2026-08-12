@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Building2, Maximize2 } from 'lucide-react';
+import { ArrowRight, Building2, Maximize2 } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
 import type { MuralItem } from '../api/mural-service';
 
@@ -23,6 +23,7 @@ export function MuralItemCard({
   const inicioDoToque = useRef<{ x: number; y: number } | null>(null);
   const arrastou = useRef(false);
   const showScopeBadge = showOrganizationBadge || item.organizationId === null;
+  const showMoreEnabled = item.showMoreEnabled === true;
   const dataDePublicacao = formatarDataDePublicacao(item.createdAt);
 
   if (item.type === 'IMAGE') {
@@ -82,11 +83,12 @@ export function MuralItemCard({
   return (
     <>
       <div
-        role="button"
-        tabIndex={0}
-        aria-label="Abrir aviso completo"
-        onClick={abrirDetalhe}
+        role={showMoreEnabled ? undefined : 'button'}
+        tabIndex={showMoreEnabled ? undefined : 0}
+        aria-label={showMoreEnabled ? undefined : 'Abrir aviso completo'}
+        onClick={showMoreEnabled ? undefined : abrirDetalhe}
         onKeyDown={(event) => {
+          if (showMoreEnabled) return;
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             setDetalheAberto(true);
@@ -107,18 +109,57 @@ export function MuralItemCard({
           inicioDoToque.current = null;
           arrastou.current = false;
         }}
-        className="relative flex aspect-[3/2] w-full cursor-pointer items-start overflow-hidden rounded-2xl border border-white/10 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:aspect-video sm:p-8"
+        className={`relative flex aspect-[3/2] w-full items-start overflow-hidden rounded-2xl border border-white/10 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:aspect-video sm:p-8 ${
+          showMoreEnabled ? '' : 'cursor-pointer'
+        }`}
         style={{
           backgroundColor: item.backgroundColor ?? '#18181b',
           color: item.textColor ?? '#ffffff',
         }}
       >
-        <div className={`h-full w-full overflow-hidden ${showScopeBadge ? 'pb-9 sm:pb-12' : ''}`}>
+        <div
+          className={`h-full w-full overflow-hidden ${
+            showMoreEnabled || showScopeBadge ? 'pb-12 sm:pb-14' : ''
+          }`}
+        >
           <MuralBadges item={item} />
           <MuralMarkdown markdown={item.markdown ?? ''} modo="resumo" />
         </div>
-        <span className="sr-only">Toque para ler todas as informações do aviso.</span>
-        {showScopeBadge && <MuralScopeBadge item={item} />}
+        {!showMoreEnabled && (
+          <span className="sr-only">Toque para ler todas as informações do aviso.</span>
+        )}
+
+        {showMoreEnabled ? (
+          <div className="absolute inset-x-2 bottom-2 z-10 flex min-w-0 items-center justify-between gap-2 sm:inset-x-3 sm:bottom-3">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                abrirDetalhe();
+              }}
+              aria-label="Ver mais sobre este aviso"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
+              style={{
+                backgroundColor: item.showMoreBackgroundColor ?? '#ffffff',
+                color: item.showMoreTextColor ?? '#18181b',
+              }}
+            >
+              <span>Ver mais</span>
+              <ArrowRight
+                aria-hidden="true"
+                className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                style={{ color: item.showMoreIconColor ?? '#18181b' }}
+              />
+            </button>
+            {showScopeBadge && (
+              <span className="min-w-0">
+                <MuralScopeBadge item={item} inline />
+              </span>
+            )}
+          </div>
+        ) : (
+          showScopeBadge && <MuralScopeBadge item={item} />
+        )}
       </div>
 
       <Modal
@@ -178,7 +219,7 @@ function MuralBadges({ item, completo = false }: { item: MuralItem; completo?: b
           className={`inline-flex max-w-full items-center rounded-[4px] font-semibold leading-none ${
             completo
               ? 'px-3 py-1.5 text-xs sm:text-sm'
-              : 'px-2 py-1 text-[10px] sm:px-3 sm:py-1.5 sm:text-sm'
+              : 'px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-sm'
           }`}
           style={{
             backgroundColor: badge.backgroundColor,
@@ -215,7 +256,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-xl font-bold sm:text-2xl'
-                : 'mb-1.5 line-clamp-2 text-[15px] font-bold leading-snug sm:mb-2 sm:line-clamp-none sm:text-2xl'
+                : 'mb-1.5 line-clamp-2 text-[17px] font-bold leading-snug sm:mb-2 sm:line-clamp-none sm:text-2xl'
             }
           >
             {children}
@@ -226,7 +267,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-lg font-bold sm:text-xl'
-                : 'mb-1.5 line-clamp-2 text-sm font-bold leading-snug sm:mb-2 sm:line-clamp-none sm:text-xl'
+                : 'mb-1.5 line-clamp-2 text-base font-bold leading-snug sm:mb-2 sm:line-clamp-none sm:text-xl'
             }
           >
             {children}
@@ -237,7 +278,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-2 text-base font-bold'
-                : 'mb-1 line-clamp-2 text-[13px] font-bold leading-snug sm:mb-1.5 sm:line-clamp-none sm:text-base'
+                : 'mb-1 line-clamp-2 text-[15px] font-bold leading-snug sm:mb-1.5 sm:line-clamp-none sm:text-base'
             }
           >
             {children}
@@ -248,7 +289,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-sm leading-relaxed last:mb-0 sm:text-base'
-                : 'mb-1.5 line-clamp-3 text-[11px] leading-[1.45] last:mb-0 sm:mb-2 sm:line-clamp-none sm:text-base sm:leading-relaxed'
+                : 'mb-1.5 line-clamp-3 text-xs leading-[1.5] last:mb-0 sm:mb-2 sm:line-clamp-none sm:text-base sm:leading-relaxed'
             }
           >
             {children}
@@ -257,7 +298,7 @@ function MuralMarkdown({
         ul: ({ children }) => (
           <ul
             className={`mb-2 list-disc space-y-1 pl-4 ${
-              completo ? 'text-sm sm:text-base' : 'text-[11px] sm:text-base'
+              completo ? 'text-sm sm:text-base' : 'text-xs sm:text-base'
             }`}
           >
             {children}
@@ -266,7 +307,7 @@ function MuralMarkdown({
         ol: ({ children }) => (
           <ol
             className={`mb-2 list-decimal space-y-1 pl-4 ${
-              completo ? 'text-sm sm:text-base' : 'text-[11px] sm:text-base'
+              completo ? 'text-sm sm:text-base' : 'text-xs sm:text-base'
             }`}
           >
             {children}
@@ -315,7 +356,7 @@ function MuralScopeBadge({ item, inline = false }: { item: MuralItem; inline?: b
         inline
           ? 'inline-flex max-w-full'
           : 'absolute bottom-2 right-2 z-10 inline-flex max-w-[calc(100%-1rem)] sm:bottom-3 sm:right-3 sm:max-w-[calc(100%-1.5rem)]'
-      } items-center gap-1.5 rounded-md border border-white/15 bg-black/70 py-1 pl-1 pr-2.5 text-[10px] font-semibold text-white shadow-lg backdrop-blur-md sm:gap-2 sm:py-1.5 sm:pl-1.5 sm:pr-3 sm:text-xs`}
+      } items-center gap-1.5 rounded-md border border-white/15 bg-black/70 py-1 pl-1 pr-2.5 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md sm:gap-2 sm:py-1.5 sm:pl-1.5 sm:pr-3 sm:text-xs`}
       aria-label={isGlobal ? 'Aviso global do SocialFlow' : `Aviso da organização ${item.organizationName}`}
     >
       <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full overflow-hidden bg-white/10 flex items-center justify-center shrink-0">

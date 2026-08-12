@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MuralItemModal } from '../mural-item-modal';
@@ -155,6 +155,10 @@ describe('MuralItemModal — badges', () => {
       markdown: '## Aviso atual',
       backgroundColor: '#7c3aed',
       textColor: '#ffffff',
+      showMoreEnabled: false,
+      showMoreBackgroundColor: '#ffffff',
+      showMoreTextColor: '#18181b',
+      showMoreIconColor: '#18181b',
       badges: [],
       createdAt: '',
       audienceUserIds: [],
@@ -174,6 +178,40 @@ describe('MuralItemModal — badges', () => {
     expect(muralService.criarCard).not.toHaveBeenCalled();
   });
 
+  it('permite ativar e personalizar o botão Ver mais antes de publicar', async () => {
+    const user = userEvent.setup();
+    montar();
+
+    await user.type(screen.getByPlaceholderText(/Nova pauta disponível/i), 'Aviso curto');
+    await user.click(screen.getByRole('switch', { name: 'Exibir botão Ver mais' }));
+
+    fireEvent.change(screen.getByLabelText('Cor do botão Ver mais'), {
+      target: { value: '#7c3aed' },
+    });
+    fireEvent.change(screen.getByLabelText('Cor do texto Ver mais'), {
+      target: { value: '#ffffff' },
+    });
+    fireEvent.change(screen.getByLabelText('Cor do ícone Ver mais'), {
+      target: { value: '#f59e0b' },
+    });
+
+    const previa = screen.getByRole('button', { name: 'Ver mais sobre este aviso' });
+    expect(previa).toHaveStyle({ backgroundColor: '#7c3aed', color: '#ffffff' });
+    expect(previa.querySelector('svg')).toHaveStyle({ color: '#f59e0b' });
+
+    await user.click(screen.getByRole('button', { name: 'Publicar no mural' }));
+
+    await waitFor(() => expect(muralService.criarCard).toHaveBeenCalled());
+    expect(vi.mocked(muralService.criarCard).mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        showMoreEnabled: true,
+        showMoreBackgroundColor: '#7c3aed',
+        showMoreTextColor: '#ffffff',
+        showMoreIconColor: '#f59e0b',
+      }),
+    );
+  });
+
   it('permite editar o destino de uma imagem sem obrigar a trocá-la', async () => {
     const user = userEvent.setup();
     montar(vi.fn(), {
@@ -187,6 +225,10 @@ describe('MuralItemModal — badges', () => {
       markdown: null,
       backgroundColor: null,
       textColor: null,
+      showMoreEnabled: false,
+      showMoreBackgroundColor: '#ffffff',
+      showMoreTextColor: '#18181b',
+      showMoreIconColor: '#18181b',
       badges: [],
       createdAt: '',
       audienceUserIds: [],

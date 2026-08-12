@@ -31,6 +31,11 @@ export interface MuralItem {
   markdown: string | null;
   backgroundColor: string | null;
   textColor: string | null;
+  /** Quando ligado, o modal é acessado por um botão explícito no card. */
+  showMoreEnabled: boolean;
+  showMoreBackgroundColor: string;
+  showMoreTextColor: string;
+  showMoreIconColor: string;
   badges: MuralBadge[];
   createdAt: string;
 }
@@ -67,6 +72,10 @@ export const muralService = {
     badges: MuralBadge[];
     organizationId: string | null;
     audienceUserIds: string[];
+    showMoreEnabled: boolean;
+    showMoreBackgroundColor: string;
+    showMoreTextColor: string;
+    showMoreIconColor: string;
   }) => {
     const response = await api.post<MuralItem>('/mural/cards', data);
     return response.data;
@@ -81,6 +90,10 @@ export const muralService = {
       badges: MuralBadge[];
       organizationId: string | null;
       audienceUserIds: string[];
+      showMoreEnabled: boolean;
+      showMoreBackgroundColor: string;
+      showMoreTextColor: string;
+      showMoreIconColor: string;
     },
   ) => {
     const response = await api.patch<MuralItem>(`/mural/cards/${id}`, data);

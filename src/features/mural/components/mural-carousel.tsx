@@ -147,7 +147,7 @@ export function MuralCarousel({
                     data-mural-slide
                     // 29,5rem reproduz o card compacto da referência. O trilho
                     // continua maior, então parte do próximo aviso fica visível.
-                    className={`shrink-0 ${temMaisDeUm ? 'w-[86%] sm:w-[29.5rem]' : 'w-full sm:w-[29.5rem]'
+                    className={`shrink-0 ${temMaisDeUm ? 'w-[90%] sm:w-[29.5rem]' : 'w-full sm:w-[29.5rem]'
                       }`}
                   >
                     <MuralItemCard
