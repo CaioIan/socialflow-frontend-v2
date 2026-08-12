@@ -8,6 +8,7 @@ import { postCommentsService } from '../api/post-comments-service';
 import { GlassCard } from '@/shared/components/glass-card';
 import { ReplaceAssetModal } from './replace-asset-modal';
 import { AdjustmentRequestModal } from './adjustment-request-modal';
+import { UploadVersionModal } from './upload-version-modal';
 import {
   ArrowLeft,
   CheckCircle,
@@ -24,6 +25,7 @@ import {
   Layers,
   FileText,
   ChevronDown,
+  Upload,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,6 +44,7 @@ export default function PostDetailPage() {
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [selectedAssetType, setSelectedAssetType] = useState<'FEED' | 'STORIES'>('FEED');
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
+  const [isNovaVersaoModalOpen, setIsNovaVersaoModalOpen] = useState(false);
   const [isSubmittingAdjustment, setIsSubmittingAdjustment] = useState(false);
   const [briefingAberto, setBriefingAberto] = useState(false);
 
@@ -206,6 +209,8 @@ export default function PostDetailPage() {
 
   const feedAssetId = feedAsset?.id || null;
   const storiesAssetId = storiesAsset?.id || null;
+
+  const temAjusteEmAberto = post.status === 'ALTERATION_REQUESTED';
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -619,38 +624,70 @@ export default function PostDetailPage() {
               )}
             </div>
 
-            {/* Replace Asset Buttons - Visible for ADMIN and DESIGNER */}
-            {(isAdmin || isDesigner) && (feedUrls.length > 0 || storiesUrl) && (
-              <div className="space-y-3 pt-4">
-                {feedUrls.length > 0 && (
-                  <button
-                    onClick={() => {
-                      setSelectedAssetId(feedAssetId || 'feed-placeholder');
-                      setSelectedAssetType('FEED');
-                      setIsReplaceAssetModalOpen(true);
-                    }}
-                    className="w-full py-2 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 border border-blue-500/30 transition-all"
-                  >
-                    <RotateCw className="w-4 h-4" />
-                    Substituir Feed
-                  </button>
-                )}
+            {/*
+              Com ajuste em aberto, "Enviar nova versão" é o único caminho.
 
-                {storiesUrl && (
-                  <button
-                    onClick={() => {
-                      setSelectedAssetId(storiesAssetId || 'stories-placeholder');
-                      setSelectedAssetType('STORIES');
-                      setIsReplaceAssetModalOpen(true);
-                    }}
-                    className="w-full py-2 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-purple-200 border border-purple-500/30 transition-all"
-                  >
-                    <RotateCw className="w-4 h-4" />
-                    Substituir Stories
-                  </button>
-                )}
+              "Substituir Feed"/"Substituir Stories" trocam a arte da versão
+              vigente e não fazem mais nada: não criam versão, não tiram o post
+              de ALTERATION_REQUESTED e não avisam o cliente. Atender um ajuste
+              por ali já aconteceu em produção — a arte nova entrou, e para todo
+              mundo o post continuou parecendo que esperava a designer.
+
+              Por isso eles somem enquanto houver ajuste, em vez de conviverem
+              com o botão certo: são o caminho silencioso, e a diferença entre
+              os três não é visível para quem está só tentando entregar a arte.
+              Sem ajuste em aberto, seguem existindo normalmente.
+            */}
+            {(isAdmin || isDesigner) && temAjusteEmAberto && (
+              <div className="space-y-2 pt-4">
+                <button
+                  onClick={() => setIsNovaVersaoModalOpen(true)}
+                  className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-amber-200 border border-amber-500/30 transition-all"
+                >
+                  <Upload className="w-4 h-4" />
+                  Enviar nova versão
+                </button>
+                <p className="text-[11px] text-zinc-500 text-center leading-relaxed">
+                  Atende o ajuste solicitado e avisa o cliente. Envie só a peça
+                  que mudou — a outra é mantida.
+                </p>
               </div>
             )}
+
+            {/* Replace Asset Buttons - Visible for ADMIN and DESIGNER */}
+            {(isAdmin || isDesigner) &&
+              !temAjusteEmAberto &&
+              (feedUrls.length > 0 || storiesUrl) && (
+                <div className="space-y-3 pt-4">
+                  {feedUrls.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setSelectedAssetId(feedAssetId || 'feed-placeholder');
+                        setSelectedAssetType('FEED');
+                        setIsReplaceAssetModalOpen(true);
+                      }}
+                      className="w-full py-2 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 border border-blue-500/30 transition-all"
+                    >
+                      <RotateCw className="w-4 h-4" />
+                      Substituir Feed
+                    </button>
+                  )}
+
+                  {storiesUrl && (
+                    <button
+                      onClick={() => {
+                        setSelectedAssetId(storiesAssetId || 'stories-placeholder');
+                        setSelectedAssetType('STORIES');
+                        setIsReplaceAssetModalOpen(true);
+                      }}
+                      className="w-full py-2 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-purple-200 border border-purple-500/30 transition-all"
+                    >
+                      <RotateCw className="w-4 h-4" />
+                      Substituir Stories
+                    </button>
+                  )}
+                </div>
+              )}
           </motion.div>
         </div>
       </div>
@@ -680,6 +717,18 @@ export default function PostDetailPage() {
         isLoading={isSubmittingAdjustment}
         initialComment={comments?.find(c => c.postVersionId === post.currentVersionId && c.authorUserId === user?.id)?.body}
         initialTarget={comments?.find(c => c.postVersionId === post.currentVersionId && c.authorUserId === user?.id)?.target}
+      />
+
+      {/*
+        O mesmo modal do card, de propósito: é o caminho que cria uma versão de
+        verdade, tira o post do ajuste e avisa o cliente. Duplicar a tela aqui
+        seria duplicar também a chance de uma das duas parar de notificar.
+      */}
+      <UploadVersionModal
+        isOpen={isNovaVersaoModalOpen}
+        onClose={() => setIsNovaVersaoModalOpen(false)}
+        postId={postId!}
+        campaignId={campId!}
       />
     </div>
   );
