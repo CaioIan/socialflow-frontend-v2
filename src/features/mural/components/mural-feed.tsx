@@ -22,6 +22,7 @@ export function MuralFeed() {
       itens={itens}
       isLoading={isLoading}
       showOrganizationBadge={showOrganizationBadge}
+      viewerName={user?.name}
     />
   );
 }

@@ -59,7 +59,7 @@ export function MuralItemCard({
             {item.badges.map((badge, index) => (
               <span
                 key={`${badge.label}-${index}`}
-                className="inline-flex max-w-full items-center rounded-[4px] px-3 py-1.5 text-xs font-semibold leading-none sm:px-3.5 sm:py-2 sm:text-sm"
+                className="inline-flex max-w-full items-center rounded-[4px] px-3 py-1.5 text-xs font-semibold leading-none sm:text-sm"
                 style={{
                   backgroundColor: badge.backgroundColor,
                   color: badge.textColor,
@@ -75,8 +75,8 @@ export function MuralItemCard({
             // Sem `remark-gfm` e sem `rehype-raw`: o react-markdown já ignora
             // HTML solto por padrão, e não habilitá-lo é o que impede alguém de
             // injetar script num aviso que o cliente vai abrir.
-            h1: ({ children }) => <h1 className="text-lg sm:text-xl font-bold mb-2">{children}</h1>,
-            h2: ({ children }) => <h2 className="text-base sm:text-lg font-bold mb-2">{children}</h2>,
+            h1: ({ children }) => <h1 className="text-lg sm:text-2xl font-bold mb-2">{children}</h1>,
+            h2: ({ children }) => <h2 className="text-base sm:text-xl font-bold mb-2">{children}</h2>,
             h3: ({ children }) => <h3 className="text-sm sm:text-base font-bold mb-1.5">{children}</h3>,
             p: ({ children }) => <p className="text-sm sm:text-base mb-2 last:mb-0 leading-relaxed">{children}</p>,
             ul: ({ children }) => <ul className="list-disc pl-5 mb-2 space-y-1">{children}</ul>,

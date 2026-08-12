@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Megaphone, Plus, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
+import { useAuthStore } from '@/stores/use-auth-store';
 import { muralService, type MuralItem } from '../api/mural-service';
 import { MuralItemCard } from './mural-item-card';
 import { MuralCarousel } from './mural-carousel';
@@ -18,6 +19,7 @@ import { MuralItemModal } from './mural-item-modal';
 export default function MuralAdminPage() {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
+  const user = useAuthStore((state) => state.user);
   const [modalAberto, setModalAberto] = useState(false);
   const [paraExcluir, setParaExcluir] = useState<MuralItem | undefined>(undefined);
 
@@ -71,6 +73,7 @@ export default function MuralAdminPage() {
           itens={itens}
           isLoading={isLoading}
           showOrganizationBadge
+          viewerName={user?.name}
         />
       </section>
 

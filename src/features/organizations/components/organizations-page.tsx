@@ -92,11 +92,11 @@ export default function OrganizationsPage() {
   const visiveis = isAdmin && aba === 'desativadas' ? desativadas : ativas;
 
   return (
-    <div className="space-y-12 max-w-7xl mx-auto">
+    <div className="mx-auto max-w-7xl space-y-8 md:space-y-12">
       {/* O mural abre a página: os recados chegam antes da escolha da empresa. */}
       <MuralFeed />
 
-      <section className="space-y-8 border-t border-white/5 pt-10">
+      <section className="space-y-6 border-t border-white/5 pt-6 md:space-y-8 md:pt-10">
       {/* Empilha no mobile, como as demais telas: lado a lado, o botão não
           cabia em 375px e vazava para fora da viewport. */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
