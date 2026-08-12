@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/use-auth-store';
 import { authService } from '../api/auth-service';
 import { useMutation } from '@tanstack/react-query';
 import { GlassCard } from '@/shared/components/glass-card';
+import { desvincularPushAoSair } from '@/shared/lib/push-notifications';
 
 export function OrganizationSelector() {
   const { organizations, logout, setCurrentOrganization } = useAuthStore();
@@ -74,6 +75,7 @@ export function OrganizationSelector() {
           <button
             onClick={async () => {
               try {
+                await desvincularPushAoSair().catch(() => undefined);
                 await authService.logout();
               } finally {
                 logout();

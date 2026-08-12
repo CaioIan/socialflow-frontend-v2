@@ -84,9 +84,9 @@ export function MuralCarousel({
 
   return (
     <>
-      <section className="grid grid-cols-1 items-start gap-6 sm:gap-8 lg:grid-cols-[minmax(17rem,2fr)_minmax(0,3fr)] lg:gap-12 xl:grid-cols-[27rem_minmax(0,1fr)] xl:gap-16">
+      <section className="grid grid-cols-1 items-start gap-6 font-sans sm:gap-8 lg:grid-cols-[minmax(17rem,2fr)_minmax(0,3fr)] lg:gap-12 xl:grid-cols-[27rem_minmax(0,1fr)] xl:gap-16">
         <header className="[container-type:inline-size] lg:pt-[4.75rem]">
-          <p className="mb-2 text-xs text-zinc-500 sm:mb-4 sm:text-base">
+          <p className="mb-2 text-[11px] text-zinc-500 sm:mb-4 sm:text-base">
             {dataComInicialMaiuscula}
           </p>
           <h2
@@ -103,12 +103,12 @@ export function MuralCarousel({
         </header>
 
         <div className="min-w-0">
-          <div className="mb-4 flex items-center gap-2 border-b border-white/15 pb-2 sm:mb-6 sm:pb-3">
-            <h3 className="text-lg font-bold text-white sm:text-[1.75rem]">
+          <div className="mb-3 flex items-center gap-2 border-b border-white/15 pb-2 sm:mb-6 sm:pb-3">
+            <h3 className="font-sans text-base font-bold tracking-tight text-white sm:text-[1.75rem]">
               Mural de Avisos
             </h3>
             {itens.length > 0 && (
-              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white">
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white sm:h-6 sm:min-w-6 sm:px-2 sm:text-xs">
                 {itens.length}
               </span>
             )}
@@ -147,7 +147,7 @@ export function MuralCarousel({
                     data-mural-slide
                     // 29,5rem reproduz o card compacto da referência. O trilho
                     // continua maior, então parte do próximo aviso fica visível.
-                    className={`shrink-0 ${temMaisDeUm ? 'w-[88%] sm:w-[29.5rem]' : 'w-full sm:w-[29.5rem]'
+                    className={`shrink-0 ${temMaisDeUm ? 'w-[86%] sm:w-[29.5rem]' : 'w-full sm:w-[29.5rem]'
                       }`}
                   >
                     <MuralItemCard
@@ -158,21 +158,21 @@ export function MuralCarousel({
                 ))}
               </div>
 
-              <div className="mt-3 flex min-h-9 items-center justify-between gap-4 px-2 sm:mt-5">
+              <div className="mt-3 flex min-h-8 items-center justify-between gap-2 px-1 sm:mt-5 sm:min-h-9 sm:gap-4 sm:px-2">
                 <button
                   type="button"
                   onClick={() => setExplicacaoAberta(true)}
-                  className="inline-flex items-center gap-2 rounded-md text-sm text-zinc-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="inline-flex items-center gap-1.5 rounded-md text-xs text-zinc-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:gap-2 sm:text-sm"
                   aria-haspopup="dialog"
                 >
-                  <CircleHelp className="h-4 w-4" />
+                  <CircleHelp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Entenda o mural
                 </button>
 
                 {temMaisDeUm && (
                   // Controles juntos, no canto inferior direito: seta, bolinhas e
                   // seta formam um só grupo em vez de três elementos espalhados.
-                  <div className="flex shrink-0 items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                     <div className="flex items-center gap-1.5">
                       {itens.map((item, i) => (
                         <button
@@ -262,7 +262,7 @@ function Seta({
       aria-label={lado === 'esquerda' ? 'Aviso anterior' : 'Próximo aviso'}
       // Desabilitado fica apagado, não some: sumir mudaria a posição da seta
       // ao lado a cada avanço, e o alvo do clique escaparia do dedo.
-      className="w-9 h-9 rounded-full border border-white/10 text-zinc-400
+      className="w-8 h-8 rounded-full border border-white/10 text-zinc-400 sm:w-9 sm:h-9
         flex items-center justify-center transition-all
         hover:bg-white/5 hover:text-white hover:border-white/25 active:scale-90
         disabled:opacity-25 disabled:pointer-events-none"

@@ -75,6 +75,7 @@ export function CreatePostModal({ isOpen, onClose, campaignId }: CreatePostModal
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts', campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['designer-dashboard'] });
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);

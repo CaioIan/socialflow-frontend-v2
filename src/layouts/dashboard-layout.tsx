@@ -45,6 +45,7 @@ export function DashboardLayout() {
     if (path.includes('/organizations')) return 'Organizações';
     if (path.includes('/mural')) return 'Mural de avisos';
     if (path.includes('/team')) return 'Equipe';
+    if (path === '/dashboard/designer') return 'Dashboard da Designer';
     if (path === '/dashboard') {
       if (userRole === 'CLIENT') return 'Minhas Aprovações';
       if (userRole === 'DESIGNER') return 'Minha Pauta';

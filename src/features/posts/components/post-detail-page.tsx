@@ -106,6 +106,7 @@ export default function PostDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
       queryClient.invalidateQueries({ queryKey: ['posts'] }); // Invalida todas as listas de posts
       queryClient.invalidateQueries({ queryKey: ['post-comments', postId] });
+      queryClient.invalidateQueries({ queryKey: ['designer-dashboard'] });
       addToast("Status do post atualizado!", "success");
     },
     onError: (error: unknown) => {

@@ -42,6 +42,19 @@ export interface StatsTimelinePoint {
   approved: number;
 }
 
+export type DesignerPostCategory =
+  | 'PENDING_WITHOUT_ART'
+  | 'PENDING_WITH_ART'
+  | 'ALTERATION_REQUESTED'
+  | 'APPROVED';
+
+export interface DesignerOverviewStats {
+  pendingWithoutArt: number;
+  pendingWithArt: number;
+  alterationRequested: number;
+  approved: number;
+}
+
 export type PeriodDays = 7 | 30 | 90;
 
 class DashboardService {
@@ -73,6 +86,28 @@ class DashboardService {
   async getPostsTimeline(days: PeriodDays, organizationId?: string): Promise<StatsTimelinePoint[]> {
     const params = { days, ...(organizationId ? { organizationId } : {}) };
     const response = await api.get<StatsTimelinePoint[]>('/stats/posts-timeline', { params });
+    return response.data;
+  }
+
+  async getDesignerOverview(organizationId?: string): Promise<DesignerOverviewStats> {
+    const params = organizationId ? { organizationId } : {};
+    const response = await api.get<DesignerOverviewStats>('/stats/designer/overview', { params });
+    return response.data;
+  }
+
+  async getDesignerPosts(
+    category: DesignerPostCategory,
+    organizationId?: string,
+    skip = 0,
+    take = 20,
+  ): Promise<StatsPostsList> {
+    const params = {
+      category,
+      skip,
+      take,
+      ...(organizationId ? { organizationId } : {}),
+    };
+    const response = await api.get<StatsPostsList>('/stats/designer/posts', { params });
     return response.data;
   }
 }

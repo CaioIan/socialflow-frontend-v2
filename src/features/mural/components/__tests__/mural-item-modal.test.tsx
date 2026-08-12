@@ -5,11 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MuralItemModal } from '../mural-item-modal';
 import { muralService } from '../../api/mural-service';
 import { organizationsService } from '@/features/organizations/api/organizations-service';
+import type { MuralItem } from '../../api/mural-service';
 
 vi.mock('../../api/mural-service', () => ({
   muralService: {
     criarCard: vi.fn(),
     criarImagem: vi.fn(),
+    atualizarCard: vi.fn(),
+    atualizarImagem: vi.fn(),
     listarDestinatarios: vi.fn(),
   },
 }));
@@ -22,13 +25,16 @@ vi.mock('@/stores/use-toast-store', () => ({
   useToastStore: () => ({ addToast: vi.fn() }),
 }));
 
-function montar(onClose = vi.fn()) {
+function montar(
+  onClose = vi.fn(),
+  item?: MuralItem & { audienceUserIds: string[] },
+) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return {
     onClose,
     ...render(
       <QueryClientProvider client={client}>
-        <MuralItemModal isOpen onClose={onClose} />
+        <MuralItemModal isOpen onClose={onClose} item={item} />
       </QueryClientProvider>,
     ),
   };
@@ -40,6 +46,8 @@ describe('MuralItemModal — badges', () => {
     vi.mocked(organizationsService.getAll).mockResolvedValue([]);
     vi.mocked(muralService.listarDestinatarios).mockResolvedValue([]);
     vi.mocked(muralService.criarCard).mockResolvedValue({} as never);
+    vi.mocked(muralService.atualizarCard).mockResolvedValue({} as never);
+    vi.mocked(muralService.atualizarImagem).mockResolvedValue({} as never);
   });
 
   it('adiciona, colore, mostra na prévia e envia a badge', async () => {
@@ -130,6 +138,72 @@ describe('MuralItemModal — badges', () => {
           organizationId: 'org-acme',
           audienceUserIds: ['client-acme'],
         }),
+      ),
+    );
+  });
+
+  it('carrega os dados atuais e salva a edição de um card', async () => {
+    const user = userEvent.setup();
+    montar(vi.fn(), {
+      id: 'item-1',
+      type: 'CARD',
+      organizationId: null,
+      organizationName: null,
+      organizationLogoUrl: null,
+      audienceCount: 0,
+      imageUrl: null,
+      markdown: '## Aviso atual',
+      backgroundColor: '#7c3aed',
+      textColor: '#ffffff',
+      badges: [],
+      createdAt: '',
+      audienceUserIds: [],
+    });
+
+    const campo = screen.getByDisplayValue('## Aviso atual');
+    await user.clear(campo);
+    await user.type(campo, '## Aviso revisado');
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    await waitFor(() =>
+      expect(muralService.atualizarCard).toHaveBeenCalledWith(
+        'item-1',
+        expect.objectContaining({ markdown: '## Aviso revisado' }),
+      ),
+    );
+    expect(muralService.criarCard).not.toHaveBeenCalled();
+  });
+
+  it('permite editar o destino de uma imagem sem obrigar a trocá-la', async () => {
+    const user = userEvent.setup();
+    montar(vi.fn(), {
+      id: 'image-1',
+      type: 'IMAGE',
+      organizationId: null,
+      organizationName: null,
+      organizationLogoUrl: null,
+      audienceCount: 0,
+      imageUrl: 'https://cdn.test/mural.png',
+      markdown: null,
+      backgroundColor: null,
+      textColor: null,
+      badges: [],
+      createdAt: '',
+      audienceUserIds: [],
+    });
+
+    expect(screen.getByAltText('Imagem atual do aviso')).toHaveAttribute(
+      'src',
+      'https://cdn.test/mural.png',
+    );
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    await waitFor(() =>
+      expect(muralService.atualizarImagem).toHaveBeenCalledWith(
+        'image-1',
+        null,
+        null,
+        [],
       ),
     );
   });

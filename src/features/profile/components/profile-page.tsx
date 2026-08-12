@@ -6,6 +6,7 @@ import { useToastStore } from '@/stores/use-toast-store';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { profileService } from '../api/profile-service';
 import { AvatarCropModal } from './avatar-crop-modal';
+import { PushNotificationControl } from './push-notification-control';
 
 /** Mesmos limites do backend, para o erro aparecer antes de subir o arquivo. */
 const TAMANHO_MAXIMO = 10 * 1024 * 1024;
@@ -235,6 +236,8 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
+
+        <PushNotificationControl />
 
         {perfil.organizations.length > 0 && (
           <div className="space-y-3 pt-6 border-t border-white/5">

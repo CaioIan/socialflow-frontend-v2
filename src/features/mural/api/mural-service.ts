@@ -55,6 +55,11 @@ export const muralService = {
     return response.data;
   },
 
+  buscarAudienciaDoItem: async (id: string) => {
+    const response = await api.get<{ userIds: string[] }>(`/mural/${id}/audience`);
+    return response.data;
+  },
+
   criarCard: async (data: {
     markdown: string;
     backgroundColor: string;
@@ -64,6 +69,21 @@ export const muralService = {
     audienceUserIds: string[];
   }) => {
     const response = await api.post<MuralItem>('/mural/cards', data);
+    return response.data;
+  },
+
+  atualizarCard: async (
+    id: string,
+    data: {
+      markdown: string;
+      backgroundColor: string;
+      textColor: string;
+      badges: MuralBadge[];
+      organizationId: string | null;
+      audienceUserIds: string[];
+    },
+  ) => {
+    const response = await api.patch<MuralItem>(`/mural/cards/${id}`, data);
     return response.data;
   },
 
@@ -81,6 +101,21 @@ export const muralService = {
     corpo.append('audienceUserIds', JSON.stringify(audienceUserIds));
 
     const response = await api.post<MuralItem>('/mural/images', corpo);
+    return response.data;
+  },
+
+  atualizarImagem: async (
+    id: string,
+    arquivo: Blob | null,
+    organizationId: string | null,
+    audienceUserIds: string[],
+  ) => {
+    const corpo = new FormData();
+    if (arquivo) corpo.append('file', arquivo, 'mural.jpg');
+    corpo.append('organizationId', organizationId ?? '');
+    corpo.append('audienceUserIds', JSON.stringify(audienceUserIds));
+
+    const response = await api.patch<MuralItem>(`/mural/images/${id}`, corpo);
     return response.data;
   },
 

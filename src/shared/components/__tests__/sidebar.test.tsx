@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Sidebar } from '../sidebar';
 
@@ -76,6 +77,9 @@ describe('Sidebar', () => {
 
       expect(screen.getByText('Início')).toBeInTheDocument();
       expect(screen.queryByText('Minha Organização')).not.toBeInTheDocument();
+      expect(within(screen.getByRole('navigation')).getAllByRole('link')[0]).toHaveTextContent(
+        'Início',
+      );
     });
 
     it('"Início" aponta para a lista de organizações', () => {
@@ -104,22 +108,24 @@ describe('Sidebar', () => {
       comOrganizacoes(2);
     });
 
-    it('não vê "Início": ele já tem a tela de Organizações', () => {
+    it('vê "Início" apontando para a listagem de organizações', () => {
       montar();
 
-      expect(screen.queryByText('Início')).not.toBeInTheDocument();
-      expect(screen.getByText('Organizações')).toBeInTheDocument();
+      expect(screen.getByText('Início').closest('a')).toHaveAttribute('href', '/organizations');
+      expect(screen.queryByText('Organizações')).not.toBeInTheDocument();
     });
 
-    it('vê somente "Gerenciar mural", como primeira opção do menu', () => {
-      const { container } = montar();
+    it('mostra Início no topo e o dashboard logo abaixo', () => {
+      montar();
+      const links = within(screen.getByRole('navigation')).getAllByRole('link');
 
       expect(screen.queryByText('Mural de Informações')).not.toBeInTheDocument();
       expect(screen.getByText('Gerenciar mural').closest('a')).toHaveAttribute(
         'href',
         '/mural/gerenciar',
       );
-      expect(container.querySelector('nav a')).toHaveTextContent('Gerenciar mural');
+      expect(links[0]).toHaveTextContent('Início');
+      expect(links[1]).toHaveTextContent('Dashboard Administrativo');
     });
   });
 });

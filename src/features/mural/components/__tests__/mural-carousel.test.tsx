@@ -29,14 +29,14 @@ describe('MuralCarousel', () => {
       />,
     );
 
-    expect(screen.getByRole('heading', { name: 'Mural de Avisos' })).toHaveClass('text-lg');
+    expect(screen.getByRole('heading', { name: 'Mural de Avisos' })).toHaveClass('text-base');
     const saudacao = screen.getByRole('heading', { name: /Caio!/ });
     expect(saudacao).toHaveClass('whitespace-nowrap');
     expect(saudacao.getAttribute('style')).toContain('8vw');
     expect(screen.getByText('Entenda o mural')).toBeInTheDocument();
 
     const primeiroSlide = screen.getByText('Aprovação pendente').closest('[data-mural-slide]');
-    expect(primeiroSlide).toHaveClass('w-[88%]', 'sm:w-[29.5rem]');
+    expect(primeiroSlide).toHaveClass('w-[86%]', 'sm:w-[29.5rem]');
     expect(primeiroSlide).not.toHaveClass('w-full');
     expect(primeiroSlide).not.toHaveClass('snap-start');
     expect(primeiroSlide?.parentElement).not.toHaveClass('snap-x', 'snap-mandatory');

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Megaphone, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Megaphone, Pencil, Plus, Trash2 } from 'lucide-react';
+import { getApiErrorMessage } from '@/api/api-error';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { useToastStore } from '@/stores/use-toast-store';
 import { useAuthStore } from '@/stores/use-auth-store';
@@ -21,6 +22,10 @@ export default function MuralAdminPage() {
   const { addToast } = useToastStore();
   const user = useAuthStore((state) => state.user);
   const [modalAberto, setModalAberto] = useState(false);
+  const [editando, setEditando] = useState<
+    (MuralItem & { audienceUserIds: string[] }) | undefined
+  >(undefined);
+  const [carregandoEdicaoId, setCarregandoEdicaoId] = useState<string | undefined>(undefined);
   const [paraExcluir, setParaExcluir] = useState<MuralItem | undefined>(undefined);
 
   const { data: itens = [], isLoading } = useQuery({
@@ -42,6 +47,32 @@ export default function MuralAdminPage() {
     },
   });
 
+  const abrirCriacao = () => {
+    setEditando(undefined);
+    setModalAberto(true);
+  };
+
+  const abrirEdicao = async (item: MuralItem) => {
+    setCarregandoEdicaoId(item.id);
+    try {
+      const { userIds } = await muralService.buscarAudienciaDoItem(item.id);
+      setEditando({ ...item, audienceUserIds: userIds });
+      setModalAberto(true);
+    } catch (erro) {
+      addToast(
+        getApiErrorMessage(erro, 'Não foi possível carregar os dados deste item.'),
+        'error',
+      );
+    } finally {
+      setCarregandoEdicaoId(undefined);
+    }
+  };
+
+  const fecharModal = () => {
+    setModalAberto(false);
+    setEditando(undefined);
+  };
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -56,7 +87,7 @@ export default function MuralAdminPage() {
         </div>
 
         <button
-          onClick={() => setModalAberto(true)}
+          onClick={abrirCriacao}
           className="bg-brand-gradient hover:opacity-90 px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_oklch(var(--primary)/0.2)]"
         >
           <Plus className="w-5 h-5" />
@@ -103,7 +134,21 @@ export default function MuralAdminPage() {
               <div key={item.id} className="space-y-2.5 group">
                 <MuralItemCard item={item} showOrganizationBadge />
 
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-1">
+                  <button
+                    type="button"
+                    onClick={() => void abrirEdicao(item)}
+                    disabled={Boolean(carregandoEdicaoId)}
+                    title="Editar item do mural"
+                    aria-label="Editar item do mural"
+                    className="p-2 rounded-lg text-zinc-500 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 disabled:opacity-40"
+                  >
+                    {carregandoEdicaoId === item.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Pencil className="w-4 h-4" />
+                    )}
+                  </button>
                   <button
                     type="button"
                     onClick={() => setParaExcluir(item)}
@@ -120,7 +165,9 @@ export default function MuralAdminPage() {
         )}
       </div>
 
-      <MuralItemModal isOpen={modalAberto} onClose={() => setModalAberto(false)} />
+      {modalAberto && (
+        <MuralItemModal isOpen onClose={fecharModal} item={editando} />
+      )}
 
       <ConfirmDialog
         isOpen={!!paraExcluir}

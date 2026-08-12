@@ -80,6 +80,7 @@ export function UploadVersionModal({ isOpen, onClose, postId, campaignId }: Uplo
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts', campaignId] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
+      queryClient.invalidateQueries({ queryKey: ['designer-dashboard'] });
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);

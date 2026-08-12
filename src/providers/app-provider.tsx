@@ -3,6 +3,7 @@ import { type ReactNode, useEffect } from 'react';
 import { authService } from '@/features/auth/api/auth-service';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { Loader2 } from 'lucide-react';
+import { PushSubscriptionSync } from '@/features/profile/components/push-subscription-sync';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +51,7 @@ export function AppProvider({ children }: AppProviderProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthBoot>
+        <PushSubscriptionSync />
         {children}
       </AuthBoot>
     </QueryClientProvider>

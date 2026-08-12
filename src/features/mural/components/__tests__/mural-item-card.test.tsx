@@ -85,12 +85,39 @@ describe('MuralItemCard', () => {
 
     expect(vermelha).toHaveStyle({ backgroundColor: '#dc2626', color: '#ffffff' });
     expect(cinza).toHaveStyle({ backgroundColor: '#d4d4d8', color: '#18181b' });
-    expect(vermelha).toHaveClass('rounded-[4px]', 'px-3', 'py-1.5', 'text-xs');
+    expect(vermelha).toHaveClass('rounded-[4px]', 'px-2', 'py-1', 'text-[10px]');
 
     const marcacoes = screen.getByLabelText('Marcações do aviso');
     const texto = screen.getByText('Aviso importante');
     expect(marcacoes.compareDocumentPosition(texto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(texto.closest('.aspect-video')).toHaveClass('items-start');
+    expect(texto.closest('[role="button"]')).toHaveClass('items-start', 'aspect-[3/2]');
+  });
+
+  it('abre o aviso completo ao tocar no card de texto', async () => {
+    const user = userEvent.setup();
+    render(
+      <MuralItemCard
+        item={aviso({
+          markdown:
+            '# Ajuste aprovado\n\nA nova versão da arte já está disponível para revisão no SocialFlow.',
+          badges: [
+            { label: 'Aprovação', backgroundColor: '#dc2626', textColor: '#ffffff' },
+          ],
+        })}
+        showOrganizationBadge
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Abrir aviso completo' }));
+
+    expect(screen.getByRole('heading', { name: 'Aviso do mural' })).toBeInTheDocument();
+    expect(screen.getAllByText('Ajuste aprovado')).toHaveLength(2);
+    expect(
+      screen.getAllByText(
+        'A nova versão da arte já está disponível para revisão no SocialFlow.',
+      ),
+    ).toHaveLength(2);
+    expect(screen.getByText(/Publicado em/)).toBeInTheDocument();
   });
 
   it('abre a imagem do aviso em tamanho maior ao clicar', async () => {

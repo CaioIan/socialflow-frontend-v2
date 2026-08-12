@@ -138,7 +138,7 @@ export function AdminDashboardPage() {
           onClick={() => abrirDrilldown('PENDING', false)}
         />
         <StatCard
-          title="Pendentes com Imagem"
+          title="Pendentes com Arte"
           value={pendentesComImagem}
           icon={ImageIcon}
           colorClass="bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-cyan-500/20"

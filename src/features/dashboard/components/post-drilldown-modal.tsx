@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, ArrowRight, Inbox } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
 import dashboardService, { type PostStatus } from '../api/dashboard-service';
+import type { DesignerPostCategory } from '../api/dashboard-service';
+import { useAuthStore } from '@/stores/use-auth-store';
 
 interface PostDrilldownModalProps {
   status: PostStatus | null;
   organizationId?: string;
   /** Recorta os PENDING entre os que já têm arte e os que ainda esperam. */
   comArte?: boolean;
+  designerCategory?: DesignerPostCategory | null;
   onClose: () => void;
 }
 
@@ -20,31 +23,48 @@ const STATUS_LABEL: Record<PostStatus, string> = {
   FAILED: 'Posts com Falha ao Publicar',
 };
 
+const DESIGNER_CATEGORY_LABEL: Record<DesignerPostCategory, string> = {
+  PENDING_WITHOUT_ART: 'Pendentes sem arte',
+  PENDING_WITH_ART: 'Pendentes com Arte',
+  ALTERATION_REQUESTED: 'Pedidos de Ajuste',
+  APPROVED: 'Artes aprovadas',
+};
+
 export function PostDrilldownModal({
   status,
   organizationId,
   comArte,
+  designerCategory,
   onClose,
 }: PostDrilldownModalProps) {
   const navigate = useNavigate();
+  const userId = useAuthStore((state) => state.user?.id);
+  const aberto = Boolean(status || designerCategory);
 
   const { data, isLoading } = useQuery({
     // `comArte` entra na chave: sem isso as duas filas de PENDING dividiriam o
     // mesmo cache e a segunda mostraria o resultado da primeira.
-    queryKey: ['dashboard-posts', status, organizationId, comArte],
-    queryFn: () => dashboardService.getPostsByStatus(status!, organizationId, 0, 20, comArte),
-    enabled: !!status,
+    queryKey: designerCategory
+      ? ['designer-dashboard', userId, 'posts', designerCategory, organizationId]
+      : ['dashboard-posts', status, organizationId, comArte],
+    queryFn: () =>
+      designerCategory
+        ? dashboardService.getDesignerPosts(designerCategory, organizationId, 0, 20)
+        : dashboardService.getPostsByStatus(status!, organizationId, 0, 20, comArte),
+    enabled: aberto,
   });
 
   return (
     <Modal
-      isOpen={!!status}
+      isOpen={aberto}
       onClose={onClose}
       title={
-        status === 'PENDING' && comArte === true
-          ? 'Pendentes com Imagem'
+        designerCategory
+          ? DESIGNER_CATEGORY_LABEL[designerCategory]
+          : status === 'PENDING' && comArte === true
+          ? 'Pendentes com Arte'
           : status === 'PENDING' && comArte === false
-            ? 'Pendentes sem Imagem'
+            ? 'Pendentes sem Arte'
             : status
               ? STATUS_LABEL[status]
               : ''

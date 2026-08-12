@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { authService } from '@/features/auth/api/auth-service';
+import { desvincularPushAoSair } from '@/shared/lib/push-notifications';
 import { useState, useEffect } from 'react';
 
 interface SidebarProps {
@@ -52,6 +53,27 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
 
   const menuItems = [
     {
+      // Só para quem atende várias empresas: com o seletor no lugar de "Minha
+      // Organização", esta entrada vira o caminho de volta para a lista.
+      icon: Home,
+      label: 'Início',
+      href: '/organizations',
+      roles: ['CLIENT', 'DESIGNER'],
+      apenasComSeletor: true,
+    },
+    {
+      icon: Home,
+      label: 'Início',
+      href: '/organizations',
+      roles: ['ADMIN'],
+    },
+    {
+      icon: LayoutDashboard,
+      label: 'Dashboard Administrativo',
+      href: '/dashboard',
+      roles: ['ADMIN'],
+    },
+    {
       icon: Megaphone,
       label: 'Mural de Informações',
       href: '/mural',
@@ -65,18 +87,9 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
     },
     {
       icon: LayoutDashboard,
-      label: 'Dashboard Administrativo',
-      href: '/dashboard',
-      roles: ['ADMIN'],
-    },
-    {
-      // Só para quem atende várias empresas: com o seletor no lugar de "Minha
-      // Organização", esta entrada vira o caminho de volta para a lista.
-      icon: Home,
-      label: 'Início',
-      href: '/organizations',
-      roles: ['CLIENT', 'DESIGNER'],
-      apenasComSeletor: true,
+      label: 'Dashboard da Designer',
+      href: '/dashboard/designer',
+      roles: ['DESIGNER'],
     },
     {
       icon: Building2,
@@ -86,7 +99,6 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
       href: '/organizations',
       roles: ['CLIENT', 'DESIGNER'],
     },
-    { icon: Building2, label: 'Organizações', href: '/organizations', roles: ['ADMIN'] },
     { icon: Users, label: 'Equipe', href: '/team', roles: ['ADMIN'] },
   ];
 
@@ -101,6 +113,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
 
   const handleLogout = async () => {
     try {
+      await desvincularPushAoSair().catch(() => undefined);
       await authService.logout();
     } finally {
       logout();
@@ -235,7 +248,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
         <nav className={cn("flex-1 space-y-1", collapsed ? "px-2" : "px-4")}>
           {filteredItems.map((item) => (
             <NavLink
-              key={item.href}
+              key={`${item.label}-${item.href}`}
               to={item.href}
               end={item.href === '/mural'}
               onClick={onClose}

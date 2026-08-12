@@ -8,6 +8,7 @@ import PostsPage from '@/features/posts/components/posts-page';
 import PostDetailPage from '@/features/posts/components/post-detail-page';
 import TeamPage from '@/features/team/components/team-page';
 import { AdminDashboardPage } from '@/features/dashboard/components/admin-dashboard-page';
+import { DesignerDashboardPage } from '@/features/dashboard/components/designer-dashboard-page';
 import InstagramPage from '@/features/instagram/components/instagram-page';
 import ProfilePage from '@/features/profile/components/profile-page';
 import MuralPage from '@/features/mural/components/mural-page';
@@ -87,6 +88,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <AdminDashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'dashboard/designer',
+        element: (
+          <ProtectedRoute allowedRoles={['DESIGNER']}>
+            <DesignerDashboardPage />
           </ProtectedRoute>
         ),
       }

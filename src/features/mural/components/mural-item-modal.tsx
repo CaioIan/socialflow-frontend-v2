@@ -7,7 +7,12 @@ import { getApiErrorMessage } from '@/api/api-error';
 import { useToastStore } from '@/stores/use-toast-store';
 import { organizationsService } from '@/features/organizations/api/organizations-service';
 import { recortarImagem, RECORTE_MURAL } from '@/shared/lib/recortar-imagem';
-import { muralService, type MuralAudienceUser, type MuralBadge } from '../api/mural-service';
+import {
+  muralService,
+  type MuralAudienceUser,
+  type MuralBadge,
+  type MuralItem,
+} from '../api/mural-service';
 import { MuralItemCard } from './mural-item-card';
 
 /** Mesmos limites do backend, para o erro aparecer antes de subir o arquivo. */
@@ -31,20 +36,22 @@ const CORES_DE_BADGE = [
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  item?: MuralItem & { audienceUserIds: string[] };
 }
 
-export function MuralItemModal({ isOpen, onClose }: Props) {
+export function MuralItemModal({ isOpen, onClose, item }: Props) {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [tipo, setTipo] = useState<'CARD' | 'IMAGE'>('CARD');
-  const [organizationId, setOrganizationId] = useState<string>('');
-  const [audienceUserIds, setAudienceUserIds] = useState<string[]>([]);
-  const [markdown, setMarkdown] = useState('');
-  const [corDeFundo, setCorDeFundo] = useState('#7c3aed');
-  const [corDoTexto, setCorDoTexto] = useState('#ffffff');
-  const [badges, setBadges] = useState<MuralBadge[]>([]);
+  const editando = Boolean(item);
+  const [tipo, setTipo] = useState<'CARD' | 'IMAGE'>(item?.type ?? 'CARD');
+  const [organizationId, setOrganizationId] = useState<string>(item?.organizationId ?? '');
+  const [audienceUserIds, setAudienceUserIds] = useState<string[]>(item?.audienceUserIds ?? []);
+  const [markdown, setMarkdown] = useState(item?.markdown ?? '');
+  const [corDeFundo, setCorDeFundo] = useState(item?.backgroundColor ?? '#7c3aed');
+  const [corDoTexto, setCorDoTexto] = useState(item?.textColor ?? '#ffffff');
+  const [badges, setBadges] = useState<MuralBadge[]>(item?.badges.map((badge) => ({ ...badge })) ?? []);
   const [erro, setErro] = useState<string | undefined>(undefined);
 
   const [imagemEscolhida, setImagemEscolhida] = useState<string | undefined>(undefined);
@@ -92,14 +99,22 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
       const org = organizationId || null;
 
       if (tipo === 'CARD') {
-        return await muralService.criarCard({
+        const dados = {
           markdown,
           backgroundColor: corDeFundo,
           textColor: corDoTexto,
           badges: badges.map((badge) => ({ ...badge, label: badge.label.trim() })),
           organizationId: org,
           audienceUserIds,
-        });
+        };
+
+        return item
+          ? await muralService.atualizarCard(item.id, dados)
+          : await muralService.criarCard(dados);
+      }
+
+      if (!imagemEscolhida && item) {
+        return await muralService.atualizarImagem(item.id, null, org, audienceUserIds);
       }
 
       if (!imagemEscolhida || !area) {
@@ -109,15 +124,24 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
       // Recorta para 1280x720 antes de subir: o backend exige 16:9, e mandar o
       // original faria a validação recusar o que o usuário acabou de enquadrar.
       const recortada = await recortarImagem(imagemEscolhida, area, RECORTE_MURAL);
-      return await muralService.criarImagem(recortada, org, audienceUserIds);
+      return item
+        ? await muralService.atualizarImagem(item.id, recortada, org, audienceUserIds)
+        : await muralService.criarImagem(recortada, org, audienceUserIds);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mural'] });
-      addToast('Item publicado no mural.', 'success');
+      addToast(editando ? 'Item atualizado no mural.' : 'Item publicado no mural.', 'success');
       fechar();
     },
     onError: (e) =>
-      setErro(getApiErrorMessage(e, 'Não foi possível publicar o item no mural.')),
+      setErro(
+        getApiErrorMessage(
+          e,
+          editando
+            ? 'Não foi possível salvar as alterações do mural.'
+            : 'Não foi possível publicar o item no mural.',
+        ),
+      ),
   });
 
   async function aoEscolherArquivo(arquivo?: File) {
@@ -169,35 +193,49 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
         markdown.length <= MAXIMO_DE_CARACTERES &&
         badges.every((badge) => badge.label.trim().length > 0)
       : Boolean(imagemEscolhida && area);
+  const imagemPodeSerSalva = tipo === 'IMAGE' && (editando || Boolean(imagemEscolhida && area));
+  const formularioPodeSerSalvo = tipo === 'IMAGE' ? imagemPodeSerSalva : podeSalvar;
   const organizacaoSelecionada = organizacoes.find((org) => org.id === organizationId);
 
   return (
-    <Modal isOpen={isOpen} onClose={() => !salvar.isPending && fechar()} title="Novo item do mural" className="max-w-3xl">
+    <Modal
+      isOpen={isOpen}
+      onClose={() => !salvar.isPending && fechar()}
+      title={editando ? 'Editar item do mural' : 'Novo item do mural'}
+      className="max-w-3xl"
+    >
       <div className="space-y-6">
         {/* Tipo */}
-        <div className="flex gap-1 bg-white/5 p-2 rounded-2xl border border-white/10">
-          {([
-            { chave: 'CARD', rotulo: 'Escrever aviso', icone: Type },
-            { chave: 'IMAGE', rotulo: 'Enviar imagem', icone: ImageIcon },
-          ] as const).map(({ chave, rotulo, icone: Icone }) => (
-            <button
-              key={chave}
-              type="button"
-              onClick={() => {
-                setTipo(chave);
-                setErro(undefined);
-              }}
-              className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-                tipo === chave
-                  ? 'bg-brand-gradient text-white shadow-lg'
-                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
-              }`}
-            >
-              <Icone className="w-4 h-4" />
-              {rotulo}
-            </button>
-          ))}
-        </div>
+        {!editando ? (
+          <div className="flex gap-1 bg-white/5 p-2 rounded-2xl border border-white/10">
+            {([
+              { chave: 'CARD', rotulo: 'Escrever aviso', icone: Type },
+              { chave: 'IMAGE', rotulo: 'Enviar imagem', icone: ImageIcon },
+            ] as const).map(({ chave, rotulo, icone: Icone }) => (
+              <button
+                key={chave}
+                type="button"
+                onClick={() => {
+                  setTipo(chave);
+                  setErro(undefined);
+                }}
+                className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                  tipo === chave
+                    ? 'bg-brand-gradient text-white shadow-lg'
+                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
+                }`}
+              >
+                <Icone className="w-4 h-4" />
+                {rotulo}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300">
+            {tipo === 'CARD' ? <Type className="h-4 w-4 text-primary" /> : <ImageIcon className="h-4 w-4 text-primary" />}
+            {tipo === 'CARD' ? 'Editando aviso em texto' : 'Editando aviso em imagem'}
+          </div>
+        )}
 
         {/* Destino */}
         <div className="space-y-2">
@@ -337,6 +375,27 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
                   </button>
                 </div>
               </>
+            ) : item?.imageUrl ? (
+              <div className="space-y-3">
+                <div className="relative w-full aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                  <img
+                    src={item.imageUrl}
+                    alt="Imagem atual do aviso"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-zinc-300 transition-colors hover:border-primary/40 hover:text-white"
+                >
+                  <Upload className="h-4 w-4" />
+                  Trocar imagem
+                </button>
+                <p className="text-center text-[11px] text-zinc-600">
+                  Se não escolher outra imagem, a atual será mantida.
+                </p>
+              </div>
             ) : (
               <button
                 type="button"
@@ -373,16 +432,16 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
           <button
             type="button"
             onClick={() => salvar.mutate()}
-            disabled={!podeSalvar || salvar.isPending}
+            disabled={!formularioPodeSerSalvo || salvar.isPending}
             className="flex-[2] bg-brand-gradient hover:opacity-90 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_oklch(var(--primary)/0.3)] disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 text-sm"
           >
             {salvar.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Publicando...
+                {editando ? 'Salvando...' : 'Publicando...'}
               </>
             ) : (
-              'Publicar no mural'
+              editando ? 'Salvar alterações' : 'Publicar no mural'
             )}
           </button>
         </div>
