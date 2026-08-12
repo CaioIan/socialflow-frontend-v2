@@ -116,10 +116,11 @@ describe('MuralItemCard', () => {
     expect(vermelha).toHaveStyle({ backgroundColor: '#dc2626', color: '#ffffff' });
     expect(cinza).toHaveStyle({ backgroundColor: '#d4d4d8', color: '#18181b' });
     expect(vermelha).toHaveClass('rounded-[4px]', 'px-2.5', 'py-1', 'text-[11px]');
+    expect(vermelha).toHaveClass('sm:text-xs');
 
     const marcacoes = screen.getByLabelText('Marcações do aviso');
     const texto = screen.getByText('Aviso importante');
-    expect(texto).toHaveClass('text-xs', 'leading-[1.5]');
+    expect(texto).toHaveClass('text-xs', 'leading-[1.5]', 'sm:text-sm', 'sm:leading-[1.55]');
     expect(marcacoes.compareDocumentPosition(texto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Abrir aviso completo' }).parentElement).toHaveClass(
       'items-start',
@@ -140,6 +141,11 @@ describe('MuralItemCard', () => {
         })}
         showOrganizationBadge
       />,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Ajuste aprovado' })).toHaveClass(
+      'text-[17px]',
+      'sm:text-lg',
     );
 
     await user.click(screen.getByRole('button', { name: 'Abrir aviso completo' }));
@@ -215,7 +221,8 @@ describe('MuralItemCard', () => {
       );
 
       const resumo = document.querySelector('[data-mural-markdown="resumo"]');
-      expect(resumo).toHaveClass('max-h-[6.5rem]', 'overflow-hidden', 'sm:max-h-[7.5rem]');
+      expect(resumo).toHaveClass('max-h-[6.5rem]', 'overflow-hidden');
+      expect(resumo).not.toHaveClass('sm:max-h-[7.5rem]');
       expect(await screen.findByTestId('mural-summary-ellipsis')).toHaveTextContent('...');
     } finally {
       scrollHeight.mockRestore();

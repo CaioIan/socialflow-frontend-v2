@@ -282,7 +282,7 @@ function MuralBadges({ item, completo = false }: { item: MuralItem; completo?: b
   return (
     <div
       className={`flex shrink-0 flex-wrap items-center ${
-        completo ? 'mb-4 gap-2' : 'mb-2 gap-1.5 sm:mb-4 sm:gap-2'
+        completo ? 'mb-4 gap-2' : 'mb-2 gap-1.5 sm:mb-3 sm:gap-2'
       }`}
       aria-label="Marcações do aviso"
     >
@@ -292,7 +292,7 @@ function MuralBadges({ item, completo = false }: { item: MuralItem; completo?: b
           className={`inline-flex max-w-full items-center rounded-[4px] font-semibold leading-none ${
             completo
               ? 'px-3 py-1.5 text-xs sm:text-sm'
-              : 'px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-sm'
+              : 'px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-xs'
           }`}
           style={{
             backgroundColor: badge.backgroundColor,
@@ -356,7 +356,7 @@ function MuralMarkdown({
       className={`min-w-0 max-w-full break-words [overflow-wrap:anywhere] ${
         completo
           ? ''
-          : 'relative max-h-[6.5rem] min-h-0 flex-1 overflow-hidden sm:max-h-[7.5rem]'
+          : 'relative max-h-[6.5rem] min-h-0 flex-1 overflow-hidden'
       }`}
     >
       <ReactMarkdown
@@ -368,7 +368,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-xl font-bold sm:text-2xl'
-                : 'mb-1.5 text-[17px] font-bold leading-snug sm:mb-2 sm:text-2xl'
+                : 'mb-1.5 text-[17px] font-bold leading-snug sm:mb-2 sm:text-lg'
             }
           >
             {children}
@@ -379,7 +379,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-lg font-bold sm:text-xl'
-                : 'mb-1.5 text-base font-bold leading-snug sm:mb-2 sm:text-xl'
+                : 'mb-1.5 text-base font-bold leading-snug sm:mb-2 sm:text-base'
             }
           >
             {children}
@@ -390,7 +390,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-2 text-base font-bold'
-                : 'mb-1 text-[15px] font-bold leading-snug sm:mb-1.5 sm:text-base'
+                : 'mb-1 text-[15px] font-bold leading-snug sm:mb-1.5 sm:text-sm'
             }
           >
             {children}
@@ -401,7 +401,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-sm leading-relaxed last:mb-0 sm:text-base'
-                : 'mb-1.5 text-xs leading-[1.5] last:mb-0 sm:mb-2 sm:text-base sm:leading-relaxed'
+                : 'mb-1.5 text-xs leading-[1.5] last:mb-0 sm:mb-2 sm:text-sm sm:leading-[1.55]'
             }
           >
             {children}
@@ -410,7 +410,7 @@ function MuralMarkdown({
         ul: ({ children }) => (
           <ul
             className={`mb-2 list-disc space-y-1 pl-4 ${
-              completo ? 'text-sm sm:text-base' : 'text-xs sm:text-base'
+              completo ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'
             }`}
           >
             {children}
@@ -419,7 +419,7 @@ function MuralMarkdown({
         ol: ({ children }) => (
           <ol
             className={`mb-2 list-decimal space-y-1 pl-4 ${
-              completo ? 'text-sm sm:text-base' : 'text-xs sm:text-base'
+              completo ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'
             }`}
           >
             {children}
