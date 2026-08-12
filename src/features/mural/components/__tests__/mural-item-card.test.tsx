@@ -121,7 +121,10 @@ describe('MuralItemCard', () => {
     const texto = screen.getByText('Aviso importante');
     expect(texto).toHaveClass('text-xs', 'leading-[1.5]');
     expect(marcacoes.compareDocumentPosition(texto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(texto.closest('[role="button"]')).toHaveClass('items-start', 'aspect-[3/2]');
+    expect(screen.getByRole('button', { name: 'Abrir aviso completo' }).parentElement).toHaveClass(
+      'items-start',
+      'aspect-[3/2]',
+    );
   });
 
   it('abre o aviso completo ao tocar no card de texto', async () => {
@@ -151,9 +154,9 @@ describe('MuralItemCard', () => {
     expect(screen.getByText(/Publicado em/)).toBeInTheDocument();
   });
 
-  it('usa o botão Ver mais configurado pelo admin mesmo quando o aviso é curto', async () => {
+  it('mantém o card e o botão Ver mais abrindo o aviso completo', async () => {
     const user = userEvent.setup();
-    render(
+    const { rerender } = render(
       <MuralItemCard
         item={aviso({
           markdown: 'Aviso curto',
@@ -165,7 +168,23 @@ describe('MuralItemCard', () => {
       />,
     );
 
-    expect(screen.queryByRole('button', { name: 'Abrir aviso completo' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Abrir aviso completo' }));
+
+    expect(screen.getByRole('heading', { name: 'Aviso do mural' })).toBeInTheDocument();
+
+    rerender(
+      <MuralItemCard
+        item={aviso({
+          markdown: 'Aviso curto',
+          showMoreEnabled: true,
+          showMoreBackgroundColor: '#7c3aed',
+          showMoreTextColor: '#ffffff',
+          showMoreIconColor: '#f59e0b',
+        })}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Fechar' }));
 
     const botao = screen.getByRole('button', { name: 'Ver mais sobre este aviso' });
     expect(botao).toHaveStyle({ backgroundColor: '#7c3aed', color: '#ffffff' });
@@ -175,6 +194,19 @@ describe('MuralItemCard', () => {
 
     expect(screen.getByRole('heading', { name: 'Aviso do mural' })).toBeInTheDocument();
     expect(screen.getAllByText('Aviso curto')).toHaveLength(2);
+  });
+
+  it('limita o resumo completo do card com reticências', () => {
+    render(
+      <MuralItemCard
+        item={aviso({
+          markdown:
+            '# Nova atualização: notificações\n\nAgora você pode receber avisos por **e-mail e push**.\n\n## Avisos por e-mail\n\nAbra o menu lateral para configurar.',
+        })}
+      />,
+    );
+
+    expect(document.querySelector('[data-mural-markdown="resumo"]')).toHaveClass('line-clamp-4');
   });
 
   it('instala o SocialFlow pelo botão fixo no gradiente da marca', async () => {

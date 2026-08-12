@@ -113,17 +113,6 @@ export function MuralItemCard({
   return (
     <>
       <div
-        role={showMoreEnabled ? undefined : 'button'}
-        tabIndex={showMoreEnabled ? undefined : 0}
-        aria-label={showMoreEnabled ? undefined : 'Abrir aviso completo'}
-        onClick={showMoreEnabled ? undefined : abrirDetalhe}
-        onKeyDown={(event) => {
-          if (showMoreEnabled) return;
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            setDetalheAberto(true);
-          }
-        }}
         onPointerDown={(event) => {
           inicioDoToque.current = { x: event.clientX, y: event.clientY };
           arrastou.current = false;
@@ -139,28 +128,29 @@ export function MuralItemCard({
           inicioDoToque.current = null;
           arrastou.current = false;
         }}
-        className={`relative flex aspect-[3/2] w-full items-start overflow-hidden rounded-2xl border border-white/10 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:aspect-video sm:p-8 ${
-          showMoreEnabled ? '' : 'cursor-pointer'
-        }`}
+        className="relative flex aspect-[3/2] w-full cursor-pointer items-start overflow-hidden rounded-2xl border border-white/10 p-4 text-left sm:aspect-video sm:p-8"
         style={{
           backgroundColor: item.backgroundColor ?? '#18181b',
           color: item.textColor ?? '#ffffff',
         }}
       >
+        <button
+          type="button"
+          aria-label="Abrir aviso completo"
+          onClick={abrirDetalhe}
+          className="absolute inset-0 z-0 cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+        />
         <div
-          className={`h-full w-full overflow-hidden ${
+          className={`pointer-events-none relative z-[1] h-full w-full overflow-hidden ${
             showCardActions || showScopeBadge ? 'pb-12 sm:pb-14' : ''
           }`}
         >
           <MuralBadges item={item} />
           <MuralMarkdown markdown={item.markdown ?? ''} modo="resumo" />
         </div>
-        {!showMoreEnabled && (
-          <span className="sr-only">Toque para ler todas as informações do aviso.</span>
-        )}
 
         {showCardActions ? (
-          <div className="absolute inset-x-2 bottom-2 z-10 flex min-w-0 items-center justify-between gap-2 sm:inset-x-3 sm:bottom-3">
+          <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10 flex min-w-0 items-center justify-between gap-2 sm:inset-x-3 sm:bottom-3">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               {showInstallButton && (
                 <button
@@ -170,7 +160,7 @@ export function MuralItemCard({
                     void instalarSocialFlow();
                   }}
                   aria-label="Instalar SocialFlow"
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-[11px] font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
+                  className="pointer-events-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-[11px] font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
                 >
                   <Download aria-hidden="true" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span className="sm:hidden">Instalar</span>
@@ -186,7 +176,7 @@ export function MuralItemCard({
                     abrirDetalhe();
                   }}
                   aria-label="Ver mais sobre este aviso"
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
+                  className="pointer-events-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
                   style={{
                     backgroundColor: item.showMoreBackgroundColor ?? '#ffffff',
                     color: item.showMoreTextColor ?? '#18181b',
@@ -324,7 +314,9 @@ function MuralMarkdown({
   return (
     <div
       data-mural-markdown={modo}
-      className="min-w-0 max-w-full break-words [overflow-wrap:anywhere]"
+      className={`min-w-0 max-w-full break-words [overflow-wrap:anywhere] ${
+        completo ? '' : 'line-clamp-4'
+      }`}
     >
       <ReactMarkdown
         components={{
@@ -335,7 +327,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-xl font-bold sm:text-2xl'
-                : 'mb-1.5 line-clamp-2 text-[17px] font-bold leading-snug sm:mb-2 sm:line-clamp-none sm:text-2xl'
+                : 'mb-1.5 line-clamp-2 text-[17px] font-bold leading-snug sm:mb-2 sm:text-2xl'
             }
           >
             {children}
@@ -346,7 +338,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-lg font-bold sm:text-xl'
-                : 'mb-1.5 line-clamp-2 text-base font-bold leading-snug sm:mb-2 sm:line-clamp-none sm:text-xl'
+                : 'mb-1.5 line-clamp-2 text-base font-bold leading-snug sm:mb-2 sm:text-xl'
             }
           >
             {children}
@@ -357,7 +349,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-2 text-base font-bold'
-                : 'mb-1 line-clamp-2 text-[15px] font-bold leading-snug sm:mb-1.5 sm:line-clamp-none sm:text-base'
+                : 'mb-1 line-clamp-2 text-[15px] font-bold leading-snug sm:mb-1.5 sm:text-base'
             }
           >
             {children}
@@ -368,7 +360,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-sm leading-relaxed last:mb-0 sm:text-base'
-                : 'mb-1.5 line-clamp-3 text-xs leading-[1.5] last:mb-0 sm:mb-2 sm:line-clamp-none sm:text-base sm:leading-relaxed'
+                : 'mb-1.5 line-clamp-3 text-xs leading-[1.5] last:mb-0 sm:mb-2 sm:text-base sm:leading-relaxed'
             }
           >
             {children}
