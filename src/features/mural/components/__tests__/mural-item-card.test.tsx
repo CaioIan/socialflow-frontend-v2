@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MuralItemCard } from '../mural-item-card';
 import type { MuralItem } from '../../api/mural-service';
 
@@ -50,6 +51,17 @@ describe('MuralItemCard', () => {
     expect(container.querySelector('img')).toHaveAttribute('src', '/favicon.png');
   });
 
+  it('indica quando o aviso está restrito a pessoas específicas', () => {
+    render(
+      <MuralItemCard
+        item={aviso({ audienceCount: 1 })}
+        showOrganizationBadge
+      />,
+    );
+
+    expect(screen.getByText('Radiogenesis · 1 pessoa')).toBeInTheDocument();
+  });
+
   it('não adiciona badge redundante para quem tem uma única organização', () => {
     render(<MuralItemCard item={aviso()} />);
 
@@ -79,5 +91,27 @@ describe('MuralItemCard', () => {
     const texto = screen.getByText('Aviso importante');
     expect(marcacoes.compareDocumentPosition(texto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(texto.closest('.aspect-video')).toHaveClass('items-start');
+  });
+
+  it('abre a imagem do aviso em tamanho maior ao clicar', async () => {
+    const user = userEvent.setup();
+    render(
+      <MuralItemCard
+        item={aviso({
+          type: 'IMAGE',
+          imageUrl: 'https://cdn.example.com/aviso.png',
+          markdown: null,
+        })}
+        showOrganizationBadge
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Ampliar imagem do aviso' }));
+
+    expect(screen.getByRole('heading', { name: 'Imagem do mural' })).toBeInTheDocument();
+    expect(screen.getByAltText('Imagem do aviso da organização Radiogenesis')).toHaveAttribute(
+      'src',
+      'https://cdn.example.com/aviso.png',
+    );
   });
 });

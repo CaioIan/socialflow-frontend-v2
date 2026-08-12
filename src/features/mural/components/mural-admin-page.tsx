@@ -24,8 +24,9 @@ export default function MuralAdminPage() {
   const [paraExcluir, setParaExcluir] = useState<MuralItem | undefined>(undefined);
 
   const { data: itens = [], isLoading } = useQuery({
-    queryKey: ['mural'],
+    queryKey: ['mural', user?.id],
     queryFn: muralService.listar,
+    enabled: Boolean(user?.id),
   });
 
   const excluir = useMutation({

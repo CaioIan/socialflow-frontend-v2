@@ -10,6 +10,7 @@ vi.mock('../../api/mural-service', () => ({
   muralService: {
     criarCard: vi.fn(),
     criarImagem: vi.fn(),
+    listarDestinatarios: vi.fn(),
   },
 }));
 
@@ -37,6 +38,7 @@ describe('MuralItemModal — badges', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(organizationsService.getAll).mockResolvedValue([]);
+    vi.mocked(muralService.listarDestinatarios).mockResolvedValue([]);
     vi.mocked(muralService.criarCard).mockResolvedValue({} as never);
   });
 
@@ -79,5 +81,56 @@ describe('MuralItemModal — badges', () => {
 
     expect(adicionar).toBeDisabled();
     expect(screen.getAllByLabelText(/Texto da badge/)).toHaveLength(4);
+  });
+
+  it('envia somente os usuários selecionados da organização', async () => {
+    vi.mocked(organizationsService.getAll).mockResolvedValue([
+      {
+        id: 'org-acme',
+        name: 'ACME Corporation',
+        slug: 'acme-corporation',
+        isActive: true,
+        logoUrl: null,
+        createdAt: '',
+        updatedAt: '',
+        instagram: null,
+      },
+    ]);
+    vi.mocked(muralService.listarDestinatarios).mockResolvedValue([
+      {
+        id: 'client-acme',
+        email: 'acme@socialflow.test',
+        name: 'Cliente ACME',
+        role: 'CLIENT',
+        avatarUrl: null,
+      },
+    ]);
+
+    const user = userEvent.setup();
+    montar();
+
+    await screen.findByRole('option', { name: 'Somente ACME Corporation' });
+    await user.selectOptions(
+      screen.getByLabelText('Quem vê este aviso'),
+      'org-acme',
+    );
+    await user.click(await screen.findByLabelText('Selecionar Cliente ACME'));
+
+    expect(muralService.listarDestinatarios).toHaveBeenCalledWith('org-acme');
+
+    await user.type(
+      screen.getByPlaceholderText(/Nova pauta disponível/i),
+      '## Aprovação disponível',
+    );
+    await user.click(screen.getByRole('button', { name: 'Publicar no mural' }));
+
+    await waitFor(() =>
+      expect(muralService.criarCard).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: 'org-acme',
+          audienceUserIds: ['client-acme'],
+        }),
+      ),
+    );
   });
 });

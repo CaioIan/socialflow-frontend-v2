@@ -112,7 +112,15 @@ export default function LoginPage() {
         </GlassCard>
 
         <p className="text-center mt-8 text-zinc-600 text-sm">
-          Problemas com o acesso? <a href="#" className="text-primary hover:underline">Fale com o Admin</a>
+          Problemas com o acesso?{' '}
+          <a
+            href="https://wa.me/5585981682911"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Fale com o Admin
+          </a>
         </p>
       </motion.div>
     </div>

@@ -5,23 +5,30 @@ import { MuralCarousel } from './mural-carousel';
 
 /**
  * Leitura compartilhada do mural, tanto na tela inicial quanto acima da lista
- * de organizações. A origem só precisa aparecer em cada aviso quando há mais
- * de uma empresa possível; globais se identificam sempre.
+ * de organizações. Todo aviso identifica sua origem: os globais usam a marca
+ * do SocialFlow e os direcionados mostram o nome e a logo da organização.
+ *
+ * A badge não depende da lista de organizações mantida no estado de login.
+ * Essa lista não é persistida ao recarregar a página e, por isso, fazia a
+ * origem desaparecer para CLIENT e DESIGNER mesmo quando a API devolvia o
+ * aviso corretamente.
  */
 export function MuralFeed() {
-  const { user, organizations } = useAuthStore();
+  const { user } = useAuthStore();
   const { data: itens = [], isLoading } = useQuery({
-    queryKey: ['mural'],
+    // O mural é autorizado por usuário. Uma chave compartilhada permitia que,
+    // após trocar de conta sem recarregar a aba, o React Query reaproveitasse
+    // por alguns minutos os avisos da sessão anterior.
+    queryKey: ['mural', user?.id],
     queryFn: muralService.listar,
+    enabled: Boolean(user?.id),
   });
-
-  const showOrganizationBadge = user?.role === 'ADMIN' || organizations.length > 1;
 
   return (
     <MuralCarousel
       itens={itens}
       isLoading={isLoading}
-      showOrganizationBadge={showOrganizationBadge}
+      showOrganizationBadge
       viewerName={user?.name}
     />
   );

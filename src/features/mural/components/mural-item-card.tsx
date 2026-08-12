@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Building2 } from 'lucide-react';
+import { Building2, Maximize2 } from 'lucide-react';
+import { Modal } from '@/shared/components/modal';
 import type { MuralItem } from '../api/mural-service';
 
 /**
@@ -16,20 +18,52 @@ export function MuralItemCard({
   item: MuralItem;
   showOrganizationBadge?: boolean;
 }) {
+  const [imagemAberta, setImagemAberta] = useState(false);
   const showScopeBadge = showOrganizationBadge || item.organizationId === null;
 
   if (item.type === 'IMAGE') {
     return (
-      <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black/20 border border-white/10">
-        <img
-          src={item.imageUrl ?? ''}
-          alt=""
-          // `object-cover`: a imagem chega recortada em 16:9, mas se um dia
-          // entrar alguma fora da proporção ela preenche em vez de distorcer.
-          className="w-full h-full object-cover"
-        />
-        {showScopeBadge && <MuralScopeBadge item={item} />}
-      </div>
+      <>
+        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black/20 border border-white/10">
+          <button
+            type="button"
+            onClick={() => setImagemAberta(true)}
+            aria-label="Ampliar imagem do aviso"
+            className="group h-full w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+          >
+            <img
+              src={item.imageUrl ?? ''}
+              alt=""
+              // `object-cover`: a imagem chega recortada em 16:9, mas se um dia
+              // entrar alguma fora da proporção ela preenche em vez de distorcer.
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.015]"
+            />
+            <span className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-black/60 text-white opacity-80 shadow-lg backdrop-blur-md transition-opacity group-hover:opacity-100">
+              <Maximize2 className="h-4 w-4" />
+            </span>
+          </button>
+          {showScopeBadge && <MuralScopeBadge item={item} />}
+        </div>
+
+        <Modal
+          isOpen={imagemAberta}
+          onClose={() => setImagemAberta(false)}
+          title="Imagem do mural"
+          className="max-w-5xl"
+        >
+          <div className="flex max-h-[calc(100dvh-10rem)] items-center justify-center overflow-hidden rounded-2xl bg-black/40">
+            <img
+              src={item.imageUrl ?? ''}
+              alt={
+                item.organizationName
+                  ? `Imagem do aviso da organização ${item.organizationName}`
+                  : 'Imagem de aviso global do SocialFlow'
+              }
+              className="max-h-[calc(100dvh-10rem)] w-full object-contain"
+            />
+          </div>
+        </Modal>
+      </>
     );
   }
 
@@ -131,6 +165,9 @@ function MuralScopeBadge({ item }: { item: MuralItem }) {
       </span>
       <span className="truncate">
         {isGlobal ? 'SocialFlow · Global' : item.organizationName ?? 'Organização'}
+        {!isGlobal && (item.audienceCount ?? 0) > 0 && (
+          <> · {item.audienceCount} {item.audienceCount === 1 ? 'pessoa' : 'pessoas'}</>
+        )}
       </span>
     </span>
   );

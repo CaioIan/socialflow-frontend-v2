@@ -8,6 +8,14 @@ export interface MuralBadge {
   textColor: string;
 }
 
+export interface MuralAudienceUser {
+  id: string;
+  name: string | null;
+  email: string;
+  avatarUrl: string | null;
+  role: 'ADMIN' | 'DESIGNER' | 'CLIENT';
+}
+
 export interface MuralItem {
   id: string;
   type: MuralItemType;
@@ -17,6 +25,8 @@ export interface MuralItem {
   organizationName: string | null;
   /** Foto da empresa exibida no crachá. `null` quando global ou sem foto. */
   organizationLogoUrl: string | null;
+  /** Zero = organização inteira; maior que zero = audiência restrita. */
+  audienceCount?: number;
   imageUrl: string | null;
   markdown: string | null;
   backgroundColor: string | null;
@@ -38,24 +48,37 @@ export const muralService = {
     return response.data;
   },
 
+  listarDestinatarios: async (organizationId: string) => {
+    const response = await api.get<MuralAudienceUser[]>(
+      `/mural/audience/${organizationId}`,
+    );
+    return response.data;
+  },
+
   criarCard: async (data: {
     markdown: string;
     backgroundColor: string;
     textColor: string;
     badges: MuralBadge[];
     organizationId: string | null;
+    audienceUserIds: string[];
   }) => {
     const response = await api.post<MuralItem>('/mural/cards', data);
     return response.data;
   },
 
   /** A imagem chega já recortada em 16:9, como Blob. */
-  criarImagem: async (arquivo: Blob, organizationId: string | null) => {
+  criarImagem: async (
+    arquivo: Blob,
+    organizationId: string | null,
+    audienceUserIds: string[],
+  ) => {
     const corpo = new FormData();
     corpo.append('file', arquivo, 'mural.jpg');
     // String vazia em vez de omitir: o backend lê `organizationId || null`, e
     // FormData não transmite `null`.
     corpo.append('organizationId', organizationId ?? '');
+    corpo.append('audienceUserIds', JSON.stringify(audienceUserIds));
 
     const response = await api.post<MuralItem>('/mural/images', corpo);
     return response.data;

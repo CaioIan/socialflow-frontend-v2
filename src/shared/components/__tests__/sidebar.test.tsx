@@ -55,12 +55,13 @@ describe('Sidebar', () => {
   describe('cliente com uma organização só', () => {
     beforeEach(() => comOrganizacoes(1));
 
-    it('mostra "Minha Organização" e não oferece "Início"', () => {
-      // Com uma empresa só, a lista de organizações não tem o que escolher —
-      // um atalho para ela seria um beco sem saída.
+    it('mostra "Minha Organização" apontando para a listagem', () => {
       montar();
 
-      expect(screen.getByText('Minha Organização')).toBeInTheDocument();
+      expect(screen.getByText('Minha Organização').closest('a')).toHaveAttribute(
+        'href',
+        '/organizations',
+      );
       expect(screen.queryByText('Início')).not.toBeInTheDocument();
     });
   });

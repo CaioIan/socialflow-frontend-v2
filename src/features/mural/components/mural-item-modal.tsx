@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Image as ImageIcon, Loader2, Plus, Tag, Trash2, Type, Upload } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Plus, Tag, Trash2, Type, Upload, Users } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
+import { getApiErrorMessage } from '@/api/api-error';
 import { useToastStore } from '@/stores/use-toast-store';
 import { organizationsService } from '@/features/organizations/api/organizations-service';
 import { recortarImagem, RECORTE_MURAL } from '@/shared/lib/recortar-imagem';
-import { muralService, type MuralBadge } from '../api/mural-service';
+import { muralService, type MuralAudienceUser, type MuralBadge } from '../api/mural-service';
 import { MuralItemCard } from './mural-item-card';
 
 /** Mesmos limites do backend, para o erro aparecer antes de subir o arquivo. */
@@ -39,6 +40,7 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
 
   const [tipo, setTipo] = useState<'CARD' | 'IMAGE'>('CARD');
   const [organizationId, setOrganizationId] = useState<string>('');
+  const [audienceUserIds, setAudienceUserIds] = useState<string[]>([]);
   const [markdown, setMarkdown] = useState('');
   const [corDeFundo, setCorDeFundo] = useState('#7c3aed');
   const [corDoTexto, setCorDoTexto] = useState('#ffffff');
@@ -56,6 +58,12 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
     enabled: isOpen,
   });
 
+  const { data: usuarios = [], isLoading: carregandoUsuarios } = useQuery({
+    queryKey: ['mural-audience-users', organizationId],
+    queryFn: () => muralService.listarDestinatarios(organizationId),
+    enabled: isOpen && Boolean(organizationId),
+  });
+
   // A URL de blob só sai da memória quando revogada.
   useEffect(() => {
     return () => {
@@ -68,6 +76,7 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
     setImagemEscolhida(undefined);
     setMarkdown('');
     setBadges([]);
+    setAudienceUserIds([]);
     setErro(undefined);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
@@ -89,6 +98,7 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
           textColor: corDoTexto,
           badges: badges.map((badge) => ({ ...badge, label: badge.label.trim() })),
           organizationId: org,
+          audienceUserIds,
         });
       }
 
@@ -99,14 +109,15 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
       // Recorta para 1280x720 antes de subir: o backend exige 16:9, e mandar o
       // original faria a validação recusar o que o usuário acabou de enquadrar.
       const recortada = await recortarImagem(imagemEscolhida, area, RECORTE_MURAL);
-      return await muralService.criarImagem(recortada, org);
+      return await muralService.criarImagem(recortada, org, audienceUserIds);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mural'] });
       addToast('Item publicado no mural.', 'success');
       fechar();
     },
-    onError: (e) => setErro(e instanceof Error ? e.message : 'Não foi possível publicar'),
+    onError: (e) =>
+      setErro(getApiErrorMessage(e, 'Não foi possível publicar o item no mural.')),
   });
 
   async function aoEscolherArquivo(arquivo?: File) {
@@ -190,12 +201,17 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
 
         {/* Destino */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-zinc-400 uppercase tracking-wide">
+          <label htmlFor="mural-organization" className="text-xs font-bold text-zinc-400 uppercase tracking-wide">
             Quem vê este aviso
           </label>
           <select
+            id="mural-organization"
             value={organizationId}
-            onChange={(e) => setOrganizationId(e.target.value)}
+            onChange={(e) => {
+              setOrganizationId(e.target.value);
+              // IDs escolhidos numa empresa nunca podem vazar para outra.
+              setAudienceUserIds([]);
+            }}
             className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50"
           >
             <option value="">Todas as empresas (aviso global)</option>
@@ -206,6 +222,15 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
             ))}
           </select>
         </div>
+
+        {organizationId && (
+          <SeletorDeDestinatarios
+            usuarios={usuarios}
+            selecionados={audienceUserIds}
+            carregando={carregandoUsuarios}
+            onChange={setAudienceUserIds}
+          />
+        )}
 
         {tipo === 'CARD' ? (
           <div className="space-y-5">
@@ -253,6 +278,7 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
                   organizationId: organizacaoSelecionada?.id ?? null,
                   organizationName: organizacaoSelecionada?.name ?? null,
                   organizationLogoUrl: organizacaoSelecionada?.logoUrl ?? null,
+                  audienceCount: audienceUserIds.length,
                   imageUrl: null,
                   markdown: markdown || '_O aviso do SocialFlow aparece aqui conforme você escreve._',
                   backgroundColor: corDeFundo,
@@ -362,6 +388,114 @@ export function MuralItemModal({ isOpen, onClose }: Props) {
         </div>
       </div>
     </Modal>
+  );
+}
+
+function SeletorDeDestinatarios({
+  usuarios,
+  selecionados,
+  carregando,
+  onChange,
+}: {
+  usuarios: MuralAudienceUser[];
+  selecionados: string[];
+  carregando: boolean;
+  onChange: (ids: string[]) => void;
+}) {
+  const alternar = (userId: string) => {
+    onChange(
+      selecionados.includes(userId)
+        ? selecionados.filter((id) => id !== userId)
+        : [...selecionados, userId],
+    );
+  };
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-zinc-400">
+            <Users className="h-3.5 w-3.5 text-primary" />
+            Pessoas específicas (opcional)
+          </span>
+          <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+            Sem selecionar ninguém, todos os usuários da organização verão o aviso.
+          </p>
+        </div>
+
+        {selecionados.length > 0 && (
+          <button
+            type="button"
+            onClick={() => onChange([])}
+            className="shrink-0 text-xs font-bold text-zinc-500 transition-colors hover:text-white"
+          >
+            Limpar seleção
+          </button>
+        )}
+      </div>
+
+      {carregando ? (
+        <div className="flex items-center gap-2 py-4 text-xs text-zinc-500" role="status">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          Carregando usuários da organização...
+        </div>
+      ) : usuarios.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-white/10 px-3 py-4 text-xs text-zinc-600">
+          Nenhum usuário ativo está vinculado a esta organização.
+        </p>
+      ) : (
+        <>
+          <p className="rounded-lg bg-black/20 px-3 py-2 text-xs text-zinc-400" role="status">
+            {selecionados.length === 0
+              ? `Todos os ${usuarios.length} usuários da organização poderão ver.`
+              : `Somente ${selecionados.length} ${selecionados.length === 1 ? 'pessoa poderá' : 'pessoas poderão'} ver.`}
+          </p>
+
+          <div className="max-h-52 space-y-1 overflow-y-auto pr-1" aria-label="Destinatários do aviso">
+            {usuarios.map((usuario) => {
+              const marcado = selecionados.includes(usuario.id);
+              const nome = usuario.name?.trim() || usuario.email;
+
+              return (
+                <label
+                  key={usuario.id}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors ${
+                    marcado
+                      ? 'border-primary/40 bg-primary/10'
+                      : 'border-transparent hover:border-white/10 hover:bg-white/[0.03]'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={marcado}
+                    onChange={() => alternar(usuario.id)}
+                    aria-label={`Selecionar ${nome}`}
+                    className="h-4 w-4 shrink-0 accent-primary"
+                  />
+
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-gradient text-xs font-bold text-white">
+                    {usuario.avatarUrl ? (
+                      <img src={usuario.avatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      nome.charAt(0).toUpperCase()
+                    )}
+                  </span>
+
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-zinc-200">{nome}</span>
+                    <span className="block truncate text-[11px] text-zinc-600">{usuario.email}</span>
+                  </span>
+
+                  <span className="shrink-0 text-[10px] font-bold uppercase text-zinc-600">
+                    {usuario.role === 'CLIENT' ? 'Cliente' : usuario.role === 'DESIGNER' ? 'Designer' : 'Admin'}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 

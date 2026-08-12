@@ -71,8 +71,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
     },
     {
       // Só para quem atende várias empresas: com o seletor no lugar de "Minha
-      // Organização", some o caminho de volta para a lista completa. Quem tem
-      // uma organização só nunca precisa dessa tela.
+      // Organização", esta entrada vira o caminho de volta para a lista.
       icon: Home,
       label: 'Início',
       href: '/organizations',
@@ -82,7 +81,9 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
     {
       icon: Building2,
       label: 'Minha Organização',
-      href: currentOrganizationId ? `/organizations/${currentOrganizationId}/campaigns` : '/organizations',
+      // Mesmo com um único vínculo, primeiro mostra a organização. Entrar nas
+      // campanhas continua sendo uma escolha feita no card da listagem.
+      href: '/organizations',
       roles: ['CLIENT', 'DESIGNER'],
     },
     { icon: Building2, label: 'Organizações', href: '/organizations', roles: ['ADMIN'] },
