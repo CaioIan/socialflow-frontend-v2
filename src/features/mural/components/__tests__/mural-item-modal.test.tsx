@@ -159,6 +159,7 @@ describe('MuralItemModal — badges', () => {
       showMoreBackgroundColor: '#ffffff',
       showMoreTextColor: '#18181b',
       showMoreIconColor: '#18181b',
+      installButtonEnabled: false,
       badges: [],
       createdAt: '',
       audienceUserIds: [],
@@ -212,6 +213,27 @@ describe('MuralItemModal — badges', () => {
     );
   });
 
+  it('ativa o botão Instalar SocialFlow somente com o gradiente oficial', async () => {
+    const user = userEvent.setup();
+    montar();
+
+    await user.type(screen.getByPlaceholderText(/Nova pauta disponível/i), 'Instale o SocialFlow');
+    await user.click(screen.getByRole('switch', { name: 'Exibir botão Instalar SocialFlow' }));
+
+    expect(screen.getByText('Gradiente oficial do SocialFlow')).toHaveClass('bg-brand-gradient');
+    expect(screen.getByRole('button', { name: 'Instalar SocialFlow' })).toHaveClass(
+      'bg-brand-gradient',
+    );
+    expect(screen.queryByLabelText(/Cor.*Instalar SocialFlow/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Publicar no mural' }));
+
+    await waitFor(() => expect(muralService.criarCard).toHaveBeenCalled());
+    expect(vi.mocked(muralService.criarCard).mock.calls[0][0]).toEqual(
+      expect.objectContaining({ installButtonEnabled: true }),
+    );
+  });
+
   it('permite editar o destino de uma imagem sem obrigar a trocá-la', async () => {
     const user = userEvent.setup();
     montar(vi.fn(), {
@@ -229,6 +251,7 @@ describe('MuralItemModal — badges', () => {
       showMoreBackgroundColor: '#ffffff',
       showMoreTextColor: '#18181b',
       showMoreIconColor: '#18181b',
+      installButtonEnabled: false,
       badges: [],
       createdAt: '',
       audienceUserIds: [],

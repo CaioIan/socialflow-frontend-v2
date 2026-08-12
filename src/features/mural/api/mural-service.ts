@@ -36,6 +36,8 @@ export interface MuralItem {
   showMoreBackgroundColor: string;
   showMoreTextColor: string;
   showMoreIconColor: string;
+  /** Exibe a ação fixa de instalação do PWA com o gradiente da marca. */
+  installButtonEnabled: boolean;
   badges: MuralBadge[];
   createdAt: string;
 }
@@ -76,6 +78,7 @@ export const muralService = {
     showMoreBackgroundColor: string;
     showMoreTextColor: string;
     showMoreIconColor: string;
+    installButtonEnabled: boolean;
   }) => {
     const response = await api.post<MuralItem>('/mural/cards', data);
     return response.data;
@@ -94,6 +97,7 @@ export const muralService = {
       showMoreBackgroundColor: string;
       showMoreTextColor: string;
       showMoreIconColor: string;
+      installButtonEnabled: boolean;
     },
   ) => {
     const response = await api.patch<MuralItem>(`/mural/cards/${id}`, data);

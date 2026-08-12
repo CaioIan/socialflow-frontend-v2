@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Image as ImageIcon, Loader2, Plus, Tag, Trash2, Type, Upload, Users } from 'lucide-react';
+import { ArrowRight, Download, Image as ImageIcon, Loader2, Plus, Tag, Trash2, Type, Upload, Users } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
 import { getApiErrorMessage } from '@/api/api-error';
 import { useToastStore } from '@/stores/use-toast-store';
@@ -63,6 +63,9 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
   const [showMoreIconColor, setShowMoreIconColor] = useState(
     item?.showMoreIconColor ?? '#18181b',
   );
+  const [installButtonEnabled, setInstallButtonEnabled] = useState(
+    item?.installButtonEnabled ?? false,
+  );
   const [erro, setErro] = useState<string | undefined>(undefined);
 
   const [imagemEscolhida, setImagemEscolhida] = useState<string | undefined>(undefined);
@@ -121,6 +124,7 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
           showMoreBackgroundColor,
           showMoreTextColor,
           showMoreIconColor,
+          installButtonEnabled,
         };
 
         return item
@@ -359,6 +363,29 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
               )}
             </section>
 
+            <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-zinc-400">
+                    <Download className="h-3.5 w-3.5 text-primary" />
+                    Botão Instalar SocialFlow
+                  </span>
+                  <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+                    Adiciona ao card uma ação exclusiva para instalar o SocialFlow neste dispositivo.
+                  </p>
+                  <span className="mt-3 inline-flex items-center gap-2 rounded-lg bg-brand-gradient px-3 py-2 text-[11px] font-bold text-white shadow-lg">
+                    <Download className="h-3.5 w-3.5" />
+                    Gradiente oficial do SocialFlow
+                  </span>
+                </div>
+                <ToggleSwitch
+                  checked={installButtonEnabled}
+                  ariaLabel="Exibir botão Instalar SocialFlow"
+                  onClick={() => setInstallButtonEnabled((atual) => !atual)}
+                />
+              </div>
+            </section>
+
             <div className="space-y-2">
               <span className="text-xs font-bold text-zinc-400 uppercase tracking-wide">
                 Como vai ficar
@@ -379,6 +406,7 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
                   showMoreBackgroundColor,
                   showMoreTextColor,
                   showMoreIconColor,
+                  installButtonEnabled,
                   badges: badges.filter((badge) => badge.label.trim().length > 0),
                   createdAt: '',
                 }}

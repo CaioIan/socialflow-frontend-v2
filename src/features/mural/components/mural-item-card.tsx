@@ -1,7 +1,15 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { ArrowRight, Building2, Maximize2 } from 'lucide-react';
+import { ArrowRight, Building2, Download, Maximize2, Share2 } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
+import { useToastStore } from '@/stores/use-toast-store';
+import {
+  ehIos,
+  estaEmModoAplicativo,
+  MENSAGEM_INSTALACAO_INICIADA,
+  observarInstalacao,
+  solicitarInstalacao,
+} from '@/shared/lib/pwa-install';
 import type { MuralItem } from '../api/mural-service';
 
 /**
@@ -20,11 +28,20 @@ export function MuralItemCard({
 }) {
   const [imagemAberta, setImagemAberta] = useState(false);
   const [detalheAberto, setDetalheAberto] = useState(false);
+  const [instrucaoDeInstalacaoAberta, setInstrucaoDeInstalacaoAberta] = useState(false);
+  const [instalado, setInstalado] = useState(estaEmModoAplicativo());
   const inicioDoToque = useRef<{ x: number; y: number } | null>(null);
   const arrastou = useRef(false);
+  const { addToast } = useToastStore();
   const showScopeBadge = showOrganizationBadge || item.organizationId === null;
   const showMoreEnabled = item.showMoreEnabled === true;
+  const showInstallButton = item.installButtonEnabled === true && !instalado;
+  const showCardActions = showMoreEnabled || showInstallButton;
   const dataDePublicacao = formatarDataDePublicacao(item.createdAt);
+
+  useEffect(() => {
+    return observarInstalacao(() => setInstalado(estaEmModoAplicativo()));
+  }, []);
 
   if (item.type === 'IMAGE') {
     return (
@@ -80,6 +97,19 @@ export function MuralItemCard({
     setDetalheAberto(true);
   };
 
+  const instalarSocialFlow = async () => {
+    const resultado = await solicitarInstalacao();
+
+    if (resultado === 'accepted') {
+      addToast(MENSAGEM_INSTALACAO_INICIADA, 'info');
+      return;
+    }
+
+    if (resultado === 'unavailable') {
+      setInstrucaoDeInstalacaoAberta(true);
+    }
+  };
+
   return (
     <>
       <div
@@ -119,7 +149,7 @@ export function MuralItemCard({
       >
         <div
           className={`h-full w-full overflow-hidden ${
-            showMoreEnabled || showScopeBadge ? 'pb-12 sm:pb-14' : ''
+            showCardActions || showScopeBadge ? 'pb-12 sm:pb-14' : ''
           }`}
         >
           <MuralBadges item={item} />
@@ -129,28 +159,48 @@ export function MuralItemCard({
           <span className="sr-only">Toque para ler todas as informações do aviso.</span>
         )}
 
-        {showMoreEnabled ? (
+        {showCardActions ? (
           <div className="absolute inset-x-2 bottom-2 z-10 flex min-w-0 items-center justify-between gap-2 sm:inset-x-3 sm:bottom-3">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                abrirDetalhe();
-              }}
-              aria-label="Ver mais sobre este aviso"
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
-              style={{
-                backgroundColor: item.showMoreBackgroundColor ?? '#ffffff',
-                color: item.showMoreTextColor ?? '#18181b',
-              }}
-            >
-              <span>Ver mais</span>
-              <ArrowRight
-                aria-hidden="true"
-                className="h-3.5 w-3.5 sm:h-4 sm:w-4"
-                style={{ color: item.showMoreIconColor ?? '#18181b' }}
-              />
-            </button>
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+              {showInstallButton && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void instalarSocialFlow();
+                  }}
+                  aria-label="Instalar SocialFlow"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-[11px] font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
+                >
+                  <Download aria-hidden="true" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="sm:hidden">Instalar</span>
+                  <span className="hidden sm:inline">Instalar SocialFlow</span>
+                </button>
+              )}
+
+              {showMoreEnabled && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    abrirDetalhe();
+                  }}
+                  aria-label="Ver mais sobre este aviso"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
+                  style={{
+                    backgroundColor: item.showMoreBackgroundColor ?? '#ffffff',
+                    color: item.showMoreTextColor ?? '#18181b',
+                  }}
+                >
+                  <span>Ver mais</span>
+                  <ArrowRight
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                    style={{ color: item.showMoreIconColor ?? '#18181b' }}
+                  />
+                </button>
+              )}
+            </div>
             {showScopeBadge && (
               <span className="min-w-0">
                 <MuralScopeBadge item={item} inline />
@@ -186,6 +236,35 @@ export function MuralItemCard({
               Publicado em {dataDePublicacao}
             </time>
           )}
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={instrucaoDeInstalacaoAberta}
+        onClose={() => setInstrucaoDeInstalacaoAberta(false)}
+        title="Instale o SocialFlow"
+      >
+        <div className="space-y-5">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-lg">
+            {ehIos() ? <Share2 className="h-5 w-5" /> : <Download className="h-5 w-5" />}
+          </div>
+          <div className="space-y-2 text-sm leading-relaxed text-zinc-300">
+            <p>
+              {ehIos()
+                ? 'No Safari, toque em Compartilhar e depois em “Adicionar à Tela de Início”.'
+                : 'Abra o menu do navegador e escolha “Instalar aplicativo” ou “Adicionar à tela inicial”.'}
+            </p>
+            <p className="text-xs text-zinc-500">
+              Depois, abra o SocialFlow pelo novo ícone criado no dispositivo.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setInstrucaoDeInstalacaoAberta(false)}
+            className="w-full rounded-xl bg-brand-gradient px-4 py-3 text-sm font-bold text-white transition-transform active:scale-[0.98]"
+          >
+            Entendi
+          </button>
         </div>
       </Modal>
     </>

@@ -1,8 +1,27 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MuralItemCard } from '../mural-item-card';
 import type { MuralItem } from '../../api/mural-service';
+import {
+  MENSAGEM_INSTALACAO_INICIADA,
+  solicitarInstalacao,
+} from '@/shared/lib/pwa-install';
+
+const toast = vi.hoisted(() => ({ addToast: vi.fn() }));
+
+vi.mock('@/shared/lib/pwa-install', () => ({
+  ehIos: vi.fn(() => false),
+  estaEmModoAplicativo: vi.fn(() => false),
+  MENSAGEM_INSTALACAO_INICIADA:
+    'Instalação iniciada. Aguarde o dispositivo concluir a instalação do SocialFlow.',
+  observarInstalacao: vi.fn(() => vi.fn()),
+  solicitarInstalacao: vi.fn(),
+}));
+
+vi.mock('@/stores/use-toast-store', () => ({
+  useToastStore: () => toast,
+}));
 
 function aviso(overrides: Partial<MuralItem> = {}): MuralItem {
   return {
@@ -19,6 +38,7 @@ function aviso(overrides: Partial<MuralItem> = {}): MuralItem {
     showMoreBackgroundColor: '#ffffff',
     showMoreTextColor: '#18181b',
     showMoreIconColor: '#18181b',
+    installButtonEnabled: false,
     badges: [],
     createdAt: '2026-08-11T10:00:00.000Z',
     ...overrides,
@@ -26,6 +46,11 @@ function aviso(overrides: Partial<MuralItem> = {}): MuralItem {
 }
 
 describe('MuralItemCard', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(solicitarInstalacao).mockResolvedValue('dismissed');
+  });
+
   it('identifica a organização com nome e logo quando há múltiplos escopos', () => {
     const { container } = render(<MuralItemCard item={aviso()} showOrganizationBadge />);
 
@@ -149,6 +174,31 @@ describe('MuralItemCard', () => {
 
     expect(screen.getByRole('heading', { name: 'Aviso do mural' })).toBeInTheDocument();
     expect(screen.getAllByText('Aviso curto')).toHaveLength(2);
+  });
+
+  it('instala o SocialFlow pelo botão fixo no gradiente da marca', async () => {
+    vi.mocked(solicitarInstalacao).mockResolvedValue('accepted');
+    const user = userEvent.setup();
+    render(<MuralItemCard item={aviso({ installButtonEnabled: true })} />);
+
+    const botao = screen.getByRole('button', { name: 'Instalar SocialFlow' });
+    expect(botao).toHaveClass('bg-brand-gradient', 'text-white');
+
+    await user.click(botao);
+
+    expect(solicitarInstalacao).toHaveBeenCalledOnce();
+    expect(toast.addToast).toHaveBeenCalledWith(MENSAGEM_INSTALACAO_INICIADA, 'info');
+  });
+
+  it('orienta a instalação manual quando o navegador não oferece o prompt nativo', async () => {
+    vi.mocked(solicitarInstalacao).mockResolvedValue('unavailable');
+    const user = userEvent.setup();
+    render(<MuralItemCard item={aviso({ installButtonEnabled: true })} />);
+
+    await user.click(screen.getByRole('button', { name: 'Instalar SocialFlow' }));
+
+    expect(screen.getByRole('heading', { name: 'Instale o SocialFlow' })).toBeInTheDocument();
+    expect(screen.getByText(/Instalar aplicativo/)).toBeInTheDocument();
   });
 
   it('quebra sequências longas e mantém scroll de contingência no modal', async () => {

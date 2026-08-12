@@ -24,6 +24,7 @@ const avisoDirecionado: MuralItem = {
   showMoreBackgroundColor: '#ffffff',
   showMoreTextColor: '#18181b',
   showMoreIconColor: '#18181b',
+  installButtonEnabled: false,
   badges: [],
   createdAt: '2026-08-11T10:00:00.000Z',
 };
