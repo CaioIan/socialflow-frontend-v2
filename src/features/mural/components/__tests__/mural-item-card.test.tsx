@@ -196,17 +196,31 @@ describe('MuralItemCard', () => {
     expect(screen.getAllByText('Aviso curto')).toHaveLength(2);
   });
 
-  it('limita o resumo completo do card com reticências', () => {
-    render(
-      <MuralItemCard
-        item={aviso({
-          markdown:
-            '# Nova atualização: notificações\n\nAgora você pode receber avisos por **e-mail e push**.\n\n## Avisos por e-mail\n\nAbra o menu lateral para configurar.',
-        })}
-      />,
-    );
+  it('limita o resumo completo do card e exibe três pontos quando o conteúdo excede', async () => {
+    const scrollHeight = vi
+      .spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
+      .mockReturnValue(220);
+    const clientHeight = vi
+      .spyOn(HTMLElement.prototype, 'clientHeight', 'get')
+      .mockReturnValue(100);
 
-    expect(document.querySelector('[data-mural-markdown="resumo"]')).toHaveClass('line-clamp-4');
+    try {
+      render(
+        <MuralItemCard
+          item={aviso({
+            markdown:
+              '# Nova atualização: notificações\n\nAgora você pode receber avisos por **e-mail e push**.\n\n## Avisos por e-mail\n\nAbra o menu lateral para configurar.',
+          })}
+        />,
+      );
+
+      const resumo = document.querySelector('[data-mural-markdown="resumo"]');
+      expect(resumo).toHaveClass('max-h-[6.5rem]', 'overflow-hidden', 'sm:max-h-[7.5rem]');
+      expect(await screen.findByTestId('mural-summary-ellipsis')).toHaveTextContent('...');
+    } finally {
+      scrollHeight.mockRestore();
+      clientHeight.mockRestore();
+    }
   });
 
   it('instala o SocialFlow pelo botão fixo no gradiente da marca', async () => {

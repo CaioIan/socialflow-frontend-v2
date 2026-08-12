@@ -141,12 +141,16 @@ export function MuralItemCard({
           className="absolute inset-0 z-0 cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
         />
         <div
-          className={`pointer-events-none relative z-[1] h-full w-full overflow-hidden ${
+          className={`pointer-events-none relative z-[1] flex h-full w-full flex-col overflow-hidden ${
             showCardActions || showScopeBadge ? 'pb-12 sm:pb-14' : ''
           }`}
         >
           <MuralBadges item={item} />
-          <MuralMarkdown markdown={item.markdown ?? ''} modo="resumo" />
+          <MuralMarkdown
+            markdown={item.markdown ?? ''}
+            modo="resumo"
+            backgroundColor={item.backgroundColor ?? '#18181b'}
+          />
         </div>
 
         {showCardActions ? (
@@ -277,7 +281,7 @@ function MuralBadges({ item, completo = false }: { item: MuralItem; completo?: b
 
   return (
     <div
-      className={`flex flex-wrap items-center ${
+      className={`flex shrink-0 flex-wrap items-center ${
         completo ? 'mb-4 gap-2' : 'mb-2 gap-1.5 sm:mb-4 sm:gap-2'
       }`}
       aria-label="Marcações do aviso"
@@ -305,17 +309,54 @@ function MuralBadges({ item, completo = false }: { item: MuralItem; completo?: b
 function MuralMarkdown({
   markdown,
   modo,
+  backgroundColor = '#18181b',
 }: {
   markdown: string;
   modo: 'resumo' | 'completo';
+  backgroundColor?: string;
 }) {
   const completo = modo === 'completo';
+  const resumoRef = useRef<HTMLDivElement>(null);
+  const [resumoTruncado, setResumoTruncado] = useState(false);
+
+  useEffect(() => {
+    if (completo) return;
+
+    let ativo = true;
+    const elemento = resumoRef.current;
+    if (!elemento) return;
+
+    const atualizarTruncamento = () => {
+      if (!ativo) return;
+      setResumoTruncado(elemento.scrollHeight > elemento.clientHeight + 1);
+    };
+
+    const timer = window.setTimeout(atualizarTruncamento, 0);
+    const observador =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(atualizarTruncamento);
+
+    observador?.observe(elemento);
+    window.addEventListener('resize', atualizarTruncamento);
+    void document.fonts?.ready.then(atualizarTruncamento);
+
+    return () => {
+      ativo = false;
+      window.clearTimeout(timer);
+      observador?.disconnect();
+      window.removeEventListener('resize', atualizarTruncamento);
+    };
+  }, [completo, markdown]);
 
   return (
     <div
+      ref={resumoRef}
       data-mural-markdown={modo}
       className={`min-w-0 max-w-full break-words [overflow-wrap:anywhere] ${
-        completo ? '' : 'line-clamp-4'
+        completo
+          ? ''
+          : 'relative max-h-[6.5rem] min-h-0 flex-1 overflow-hidden sm:max-h-[7.5rem]'
       }`}
     >
       <ReactMarkdown
@@ -327,7 +368,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-xl font-bold sm:text-2xl'
-                : 'mb-1.5 line-clamp-2 text-[17px] font-bold leading-snug sm:mb-2 sm:text-2xl'
+                : 'mb-1.5 text-[17px] font-bold leading-snug sm:mb-2 sm:text-2xl'
             }
           >
             {children}
@@ -338,7 +379,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-lg font-bold sm:text-xl'
-                : 'mb-1.5 line-clamp-2 text-base font-bold leading-snug sm:mb-2 sm:text-xl'
+                : 'mb-1.5 text-base font-bold leading-snug sm:mb-2 sm:text-xl'
             }
           >
             {children}
@@ -349,7 +390,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-2 text-base font-bold'
-                : 'mb-1 line-clamp-2 text-[15px] font-bold leading-snug sm:mb-1.5 sm:text-base'
+                : 'mb-1 text-[15px] font-bold leading-snug sm:mb-1.5 sm:text-base'
             }
           >
             {children}
@@ -360,7 +401,7 @@ function MuralMarkdown({
             className={
               completo
                 ? 'mb-3 text-sm leading-relaxed last:mb-0 sm:text-base'
-                : 'mb-1.5 line-clamp-3 text-xs leading-[1.5] last:mb-0 sm:mb-2 sm:text-base sm:leading-relaxed'
+                : 'mb-1.5 text-xs leading-[1.5] last:mb-0 sm:mb-2 sm:text-base sm:leading-relaxed'
             }
           >
             {children}
@@ -410,6 +451,19 @@ function MuralMarkdown({
       >
         {markdown}
       </ReactMarkdown>
+
+      {!completo && resumoTruncado && (
+        <span
+          aria-hidden="true"
+          data-testid="mural-summary-ellipsis"
+          className="pointer-events-none absolute inset-x-0 bottom-0 flex h-8 items-end justify-end pr-1 text-lg font-extrabold leading-none tracking-[0.12em]"
+          style={{
+            background: `linear-gradient(to bottom, transparent, ${backgroundColor} 72%)`,
+          }}
+        >
+          ...
+        </span>
+      )}
     </div>
   );
 }
