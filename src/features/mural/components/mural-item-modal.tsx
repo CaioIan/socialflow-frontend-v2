@@ -49,6 +49,7 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
   const [tipo, setTipo] = useState<'CARD' | 'IMAGE'>(item?.type ?? 'CARD');
   const [organizationId, setOrganizationId] = useState<string>(item?.organizationId ?? '');
   const [audienceUserIds, setAudienceUserIds] = useState<string[]>(item?.audienceUserIds ?? []);
+  const [designersOnly, setDesignersOnly] = useState(item?.designersOnly ?? false);
   const [markdown, setMarkdown] = useState(item?.markdown ?? '');
   const [corDeFundo, setCorDeFundo] = useState(item?.backgroundColor ?? '#7c3aed');
   const [corDoTexto, setCorDoTexto] = useState(item?.textColor ?? '#ffffff');
@@ -83,6 +84,12 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
     queryKey: ['mural-audience-users', organizationId],
     queryFn: () => muralService.listarDestinatarios(organizationId),
     enabled: isOpen && Boolean(organizationId),
+  });
+
+  const { data: designers = [], isLoading: carregandoDesigners } = useQuery({
+    queryKey: ['mural-audience-designers'],
+    queryFn: muralService.listarDesigners,
+    enabled: isOpen && designersOnly && !organizationId,
   });
 
   // A URL de blob só sai da memória quando revogada.
@@ -125,6 +132,7 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
           showMoreTextColor,
           showMoreIconColor,
           installButtonEnabled,
+          designersOnly,
         };
 
         return item
@@ -133,7 +141,13 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
       }
 
       if (!imagemEscolhida && item) {
-        return await muralService.atualizarImagem(item.id, null, org, audienceUserIds);
+        return await muralService.atualizarImagem(
+          item.id,
+          null,
+          org,
+          audienceUserIds,
+          designersOnly,
+        );
       }
 
       if (!imagemEscolhida || !area) {
@@ -144,8 +158,14 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
       // original faria a validação recusar o que o usuário acabou de enquadrar.
       const recortada = await recortarImagem(imagemEscolhida, area, RECORTE_MURAL);
       return item
-        ? await muralService.atualizarImagem(item.id, recortada, org, audienceUserIds)
-        : await muralService.criarImagem(recortada, org, audienceUserIds);
+        ? await muralService.atualizarImagem(
+            item.id,
+            recortada,
+            org,
+            audienceUserIds,
+            designersOnly,
+          )
+        : await muralService.criarImagem(recortada, org, audienceUserIds, designersOnly);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mural'] });
@@ -280,11 +300,41 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
           </select>
         </div>
 
-        {organizationId && (
+        <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-zinc-400">
+                <Users className="h-3.5 w-3.5 text-primary" />
+                Somente designers
+              </span>
+              <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+                Exibe o aviso apenas para a equipe de design do SocialFlow. A organização é opcional e clientes não verão este conteúdo.
+              </p>
+            </div>
+            <ToggleSwitch
+              checked={designersOnly}
+              ariaLabel="Exibir aviso somente para designers"
+              onClick={() => {
+                setDesignersOnly((atual) => !atual);
+                setAudienceUserIds([]);
+              }}
+            />
+          </div>
+        </section>
+
+        {(organizationId || designersOnly) && (
           <SeletorDeDestinatarios
-            usuarios={usuarios}
+            usuarios={
+              organizationId
+                ? designersOnly
+                  ? usuarios.filter((usuario) => usuario.role === 'DESIGNER')
+                  : usuarios
+                : designers
+            }
             selecionados={audienceUserIds}
-            carregando={carregandoUsuarios}
+            carregando={organizationId ? carregandoUsuarios : carregandoDesigners}
+            designersOnly={designersOnly}
+            organizationSelected={Boolean(organizationId)}
             onChange={setAudienceUserIds}
           />
         )}
@@ -407,6 +457,7 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
                   showMoreTextColor,
                   showMoreIconColor,
                   installButtonEnabled,
+                  designersOnly,
                   badges: badges.filter((badge) => badge.label.trim().length > 0),
                   createdAt: '',
                 }}
@@ -540,11 +591,15 @@ function SeletorDeDestinatarios({
   usuarios,
   selecionados,
   carregando,
+  designersOnly,
+  organizationSelected,
   onChange,
 }: {
   usuarios: MuralAudienceUser[];
   selecionados: string[];
   carregando: boolean;
+  designersOnly: boolean;
+  organizationSelected: boolean;
   onChange: (ids: string[]) => void;
 }) {
   const alternar = (userId: string) => {
@@ -564,7 +619,11 @@ function SeletorDeDestinatarios({
             Pessoas específicas (opcional)
           </span>
           <p className="mt-1 text-xs leading-relaxed text-zinc-600">
-            Sem selecionar ninguém, todos os usuários da organização verão o aviso.
+            {designersOnly
+              ? organizationSelected
+                ? 'Sem selecionar ninguém, todos os designers da organização verão o aviso.'
+                : 'Sem selecionar ninguém, todos os designers do SocialFlow verão o aviso.'
+              : 'Sem selecionar ninguém, todos os usuários da organização verão o aviso.'}
           </p>
         </div>
 
@@ -586,13 +645,21 @@ function SeletorDeDestinatarios({
         </div>
       ) : usuarios.length === 0 ? (
         <p className="rounded-xl border border-dashed border-white/10 px-3 py-4 text-xs text-zinc-600">
-          Nenhum usuário ativo está vinculado a esta organização.
+          {designersOnly
+            ? organizationSelected
+              ? 'Nenhum designer ativo está vinculado a esta organização.'
+              : 'Nenhum designer ativo foi encontrado no SocialFlow.'
+            : 'Nenhum usuário ativo está vinculado a esta organização.'}
         </p>
       ) : (
         <>
           <p className="rounded-lg bg-black/20 px-3 py-2 text-xs text-zinc-400" role="status">
             {selecionados.length === 0
-              ? `Todos os ${usuarios.length} usuários da organização poderão ver.`
+              ? designersOnly
+                ? organizationSelected
+                  ? `Todos os ${usuarios.length} designers da organização poderão ver.`
+                  : `Todos os ${usuarios.length} designers do SocialFlow poderão ver.`
+                : `Todos os ${usuarios.length} usuários da organização poderão ver.`
               : `Somente ${selecionados.length} ${selecionados.length === 1 ? 'pessoa poderá' : 'pessoas poderão'} ver.`}
           </p>
 

@@ -326,11 +326,23 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
               onClick={() => void instalarSocialFlow()}
               title={collapsed ? 'Instalar SocialFlow' : undefined}
               className={cn(
-                'group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-zinc-500 transition-all duration-200 hover:bg-white/5 hover:text-zinc-300',
+                'group relative isolate flex w-full items-center gap-3 overflow-hidden rounded-xl border border-blue-500/35 bg-gradient-to-r from-[#1D4ED8]/15 to-[#7E22CE]/15 px-3 py-2.5 shadow-[0_0_22px_rgba(126,34,206,0.22)] transition-all duration-200 hover:border-violet-400/55 hover:from-[#1D4ED8]/25 hover:to-[#7E22CE]/25 hover:shadow-[0_0_30px_rgba(126,34,206,0.38)]',
                 collapsed && 'justify-center px-0',
               )}
             >
-              <Download className="h-5 w-5 shrink-0 group-hover:text-zinc-300" />
+              <svg aria-hidden="true" className="absolute h-0 w-0">
+                <defs>
+                  <linearGradient id="socialflow-install-gradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0" stopColor="#1D4ED8" />
+                    <stop offset="1" stopColor="#7E22CE" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <Download
+                aria-hidden="true"
+                stroke="url(#socialflow-install-gradient)"
+                className="h-5 w-5 shrink-0 drop-shadow-[0_0_5px_rgba(126,34,206,0.85)] transition-transform group-hover:scale-110"
+              />
               <AnimatePresence mode="wait">
                 {!collapsed && (
                   <motion.span
@@ -339,7 +351,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
                     animate={{ opacity: 1, width: 'auto' }}
                     exit={{ opacity: 0, width: 0 }}
                     transition={{ duration: 0.15 }}
-                    className="overflow-hidden whitespace-nowrap text-sm font-medium"
+                    className="text-brand-gradient overflow-hidden whitespace-nowrap text-sm font-extrabold drop-shadow-[0_0_8px_rgba(126,34,206,0.45)]"
                   >
                     Instalar SocialFlow
                   </motion.span>

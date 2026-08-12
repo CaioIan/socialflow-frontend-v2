@@ -3,7 +3,6 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from '@/shared/components/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/use-auth-store';
-import { OrganizationSelector } from '@/features/auth/components/organization-selector';
 import { Menu } from 'lucide-react';
 import { UserAvatar } from '@/shared/components/user-avatar';
 import { useProfile } from '@/features/profile/api/use-profile';
@@ -27,7 +26,6 @@ export function DashboardLayout() {
   const { data: perfil } = useProfile();
 
   const userRole = user?.role?.toUpperCase();
-  const isClient = userRole === 'CLIENT';
   const activeOrg = organizations.find(org => org.organizationId === currentOrganizationId);
 
   const handleToggleCollapse = () => {
@@ -45,7 +43,7 @@ export function DashboardLayout() {
     if (path.includes('/organizations')) return 'Organizações';
     if (path.includes('/mural')) return 'Mural de avisos';
     if (path.includes('/team')) return 'Equipe';
-    if (path === '/dashboard/designer') return 'Dashboard da Designer';
+    if (path === '/dashboard/designer') return 'Dashboard Designer';
     if (path === '/dashboard') {
       if (userRole === 'CLIENT') return 'Minhas Aprovações';
       if (userRole === 'DESIGNER') return 'Minha Pauta';
@@ -53,13 +51,6 @@ export function DashboardLayout() {
     }
     return 'SocialFlow';
   };
-
-  // Mural e listagem existem antes da escolha de uma empresa. As telas internas
-  // continuam exigindo o contexto de organização do cliente.
-  const permiteSemOrganizacao = location.pathname === '/mural' || location.pathname === '/organizations';
-  if (isClient && !currentOrganizationId && !permiteSemOrganizacao) {
-    return <OrganizationSelector />;
-  }
 
   return (
     <div className="flex min-h-screen bg-[#0a0a0a]">

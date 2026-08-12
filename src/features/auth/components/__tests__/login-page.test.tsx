@@ -18,8 +18,8 @@ vi.mock('@/stores/use-toast-store', () => ({
 describe('LoginPage', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it.each<User['role']>(['ADMIN', 'DESIGNER', 'CLIENT'])(
-    'leva %s para a tela de início após um login comum',
+  it.each<User['role']>(['ADMIN', 'CLIENT'])(
+    'leva %s para a tela de início após o login',
     async (role) => {
       vi.mocked(authService.login).mockResolvedValue({
         user: {
@@ -42,8 +42,7 @@ describe('LoginPage', () => {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/organizations" element={<div>Tela de início</div>} />
-              <Route path="/mural" element={<div>Tela do mural</div>} />
-              <Route path="/mural/gerenciar" element={<div>Gerenciar mural</div>} />
+              <Route path="/dashboard/designer" element={<div>Dashboard da designer</div>} />
             </Routes>
           </MemoryRouter>
         </QueryClientProvider>,
@@ -54,7 +53,59 @@ describe('LoginPage', () => {
       await user.click(screen.getByRole('button', { name: 'Entrar na Plataforma' }));
 
       expect(await screen.findByText('Tela de início')).toBeInTheDocument();
-      expect(screen.queryByText('Tela do mural')).not.toBeInTheDocument();
     },
   );
+
+  it('leva a designer para o Início, mesmo com várias organizações', async () => {
+    vi.mocked(authService.login).mockResolvedValue({
+      user: {
+        id: 'designer-1',
+        email: 'designer@socialflow.test',
+        name: 'Designer de teste',
+        role: 'DESIGNER',
+        isActive: true,
+      },
+      organizations: [
+        {
+          id: 'vinculo-1',
+          organizationId: 'org-1',
+          name: 'Organização 1',
+          slug: 'organizacao-1',
+          role: 'DESIGNER',
+          isActive: true,
+        },
+        {
+          id: 'vinculo-2',
+          organizationId: 'org-2',
+          name: 'Organização 2',
+          slug: 'organizacao-2',
+          role: 'DESIGNER',
+          isActive: true,
+        },
+      ],
+    });
+    const user = userEvent.setup();
+    const queryClient = new QueryClient({
+      defaultOptions: { mutations: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/login']}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/organizations" element={<div>Tela de início</div>} />
+            <Route path="/dashboard/designer" element={<div>Dashboard da designer</div>} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await user.type(screen.getByPlaceholderText('exemplo@socialflow.com.br'), 'designer@socialflow.test');
+    await user.type(screen.getByPlaceholderText('••••••••'), 'senha123');
+    await user.click(screen.getByRole('button', { name: 'Entrar na Plataforma' }));
+
+    expect(await screen.findByText('Tela de início')).toBeInTheDocument();
+    expect(screen.queryByText('Dashboard da designer')).not.toBeInTheDocument();
+  });
 });

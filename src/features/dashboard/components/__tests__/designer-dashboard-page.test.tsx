@@ -53,6 +53,7 @@ describe('DesignerDashboardPage', () => {
   it('exibe somente as quatro filas da designer', async () => {
     montar();
 
+    expect(await screen.findByRole('heading', { name: 'Dashboard Designer' })).toBeInTheDocument();
     expect(await screen.findByText('Pendentes sem arte')).toBeInTheDocument();
     expect(screen.getByText('Pendentes com Arte')).toBeInTheDocument();
     expect(screen.getByText('Pedidos de Ajuste')).toBeInTheDocument();

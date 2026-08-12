@@ -14,6 +14,7 @@ vi.mock('../../api/mural-service', () => ({
     atualizarCard: vi.fn(),
     atualizarImagem: vi.fn(),
     listarDestinatarios: vi.fn(),
+    listarDesigners: vi.fn(),
   },
 }));
 
@@ -45,6 +46,7 @@ describe('MuralItemModal — badges', () => {
     vi.clearAllMocks();
     vi.mocked(organizationsService.getAll).mockResolvedValue([]);
     vi.mocked(muralService.listarDestinatarios).mockResolvedValue([]);
+    vi.mocked(muralService.listarDesigners).mockResolvedValue([]);
     vi.mocked(muralService.criarCard).mockResolvedValue({} as never);
     vi.mocked(muralService.atualizarCard).mockResolvedValue({} as never);
     vi.mocked(muralService.atualizarImagem).mockResolvedValue({} as never);
@@ -160,6 +162,7 @@ describe('MuralItemModal — badges', () => {
       showMoreTextColor: '#18181b',
       showMoreIconColor: '#18181b',
       installButtonEnabled: false,
+      designersOnly: false,
       badges: [],
       createdAt: '',
       audienceUserIds: [],
@@ -234,6 +237,42 @@ describe('MuralItemModal — badges', () => {
     );
   });
 
+  it('permite escolher designers sem selecionar uma organização', async () => {
+    vi.mocked(muralService.listarDesigners).mockResolvedValue([
+      {
+        id: 'designer-1',
+        email: 'designer@socialflow.test',
+        name: 'Designer SocialFlow',
+        role: 'DESIGNER',
+        avatarUrl: null,
+      },
+    ]);
+
+    const user = userEvent.setup();
+    montar();
+
+    await user.click(screen.getByRole('switch', { name: 'Exibir aviso somente para designers' }));
+
+    await user.click(await screen.findByLabelText('Selecionar Designer SocialFlow'));
+    expect(muralService.listarDesigners).toHaveBeenCalled();
+
+    await user.type(
+      screen.getByPlaceholderText(/Nova pauta disponível/i),
+      '## Recado para o time de design',
+    );
+    await user.click(screen.getByRole('button', { name: 'Publicar no mural' }));
+
+    await waitFor(() =>
+      expect(muralService.criarCard).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: null,
+          designersOnly: true,
+          audienceUserIds: ['designer-1'],
+        }),
+      ),
+    );
+  });
+
   it('permite editar o destino de uma imagem sem obrigar a trocá-la', async () => {
     const user = userEvent.setup();
     montar(vi.fn(), {
@@ -252,6 +291,7 @@ describe('MuralItemModal — badges', () => {
       showMoreTextColor: '#18181b',
       showMoreIconColor: '#18181b',
       installButtonEnabled: false,
+      designersOnly: false,
       badges: [],
       createdAt: '',
       audienceUserIds: [],
@@ -269,6 +309,7 @@ describe('MuralItemModal — badges', () => {
         null,
         null,
         [],
+        false,
       ),
     );
   });

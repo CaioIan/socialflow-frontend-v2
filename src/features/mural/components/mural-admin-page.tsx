@@ -99,7 +99,7 @@ export default function MuralAdminPage() {
           resultado entrando com outra conta seria trabalhar no escuro. */}
       <section>
         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block mb-5">
-          Como o cliente vê
+          Prévia do mural
         </span>
         <MuralCarousel
           itens={itens}

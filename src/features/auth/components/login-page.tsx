@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { authService } from '../api/auth-service';
@@ -12,7 +12,6 @@ import { getApiErrorMessage } from '@/api/api-error';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const setAuth = useAuthStore((state) => state.setAuth);
   const { addToast } = useToastStore();
 
@@ -27,12 +26,7 @@ export default function LoginPage() {
     onSuccess: (data) => {
       setAuth(data.user, data.organizations);
       addToast('Login realizado com sucesso!', 'success');
-      const requestedPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
-      const defaultPath = '/organizations';
-      const from = data.user.role === 'ADMIN' && requestedPath === '/mural'
-        ? '/mural/gerenciar'
-        : requestedPath ?? defaultPath;
-      navigate(from, { replace: true });
+      navigate('/organizations', { replace: true });
     },
     onError: (error: unknown) => {
       addToast(getApiErrorMessage(error, 'Credenciais inválidas ou erro no servidor.'), 'error');

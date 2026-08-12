@@ -39,6 +39,7 @@ function aviso(overrides: Partial<MuralItem> = {}): MuralItem {
     showMoreTextColor: '#18181b',
     showMoreIconColor: '#18181b',
     installButtonEnabled: false,
+    designersOnly: false,
     badges: [],
     createdAt: '2026-08-11T10:00:00.000Z',
     ...overrides,

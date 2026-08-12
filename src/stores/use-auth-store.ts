@@ -32,10 +32,21 @@ export const useAuthStore = create<AuthState>()(
           organizations,
           isAuthenticated: true,
           isCheckingAuth: false,
-          currentOrganizationId: organizations.length === 1 ? organizations[0].organizationId : null
+          // Uma única empresa dispensa escolha. Com vários vínculos, o usuário
+          // entra no painel geral e define o contexto quando quiser navegar.
+          currentOrganizationId:
+            organizations.length === 1 ? organizations[0].organizationId : null
         }),
 
-      setUser: (user) => set({ user, isAuthenticated: true, isCheckingAuth: false }),
+      setUser: (user) =>
+        set({
+          user,
+          isAuthenticated: true,
+          isCheckingAuth: false,
+          // `/auth/me` é a fonte do contexto efetivo do token. `undefined`
+          // também importa: significa sessão geral, sem empresa selecionada.
+          currentOrganizationId: user.organizationId ?? null,
+        }),
 
       setIsCheckingAuth: (status) => set({ isCheckingAuth: status }),
 

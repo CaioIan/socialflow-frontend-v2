@@ -34,7 +34,7 @@ export function DesignerDashboardPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-white">Dashboard da Designer</h1>
+          <h1 className="text-3xl font-bold text-white">Dashboard Designer</h1>
           <p className="mt-1 text-zinc-400">Carregando sua fila de produção...</p>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -50,7 +50,7 @@ export function DesignerDashboardPage() {
     <div className="space-y-8">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white">Dashboard da Designer</h1>
+          <h1 className="text-3xl font-bold text-white">Dashboard Designer</h1>
           <p className="mt-1 text-zinc-400">
             Acompanhe o que precisa de arte, revisão ou já recebeu aprovação
             {dataUpdatedAt > 0 && (

@@ -19,13 +19,13 @@ export interface MuralAudienceUser {
 export interface MuralItem {
   id: string;
   type: MuralItemType;
-  /** `null` = aviso global, visível para todas as organizações. */
+  /** `null` = aviso sem recorte por organização. */
   organizationId: string | null;
   /** Nome da empresa, para o crachá na tela de gestão. `null` quando global. */
   organizationName: string | null;
   /** Foto da empresa exibida no crachá. `null` quando global ou sem foto. */
   organizationLogoUrl: string | null;
-  /** Zero = organização inteira; maior que zero = audiência restrita. */
+  /** Zero = todo o público do filtro; maior que zero = pessoas específicas. */
   audienceCount?: number;
   imageUrl: string | null;
   markdown: string | null;
@@ -38,6 +38,8 @@ export interface MuralItem {
   showMoreIconColor: string;
   /** Exibe a ação fixa de instalação do PWA com o gradiente da marca. */
   installButtonEnabled: boolean;
+  /** Restringe o aviso aos designers da organização. */
+  designersOnly: boolean;
   badges: MuralBadge[];
   createdAt: string;
 }
@@ -62,6 +64,11 @@ export const muralService = {
     return response.data;
   },
 
+  listarDesigners: async () => {
+    const response = await api.get<MuralAudienceUser[]>('/mural/designers');
+    return response.data;
+  },
+
   buscarAudienciaDoItem: async (id: string) => {
     const response = await api.get<{ userIds: string[] }>(`/mural/${id}/audience`);
     return response.data;
@@ -79,6 +86,7 @@ export const muralService = {
     showMoreTextColor: string;
     showMoreIconColor: string;
     installButtonEnabled: boolean;
+    designersOnly: boolean;
   }) => {
     const response = await api.post<MuralItem>('/mural/cards', data);
     return response.data;
@@ -98,6 +106,7 @@ export const muralService = {
       showMoreTextColor: string;
       showMoreIconColor: string;
       installButtonEnabled: boolean;
+      designersOnly: boolean;
     },
   ) => {
     const response = await api.patch<MuralItem>(`/mural/cards/${id}`, data);
@@ -109,6 +118,7 @@ export const muralService = {
     arquivo: Blob,
     organizationId: string | null,
     audienceUserIds: string[],
+    designersOnly: boolean,
   ) => {
     const corpo = new FormData();
     corpo.append('file', arquivo, 'mural.jpg');
@@ -116,6 +126,7 @@ export const muralService = {
     // FormData não transmite `null`.
     corpo.append('organizationId', organizationId ?? '');
     corpo.append('audienceUserIds', JSON.stringify(audienceUserIds));
+    corpo.append('designersOnly', String(designersOnly));
 
     const response = await api.post<MuralItem>('/mural/images', corpo);
     return response.data;
@@ -126,11 +137,13 @@ export const muralService = {
     arquivo: Blob | null,
     organizationId: string | null,
     audienceUserIds: string[],
+    designersOnly: boolean,
   ) => {
     const corpo = new FormData();
     if (arquivo) corpo.append('file', arquivo, 'mural.jpg');
     corpo.append('organizationId', organizationId ?? '');
     corpo.append('audienceUserIds', JSON.stringify(audienceUserIds));
+    corpo.append('designersOnly', String(designersOnly));
 
     const response = await api.patch<MuralItem>(`/mural/images/${id}`, corpo);
     return response.data;

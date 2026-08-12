@@ -150,7 +150,13 @@ describe('Sidebar', () => {
       vi.mocked(obterPromptDeInstalacao).mockReturnValue({} as never);
       montar();
 
-      expect(screen.getByRole('button', { name: 'Instalar SocialFlow' })).toBeInTheDocument();
+      const botao = screen.getByRole('button', { name: 'Instalar SocialFlow' });
+      expect(botao).toBeInTheDocument();
+      expect(botao).toHaveClass('border-blue-500/35');
+      expect(botao.querySelector('.text-brand-gradient')).toHaveTextContent('Instalar SocialFlow');
+      expect(
+        botao.querySelector('svg[stroke="url(#socialflow-install-gradient)"]'),
+      ).toBeInTheDocument();
     });
 
     it('informa que a instalação começou sem afirmar que já terminou', async () => {
