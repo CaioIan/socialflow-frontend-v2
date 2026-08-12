@@ -7,6 +7,8 @@ import { useAuthStore } from '@/stores/use-auth-store';
 import { profileService } from '../api/profile-service';
 import { AvatarCropModal } from './avatar-crop-modal';
 import { PushNotificationControl } from './push-notification-control';
+import { ToggleSwitch } from '@/shared/components/toggle-switch';
+import type { Profile } from '../api/profile-service';
 
 /** Mesmos limites do backend, para o erro aparecer antes de subir o arquivo. */
 const TAMANHO_MAXIMO = 10 * 1024 * 1024;
@@ -72,8 +74,17 @@ export default function ProfilePage() {
 
   const definirNotificacoes = useMutation({
     mutationFn: profileService.definirNotificacoes,
+    onMutate: async (ligado) => {
+      await queryClient.cancelQueries({ queryKey: ['profile'] });
+      const anterior = queryClient.getQueryData<Profile>(['profile']);
+
+      queryClient.setQueryData<Profile>(['profile'], (atual) =>
+        atual ? { ...atual, emailNotifications: ligado } : atual,
+      );
+
+      return { anterior };
+    },
     onSuccess: (_, ligado) => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
       addToast(
         ligado
           ? 'Você voltará a receber avisos por e-mail.'
@@ -81,7 +92,13 @@ export default function ProfilePage() {
         'success',
       );
     },
-    onError: () => addToast('Não foi possível alterar a preferência.', 'error'),
+    onError: (_erro, _ligado, contexto) => {
+      if (contexto?.anterior) {
+        queryClient.setQueryData(['profile'], contexto.anterior);
+      }
+      addToast('Não foi possível alterar a preferência.', 'error');
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['profile'] }),
   });
 
   function aoEscolher(arquivo: File | undefined) {
@@ -217,23 +234,12 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            <button
-              type="button"
-              role="switch"
-              aria-checked={perfil.emailNotifications}
-              aria-label="Receber avisos por e-mail"
+            <ToggleSwitch
+              checked={perfil.emailNotifications}
               disabled={definirNotificacoes.isPending}
               onClick={() => definirNotificacoes.mutate(!perfil.emailNotifications)}
-              className={`relative shrink-0 w-12 h-7 rounded-full transition-colors disabled:opacity-50 ${
-                perfil.emailNotifications ? 'bg-primary' : 'bg-white/10'
-              }`}
-            >
-              <span
-                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${
-                  perfil.emailNotifications ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
+              ariaLabel="Receber avisos por e-mail"
+            />
           </div>
         </div>
 

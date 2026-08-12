@@ -128,7 +128,7 @@ export function MuralItemCard({
         className="max-w-2xl"
       >
         <div
-          className="rounded-2xl border border-white/10 p-5 sm:p-8"
+          className="min-w-0 max-w-full rounded-2xl border border-white/10 p-5 sm:p-8"
           style={{
             backgroundColor: item.backgroundColor ?? '#18181b',
             color: item.textColor ?? '#ffffff',
@@ -202,8 +202,12 @@ function MuralMarkdown({
   const completo = modo === 'completo';
 
   return (
-    <ReactMarkdown
-      components={{
+    <div
+      data-mural-markdown={modo}
+      className="min-w-0 max-w-full break-words [overflow-wrap:anywhere]"
+    >
+      <ReactMarkdown
+        components={{
         // Sem `remark-gfm` e sem `rehype-raw`: o react-markdown já ignora HTML
         // solto por padrão, impedindo script dentro de um aviso.
         h1: ({ children }) => (
@@ -270,26 +274,31 @@ function MuralMarkdown({
         ),
         strong: ({ children }) => <strong className="font-bold">{children}</strong>,
         em: ({ children }) => <em className="italic">{children}</em>,
-        a: ({ href, children }) =>
-          completo ? (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2"
-            >
+          a: ({ href, children }) =>
+            completo ? (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-words underline underline-offset-2 [overflow-wrap:anywhere]"
+              >
+                {children}
+              </a>
+            ) : (
+              <span className="break-words underline underline-offset-2 [overflow-wrap:anywhere]">
+                {children}
+              </span>
+            ),
+          code: ({ children }) => (
+            <code className="whitespace-pre-wrap break-words rounded bg-black/20 px-1.5 py-0.5 text-[0.9em] [overflow-wrap:anywhere]">
               {children}
-            </a>
-          ) : (
-            <span className="underline underline-offset-2">{children}</span>
+            </code>
           ),
-        code: ({ children }) => (
-          <code className="rounded bg-black/20 px-1.5 py-0.5 text-[0.9em]">{children}</code>
-        ),
-      }}
-    >
-      {markdown}
-    </ReactMarkdown>
+        }}
+      >
+        {markdown}
+      </ReactMarkdown>
+    </div>
   );
 }
 

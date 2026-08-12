@@ -120,6 +120,27 @@ describe('MuralItemCard', () => {
     expect(screen.getByText(/Publicado em/)).toBeInTheDocument();
   });
 
+  it('quebra sequências longas e mantém scroll de contingência no modal', async () => {
+    const user = userEvent.setup();
+    const palavraSemEspacos = 'sfjaisldaksjldkjxoifejlksdlfksjldkiljsjifoelksdjlfjolejifsl'.repeat(4);
+    render(<MuralItemCard item={aviso({ markdown: palavraSemEspacos })} />);
+
+    await user.click(screen.getByRole('button', { name: 'Abrir aviso completo' }));
+
+    const markdownCompleto = document.querySelector('[data-mural-markdown="completo"]');
+    expect(markdownCompleto).toHaveClass(
+      'min-w-0',
+      'max-w-full',
+      'break-words',
+      '[overflow-wrap:anywhere]',
+    );
+    expect(screen.getByTestId('modal-scroll-area')).toHaveClass(
+      'min-w-0',
+      'overflow-auto',
+      'overscroll-contain',
+    );
+  });
+
   it('abre a imagem do aviso em tamanho maior ao clicar', async () => {
     const user = userEvent.setup();
     render(

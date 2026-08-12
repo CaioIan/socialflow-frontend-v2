@@ -3,8 +3,8 @@ import {
   BellRing,
   CheckCircle2,
   Download,
-  Loader2,
   Share2,
+  ShieldCheck,
   Smartphone,
 } from 'lucide-react';
 import { useToastStore } from '@/stores/use-toast-store';
@@ -22,6 +22,8 @@ import {
   obterInscricaoPush,
   removerPushNesteDispositivo,
 } from '@/shared/lib/push-notifications';
+import { Modal } from '@/shared/components/modal';
+import { ToggleSwitch } from '@/shared/components/toggle-switch';
 
 type EstadoPush =
   | 'carregando'
@@ -38,6 +40,7 @@ export function PushNotificationControl() {
   const [processando, setProcessando] = useState(false);
   const [instalado, setInstalado] = useState(estaEmModoAplicativo());
   const [podeInstalar, setPodeInstalar] = useState(Boolean(obterPromptDeInstalacao()));
+  const [modalDePermissaoAberto, setModalDePermissaoAberto] = useState(false);
   const ios = ehIos();
 
   const atualizarEstado = useCallback(async () => {
@@ -83,32 +86,56 @@ export function PushNotificationControl() {
     };
   }, [atualizarEstado]);
 
-  const alternarPush = async () => {
-    if (estado !== 'ativo' && estado !== 'inativo') return;
+  const ativarNesteDispositivo = async () => {
     setProcessando(true);
 
     try {
-      if (estado === 'ativo') {
-        await removerPushNesteDispositivo();
-        setEstado('inativo');
-        addToast('Notificações push desativadas neste dispositivo.', 'success');
-      } else {
-        const chavePublica = await buscarChavePublicaPush();
-        if (!chavePublica) {
-          setEstado('nao-configurado');
-          return;
-        }
-
-        await ativarPush(chavePublica);
-        setEstado('ativo');
-        addToast('Notificações push ativadas neste dispositivo.', 'success');
+      const chavePublica = await buscarChavePublicaPush();
+      if (!chavePublica) {
+        setEstado('nao-configurado');
+        return;
       }
+
+      await ativarPush(chavePublica);
+      setEstado('ativo');
+      addToast('Notificações push ativadas neste dispositivo.', 'success');
     } catch {
       await atualizarEstado();
       addToast('Não foi possível alterar as notificações push.', 'error');
     } finally {
       setProcessando(false);
     }
+  };
+
+  const alternarPush = async () => {
+    if (estado !== 'ativo' && estado !== 'inativo') return;
+
+    if (estado === 'ativo') {
+      setProcessando(true);
+      try {
+        await removerPushNesteDispositivo();
+        setEstado('inativo');
+        addToast('Notificações push desativadas neste dispositivo.', 'success');
+      } catch {
+        await atualizarEstado();
+        addToast('Não foi possível alterar as notificações push.', 'error');
+      } finally {
+        setProcessando(false);
+      }
+      return;
+    }
+
+    if (Notification.permission === 'default') {
+      setModalDePermissaoAberto(true);
+      return;
+    }
+
+    await ativarNesteDispositivo();
+  };
+
+  const confirmarPermissao = async () => {
+    setModalDePermissaoAberto(false);
+    await ativarNesteDispositivo();
   };
 
   const instalar = async () => {
@@ -145,25 +172,13 @@ export function PushNotificationControl() {
           <MensagemDoEstado estado={estado} />
         </div>
 
-        <button
-          type="button"
-          role="switch"
-          aria-checked={ligado}
-          aria-label="Receber avisos push neste dispositivo"
+        <ToggleSwitch
+          checked={ligado}
           disabled={!permiteAlternar || processando}
-          onClick={alternarPush}
-          className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-            ligado ? 'bg-primary' : 'bg-white/10'
-          }`}
-        >
-          <span
-            className={`absolute top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white transition-transform ${
-              ligado ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          >
-            {processando && <Loader2 className="h-3 w-3 animate-spin text-zinc-700" />}
-          </span>
-        </button>
+          loading={processando}
+          onClick={() => void alternarPush()}
+          ariaLabel="Receber avisos push neste dispositivo"
+        />
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
@@ -213,6 +228,45 @@ export function PushNotificationControl() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={modalDePermissaoAberto}
+        onClose={() => setModalDePermissaoAberto(false)}
+        title="Permita as notificações"
+      >
+        <div className="space-y-6">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-primary">
+            <ShieldCheck className="h-7 w-7" />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm leading-relaxed text-zinc-300">
+              Na próxima mensagem do navegador, toque em <strong className="text-white">Permitir</strong>{' '}
+              para receber avisos do SocialFlow neste dispositivo.
+            </p>
+            <p className="text-xs leading-relaxed text-zinc-500">
+              O push chega imediatamente. Seus avisos por e-mail continuam ativos separadamente.
+            </p>
+          </div>
+
+          <div className="flex flex-col-reverse gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => setModalDePermissaoAberto(false)}
+              className="flex-1 rounded-xl px-4 py-3 text-sm font-bold text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              Agora não
+            </button>
+            <button
+              type="button"
+              onClick={() => void confirmarPermissao()}
+              className="flex-[1.4] rounded-xl bg-brand-gradient px-4 py-3 text-sm font-bold text-white transition-transform active:scale-[0.98]"
+            >
+              Continuar e permitir
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
