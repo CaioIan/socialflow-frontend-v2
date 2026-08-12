@@ -212,6 +212,16 @@ export default function PostDetailPage() {
 
   const temAjusteEmAberto = post.status === 'ALTERATION_REQUESTED';
 
+  /**
+   * Há uma decisão de fato à espera do cliente.
+   *
+   * Aprovado e publicado já foram decididos; com ajuste em aberto a vez é da
+   * designer. Nos três casos a dupla de botões sai da tela, e um aviso de
+   * estado ocupa o lugar.
+   */
+  const podeDecidir =
+    post.status !== 'APPROVED' && post.status !== 'PUBLISHED' && !temAjusteEmAberto;
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -332,12 +342,23 @@ export default function PostDetailPage() {
               {/* Approval Panel - Only for CLIENT */}
               {isClient && (
                 <div className="mt-10 pt-8 border-t border-white/5">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    {post.status !== 'APPROVED' && post.status !== 'PUBLISHED' && (
+                  {/*
+                    Os dois botões saem juntos, e pelo mesmo motivo: com um
+                    ajuste em aberto não há decisão a tomar. A bola está com a
+                    designer, e a arte na tela é justamente a que o cliente
+                    acabou de reprovar — aprová-la agora seria aprovar o que ele
+                    pediu para mudar. Voltam quando a nova versão chega e o post
+                    retorna para PENDING.
+
+                    É o mesmo tratamento já dado a aprovado e publicado: decisão
+                    tomada, botão fora da tela em vez de cinza pedindo clique.
+                  */}
+                  {podeDecidir && (
+                    <div className="flex flex-col sm:flex-row gap-4">
                       <button
-                        onClick={() => updateStatusMutation.mutate({ 
-                          status: 'APPROVED', 
-                          versionId: post.currentVersionId || undefined 
+                        onClick={() => updateStatusMutation.mutate({
+                          status: 'APPROVED',
+                          versionId: post.currentVersionId || undefined
                         })}
                         disabled={decisaoEmAndamento || !post.currentVersionId}
                         className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_rgba(16,185,129,0.2)] disabled:opacity-50 disabled:grayscale"
@@ -345,31 +366,36 @@ export default function PostDetailPage() {
                         <CheckCircle className="w-5 h-5" />
                         Aprovar Post
                       </button>
-                    )}
-                    {/* Aprovado ou publicado, a decisão está tomada: o botão sai
-                        da tela em vez de ficar cinza pedindo clique. */}
-                    {post.status !== 'APPROVED' &&
-                      post.status !== 'PUBLISHED' && (
                       <button
                         onClick={() => setIsAdjustmentModalOpen(true)}
-                        disabled={
-                          decisaoEmAndamento ||
-                          !post.currentVersionId ||
-                          post.status === 'ALTERATION_REQUESTED'
-                        }
+                        disabled={decisaoEmAndamento || !post.currentVersionId}
                         className="flex-1 bg-amber-500 hover:bg-amber-400 text-black px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_25px_rgba(245,158,11,0.2)] disabled:opacity-50 disabled:grayscale"
                       >
                         <AlertCircle className="w-5 h-5" />
-                        {post.status === 'ALTERATION_REQUESTED' ? 'Ajuste já solicitado' : 'Solicitar Ajuste'}
+                        Solicitar Ajuste
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   {!post.currentVersionId && (
                     <p className="text-[10px] text-zinc-500 text-center mt-4">
                       {isClient
                         ? 'A arte ainda não foi enviada. Assim que ela chegar, o botão de aprovar libera.'
                         : 'A aprovação só libera depois que a primeira versão da arte for enviada.'}
                     </p>
+                  )}
+                  {/* Sem os botões, a tela precisa dizer por que — senão some a
+                      ação e não sobra explicação nenhuma. */}
+                  {temAjusteEmAberto && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex flex-col items-center justify-center gap-1 text-amber-400">
+                      <div className="flex items-center gap-3">
+                        <AlertCircle className="w-5 h-5" />
+                        <span className="font-bold text-sm uppercase tracking-wider">Ajuste solicitado</span>
+                      </div>
+                      <span className="text-xs text-amber-400/70 text-center">
+                        A designer foi avisada. Quando a nova arte chegar, você poderá
+                        aprovar ou pedir outro ajuste.
+                      </span>
+                    </div>
                   )}
                   {post.status === 'APPROVED' && (
                     <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-center gap-3 text-emerald-400">
