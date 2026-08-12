@@ -289,7 +289,16 @@ export default function PostDetailPage() {
                           transition={{ duration: 0.2 }}
                           className="overflow-hidden"
                         >
-                          <p className="text-sm text-zinc-400 leading-relaxed bg-white/2 border border-white/5 rounded-2xl p-5 italic mt-2">
+                          {/*
+                            `whitespace-pre-line` porque o briefing chega com as
+                            quebras de linha do arquivo importado, e o HTML as
+                            engoliria: a copy de um carrossel virava um bloco
+                            único, com "SLIDE 1" e "SLIDE 2" grudados na mesma
+                            frase. `pre-line` mantém as quebras e ainda colapsa
+                            espaço repetido, que é o que sobra de célula de
+                            planilha.
+                          */}
+                          <p className="text-sm text-zinc-400 leading-relaxed bg-white/2 border border-white/5 rounded-2xl p-5 italic mt-2 whitespace-pre-line">
                             {post.briefing || 'Nenhum briefing fornecido.'}
                           </p>
                         </motion.div>
