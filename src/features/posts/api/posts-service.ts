@@ -123,6 +123,21 @@ export const postsService = {
     return response.data;
   },
 
+  /**
+   * Tira o feed ou o stories do post.
+   *
+   * `POST` porque a operação cria uma versão nova com o que sobrou — nenhum
+   * arquivo é apagado, e as versões antigas continuam mostrando a arte que o
+   * cliente viu.
+   */
+  removerPecaDaArte: async ({ postId, piece }: { postId: string; piece: 'FEED' | 'STORIES' }) => {
+    const response = await api.post<{ removida: 'FEED' | 'STORIES'; ficouSemArte: boolean }>(
+      '/post-versions/remove-piece',
+      { postId, piece },
+    );
+    return response.data;
+  },
+
   uploadAsset: async (file: File, postId: string, assetType: string = 'FEED') => {
     // 2. Solicita os parâmetros de assinatura para o backend
     const signResponse = await api.post('/assets/sign-upload', {

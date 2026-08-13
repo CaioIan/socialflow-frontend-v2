@@ -9,6 +9,7 @@ import { GlassCard } from '@/shared/components/glass-card';
 import { ReplaceAssetModal } from './replace-asset-modal';
 import { AdjustmentRequestModal } from './adjustment-request-modal';
 import { UploadVersionModal } from './upload-version-modal';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import {
   ArrowLeft,
   CheckCircle,
@@ -26,6 +27,7 @@ import {
   FileText,
   ChevronDown,
   Upload,
+  Trash2,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,6 +47,7 @@ export default function PostDetailPage() {
   const [selectedAssetType, setSelectedAssetType] = useState<'FEED' | 'STORIES'>('FEED');
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
   const [isNovaVersaoModalOpen, setIsNovaVersaoModalOpen] = useState(false);
+  const [pecaParaExcluir, setPecaParaExcluir] = useState<'FEED' | 'STORIES' | null>(null);
   const [isSubmittingAdjustment, setIsSubmittingAdjustment] = useState(false);
   const [briefingAberto, setBriefingAberto] = useState(false);
 
@@ -117,6 +120,26 @@ export default function PostDetailPage() {
     }
   });
 
+  const removerPecaMutation = useMutation({
+    mutationFn: (piece: 'FEED' | 'STORIES') =>
+      postsService.removerPecaDaArte({ postId: postId!, piece }),
+    onSuccess: (resultado) => {
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['designer-dashboard'] });
+      setPecaParaExcluir(null);
+      addToast(
+        resultado.ficouSemArte
+          ? 'Arte excluída. O post voltou a aguardar arte.'
+          : 'Arte excluída.',
+        'success',
+      );
+    },
+    onError: (error: unknown) => {
+      addToast(getApiErrorMessage(error, 'Erro ao excluir a arte.'), 'error');
+    },
+  });
+
   /**
    * Trava os botões de decisão do cliente.
    *
@@ -186,19 +209,28 @@ export default function PostDetailPage() {
 
   if (!post) return <div>Post não encontrado.</div>;
 
-  // Priority: current version feedUrls (array), then Cloudinary assets
+  /*
+    A versão atual é a única fonte da arte exibida.
+
+    Antes havia um segundo caminho: não achando a peça na versão, a tela
+    procurava o asset mais recente entre TODOS os do post, de qualquer versão.
+    Isso ressuscitava arte excluída — some o stories da versão, e a tela o
+    trazia de volta a partir do asset de uma versão anterior, fazendo a exclusão
+    parecer que não funcionou.
+
+    Os assets da própria versão continuam servindo de reserva, porque posts
+    antigos existem com `feedUrls` vazio e as artes só nos assets. O que saiu
+    foi a busca que atravessava versões.
+  */
   const currentVersionAssets = post.currentVersion?.assets || [];
   const feedUrls: string[] = post.currentVersion?.feedUrls?.length
     ? post.currentVersion.feedUrls
     : currentVersionAssets.filter(a => a.assetType === 'FEED').map(a => a.cloudinaryUrl);
 
-  const feedAsset = currentVersionAssets.find(a => a.assetType === 'FEED') ||
-    (post.assets || []).slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'FEED');
+  const feedAsset = currentVersionAssets.find(a => a.assetType === 'FEED');
+  const storiesAsset = currentVersionAssets.find(a => a.assetType === 'STORIES');
 
-  const storiesAsset = currentVersionAssets.find(a => a.assetType === 'STORIES') ||
-    (post.assets || []).slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).find(a => a.assetType === 'STORIES');
-
-  const feedUrl = feedUrls[0] || feedAsset?.cloudinaryUrl || null;
+  const feedUrl = feedUrls[0] || null;
   const storiesUrl = post.currentVersion?.storiesUrl || storiesAsset?.cloudinaryUrl || null;
   const isCarousel = feedUrls.length > 1;
 
@@ -221,6 +253,13 @@ export default function PostDetailPage() {
    */
   const podeDecidir =
     post.status !== 'APPROVED' && post.status !== 'PUBLISHED' && !temAjusteEmAberto;
+
+  /**
+   * Espelha a regra do backend, que recusa remover arte de post aprovado ou
+   * publicado. Sem esta trava a tela oferecia a ação e o clique voltava erro —
+   * pior que não oferecer, porque parece defeito.
+   */
+  const podeRemoverArte = post.status === 'PENDING' || temAjusteEmAberto;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -496,6 +535,43 @@ export default function PostDetailPage() {
                       </div>
                     )
                   )}
+
+                  {/*
+                    Exclusão de peça, disponível nos dois estados.
+
+                    Nasceu de um pedido de cliente que a designer não tinha como
+                    atender: só o ADMIN podia apagar arte, e por um endpoint que
+                    removia o arquivo sem tocar na versão — a tela continuaria
+                    apontando para uma imagem inexistente.
+
+                    Fica numa linha discreta, abaixo da ação principal: excluir é
+                    o caminho raro, e não deve competir com enviar arte.
+                  */}
+                  {podeRemoverArte && (feedUrls.length > 0 || storiesUrl) && (
+                    <div className="flex items-center justify-center gap-4 mt-4">
+                      {feedUrls.length > 0 && (
+                        <button
+                          onClick={() => setPecaParaExcluir('FEED')}
+                          className="text-[11px] font-semibold text-zinc-500 hover:text-red-400 transition-colors flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Excluir arte de feed
+                        </button>
+                      )}
+                      {feedUrls.length > 0 && storiesUrl && (
+                        <span className="text-zinc-700">·</span>
+                      )}
+                      {storiesUrl && (
+                        <button
+                          onClick={() => setPecaParaExcluir('STORIES')}
+                          className="text-[11px] font-semibold text-zinc-500 hover:text-red-400 transition-colors flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Excluir arte de stories
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </GlassCard>
@@ -762,6 +838,37 @@ export default function PostDetailPage() {
         onClose={() => setIsNovaVersaoModalOpen(false)}
         postId={postId!}
         campaignId={campId!}
+      />
+
+      <ConfirmDialog
+        isOpen={pecaParaExcluir !== null}
+        onClose={() => setPecaParaExcluir(null)}
+        onConfirm={() => pecaParaExcluir && removerPecaMutation.mutate(pecaParaExcluir)}
+        title={
+          pecaParaExcluir === 'STORIES'
+            ? 'Excluir a arte de stories?'
+            : 'Excluir a arte de feed?'
+        }
+        description={
+          <>
+            {pecaParaExcluir === 'FEED' && feedUrls.length > 1 ? (
+              <>
+                As <strong>{feedUrls.length} imagens do carrossel</strong> saem juntas —
+                o feed é excluído inteiro.
+              </>
+            ) : (
+              <>A arte deixa de aparecer no post.</>
+            )}{' '}
+            {/* Dito explicitamente porque "excluir" costuma sugerir perda
+                definitiva, e aqui não é o caso: o histórico continua completo. */}
+            O histórico é preservado: as versões anteriores continuam mostrando
+            a arte que o cliente já viu. O cliente não é avisado agora — quando
+            você enviar a arte nova, ele recebe o aviso normalmente.
+          </>
+        }
+        confirmLabel="Excluir arte"
+        confirmingLabel="Excluindo..."
+        isConfirming={removerPecaMutation.isPending}
       />
     </div>
   );
