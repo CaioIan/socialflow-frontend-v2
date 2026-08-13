@@ -681,7 +681,7 @@ export default function PostDetailPage() {
                       {podeExcluirArte && (
                         <button
                           onClick={() => setPecaParaExcluir('FEED')}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 transition-all text-[10px] font-bold uppercase tracking-wider"
+                          className="py-2.5 px-4 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 hover:text-red-200 border border-red-500/30 transition-all"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           Excluir
@@ -720,7 +720,7 @@ export default function PostDetailPage() {
                       {podeExcluirArte && (
                         <button
                           onClick={() => setPecaParaExcluir('STORIES')}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 transition-all text-[10px] font-bold uppercase tracking-wider"
+                          className="py-2.5 px-4 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 hover:text-red-200 border border-red-500/30 transition-all"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           Excluir
@@ -778,7 +778,7 @@ export default function PostDetailPage() {
                           {podeExcluirArte && i === 0 && (
                             <button
                               onClick={() => setPecaParaExcluir('FEED')}
-                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 transition-colors text-[10px] font-bold uppercase"
+                              className="py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 transition-all"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                               Excluir
@@ -806,7 +806,7 @@ export default function PostDetailPage() {
                           {podeExcluirArte && (
                             <button
                               onClick={() => setPecaParaExcluir('STORIES')}
-                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 transition-colors text-[10px] font-bold uppercase"
+                              className="py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 transition-all"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                               Excluir
