@@ -270,11 +270,16 @@ export default function PostDetailPage() {
     post.status !== 'APPROVED' && post.status !== 'PUBLISHED' && !temAjusteEmAberto;
 
   /**
-   * Espelha a regra do backend, que recusa remover arte de post aprovado ou
-   * publicado. Sem esta trava a tela oferecia a ação e o clique voltava erro —
-   * pior que não oferecer, porque parece defeito.
+   * Quem pode excluir arte, e quando.
+   *
+   * O papel entra aqui porque os botões vivem sobre as imagens, fora do painel
+   * restrito à equipe — sem isto, o cliente veria "Excluir" na própria tela de
+   * aprovação. O estado espelha a regra do backend, que recusa remover arte de
+   * post aprovado ou publicado: oferecer a ação e devolver erro no clique é
+   * pior do que não oferecer, porque parece defeito.
    */
-  const podeRemoverArte = post.status === 'PENDING' || temAjusteEmAberto;
+  const podeExcluirArte =
+    (isAdmin || isDesigner) && (post.status === 'PENDING' || temAjusteEmAberto);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -528,12 +533,19 @@ export default function PostDetailPage() {
                         vazia contradiria o aviso que ele acabou de receber.
                       */}
                       <div className="pt-3 mt-1 border-t border-white/5">
+                        {/*
+                          Sólido e com brilho, no mesmo peso de "Enviar nova
+                          versão": os dois são caminhos igualmente válidos para
+                          fechar o ajuste. Em tom translúcido, este parecia um
+                          selo de estado — algo que a tela informa — e não uma
+                          ação que se clica.
+                        */}
                         <button
                           onClick={() => setConfirmandoConclusao(true)}
                           disabled={!post.currentVersionId}
-                          className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="w-full py-3.5 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black transition-all shadow-[0_0_25px_rgba(16,185,129,0.2)] disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed disabled:shadow-none"
                         >
-                          <CheckCircle className="w-4 h-4" />
+                          <CheckCircle className="w-5 h-5" />
                           Marcar ajuste como atendido
                         </button>
                         <p className="text-[11px] text-zinc-500 text-center leading-relaxed mt-2">
@@ -577,42 +589,6 @@ export default function PostDetailPage() {
                     )
                   )}
 
-                  {/*
-                    Exclusão de peça, disponível nos dois estados.
-
-                    Nasceu de um pedido de cliente que a designer não tinha como
-                    atender: só o ADMIN podia apagar arte, e por um endpoint que
-                    removia o arquivo sem tocar na versão — a tela continuaria
-                    apontando para uma imagem inexistente.
-
-                    Fica numa linha discreta, abaixo da ação principal: excluir é
-                    o caminho raro, e não deve competir com enviar arte.
-                  */}
-                  {podeRemoverArte && (feedUrls.length > 0 || storiesUrl) && (
-                    <div className="flex items-center justify-center gap-4 mt-4">
-                      {feedUrls.length > 0 && (
-                        <button
-                          onClick={() => setPecaParaExcluir('FEED')}
-                          className="text-[11px] font-semibold text-zinc-500 hover:text-red-400 transition-colors flex items-center gap-1.5"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Excluir arte de feed
-                        </button>
-                      )}
-                      {feedUrls.length > 0 && storiesUrl && (
-                        <span className="text-zinc-700">·</span>
-                      )}
-                      {storiesUrl && (
-                        <button
-                          onClick={() => setPecaParaExcluir('STORIES')}
-                          className="text-[11px] font-semibold text-zinc-500 hover:text-red-400 transition-colors flex items-center gap-1.5"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Excluir arte de stories
-                        </button>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
             </GlassCard>
@@ -692,13 +668,26 @@ export default function PostDetailPage() {
                         </span>
                       )}
                     </h3>
-                    <button
-                      onClick={() => handleDownload(feedUrls[0], 'feed')}
-                      className="flex items-center gap-2 text-primary hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider group"
-                    >
-                      <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      Baixar HD
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleDownload(feedUrls[0], 'feed')}
+                        className="flex items-center gap-2 text-primary hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider group"
+                      >
+                        <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        Baixar HD
+                      </button>
+                      {/* Sobre a arte, e não escondido no painel: quem decide
+                          excluir está olhando para a imagem. */}
+                      {podeExcluirArte && (
+                        <button
+                          onClick={() => setPecaParaExcluir('FEED')}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 transition-all text-[10px] font-bold uppercase tracking-wider"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Excluir
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {isCarousel ? (
                     <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 no-scrollbar">
@@ -720,13 +709,24 @@ export default function PostDetailPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-2">
                     <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Arte do Stories</h3>
-                    <button
-                      onClick={() => handleDownload(storiesUrl, 'stories')}
-                      className="flex items-center gap-2 text-primary hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider group"
-                    >
-                      <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      Baixar HD
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleDownload(storiesUrl, 'stories')}
+                        className="flex items-center gap-2 text-primary hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider group"
+                      >
+                        <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        Baixar HD
+                      </button>
+                      {podeExcluirArte && (
+                        <button
+                          onClick={() => setPecaParaExcluir('STORIES')}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 transition-all text-[10px] font-bold uppercase tracking-wider"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Excluir
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-black/20 aspect-[9/16] group cursor-zoom-in">
                     <img src={storiesUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Arte Stories" />
@@ -767,10 +767,24 @@ export default function PostDetailPage() {
                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                           {isCarousel ? `Feed ${i + 1}/${feedUrls.length}` : 'Arte do Feed'}
                         </span>
-                        <button onClick={() => handleDownload(url, `feed-${i + 1}`)} className="flex items-center gap-1.5 text-primary hover:text-white transition-colors text-[10px] font-bold uppercase">
-                          <Download className="w-3.5 h-3.5" />
-                          Baixar HD
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleDownload(url, `feed-${i + 1}`)} className="flex items-center gap-1.5 text-primary hover:text-white transition-colors text-[10px] font-bold uppercase">
+                            <Download className="w-3.5 h-3.5" />
+                            Baixar HD
+                          </button>
+                          {/* Só no primeiro slide: o feed sai inteiro, então
+                              repetir o botão em cada imagem sugeriria que dá
+                              para excluir slide a slide. */}
+                          {podeExcluirArte && i === 0 && (
+                            <button
+                              onClick={() => setPecaParaExcluir('FEED')}
+                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 transition-colors text-[10px] font-bold uppercase"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Excluir
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-black/20">
                         <img src={url} className="w-full h-auto" alt={`Feed ${i + 1}`} />
@@ -784,10 +798,21 @@ export default function PostDetailPage() {
                     >
                       <div className="flex items-center justify-between px-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Arte do Stories</span>
-                        <button onClick={() => handleDownload(storiesUrl, 'stories')} className="flex items-center gap-1.5 text-primary hover:text-white transition-colors text-[10px] font-bold uppercase">
-                          <Download className="w-3.5 h-3.5" />
-                          Baixar HD
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleDownload(storiesUrl, 'stories')} className="flex items-center gap-1.5 text-primary hover:text-white transition-colors text-[10px] font-bold uppercase">
+                            <Download className="w-3.5 h-3.5" />
+                            Baixar HD
+                          </button>
+                          {podeExcluirArte && (
+                            <button
+                              onClick={() => setPecaParaExcluir('STORIES')}
+                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 transition-colors text-[10px] font-bold uppercase"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Excluir
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-black/20 aspect-[9/16]">
                         <img src={storiesUrl} className="w-full h-full object-cover" alt="Arte Stories" />
