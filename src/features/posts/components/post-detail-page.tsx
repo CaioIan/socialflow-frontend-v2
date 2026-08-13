@@ -48,6 +48,7 @@ export default function PostDetailPage() {
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
   const [isNovaVersaoModalOpen, setIsNovaVersaoModalOpen] = useState(false);
   const [pecaParaExcluir, setPecaParaExcluir] = useState<'FEED' | 'STORIES' | null>(null);
+  const [confirmandoConclusao, setConfirmandoConclusao] = useState(false);
   const [isSubmittingAdjustment, setIsSubmittingAdjustment] = useState(false);
   const [briefingAberto, setBriefingAberto] = useState(false);
 
@@ -118,6 +119,20 @@ export default function PostDetailPage() {
     onError: (error: unknown) => {
       addToast(getApiErrorMessage(error, 'Erro ao atualizar status.'), 'error');
     }
+  });
+
+  const concluirAjusteMutation = useMutation({
+    mutationFn: () => postsService.concluirAjuste(postId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['designer-dashboard'] });
+      setConfirmandoConclusao(false);
+      addToast('Ajuste concluído. O cliente foi avisado.', 'success');
+    },
+    onError: (error: unknown) => {
+      addToast(getApiErrorMessage(error, 'Erro ao concluir o ajuste.'), 'error');
+    },
   });
 
   const removerPecaMutation = useMutation({
@@ -501,6 +516,32 @@ export default function PostDetailPage() {
                         Atende o ajuste solicitado e avisa o cliente. Envie só a
                         peça que mudou — a outra é mantida.
                       </p>
+
+                      {/*
+                        Nem todo ajuste termina em upload: "remova o formato
+                        feed" se resolve removendo. Sem esta saída, atender esse
+                        pedido deixava o post preso em ajuste solicitado para
+                        sempre, porque o único gatilho de "atendido" era enviar
+                        arte.
+
+                        Exige arte no post: mandar o cliente revisar uma tela
+                        vazia contradiria o aviso que ele acabou de receber.
+                      */}
+                      <div className="pt-3 mt-1 border-t border-white/5">
+                        <button
+                          onClick={() => setConfirmandoConclusao(true)}
+                          disabled={!post.currentVersionId}
+                          className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Marcar ajuste como atendido
+                        </button>
+                        <p className="text-[11px] text-zinc-500 text-center leading-relaxed mt-2">
+                          {post.currentVersionId
+                            ? 'Para ajustes que não geram arte nova, como remover um formato.'
+                            : 'O post precisa de pelo menos uma arte para o cliente revisar.'}
+                        </p>
+                      </div>
                     </div>
                   ) : (
                     (feedUrls.length > 0 || storiesUrl) && (
@@ -869,6 +910,26 @@ export default function PostDetailPage() {
         confirmLabel="Excluir arte"
         confirmingLabel="Excluindo..."
         isConfirming={removerPecaMutation.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmandoConclusao}
+        onClose={() => setConfirmandoConclusao(false)}
+        onConfirm={() => concluirAjusteMutation.mutate()}
+        title="Marcar ajuste como atendido?"
+        description={
+          <>
+            Confirme que o que o cliente pediu já foi feito. O post volta a
+            aguardar aprovação e o cliente é avisado de que o ajuste foi
+            concluído.
+            {/* Dito porque este caminho não tem campo de observação: o cliente
+                não recebe explicação do que mudou, só o aviso. */}
+            {' '}Ele não recebe detalhes do que mudou — vai conferir direto no post.
+          </>
+        }
+        confirmLabel="Confirmar conclusão"
+        confirmingLabel="Concluindo..."
+        isConfirming={concluirAjusteMutation.isPending}
       />
     </div>
   );

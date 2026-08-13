@@ -130,6 +130,16 @@ export const postsService = {
    * arquivo é apagado, e as versões antigas continuam mostrando a arte que o
    * cliente viu.
    */
+  /**
+   * Fecha um pedido de ajuste que não terminou em arte nova — o caso típico é
+   * o cliente ter pedido para remover um formato. Devolve o post para PENDING
+   * e avisa o cliente.
+   */
+  concluirAjuste: async (postId: string) => {
+    const response = await api.post<Post>(`/posts/${postId}/resolve-adjustment`);
+    return response.data;
+  },
+
   removerPecaDaArte: async ({ postId, piece }: { postId: string; piece: 'FEED' | 'STORIES' }) => {
     const response = await api.post<{ removida: 'FEED' | 'STORIES'; ficouSemArte: boolean }>(
       '/post-versions/remove-piece',
