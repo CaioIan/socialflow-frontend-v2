@@ -26,7 +26,17 @@ export default function LoginPage() {
     onSuccess: (data) => {
       setAuth(data.user, data.organizations);
       addToast('Login realizado com sucesso!', 'success');
-      navigate('/organizations', { replace: true });
+
+      // Quem faz arte entra direto na fila de trabalho. O Início é uma lista de
+      // empresas, um passo a mais antes de chegar ao que importa — e o painel
+      // já cobre todas as organizações do usuário de uma vez, então escolher
+      // empresa primeiro não acrescenta nada para esse papel.
+      const destino =
+        data.user.role?.toUpperCase() === 'DESIGNER'
+          ? '/dashboard/designer'
+          : '/organizations';
+
+      navigate(destino, { replace: true });
     },
     onError: (error: unknown) => {
       addToast(getApiErrorMessage(error, 'Credenciais inválidas ou erro no servidor.'), 'error');

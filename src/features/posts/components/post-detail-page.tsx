@@ -392,8 +392,8 @@ export default function PostDetailPage() {
                         <span className="font-bold text-sm uppercase tracking-wider">Ajuste solicitado</span>
                       </div>
                       <span className="text-xs text-amber-400/70 text-center">
-                        A designer foi avisada. Quando a nova arte chegar, você poderá
-                        aprovar ou pedir outro ajuste.
+                        A equipe de design foi avisada. Quando a nova arte chegar,
+                        você poderá aprovar ou pedir outro ajuste.
                       </span>
                     </div>
                   )}
@@ -424,6 +424,77 @@ export default function PostDetailPage() {
                         </div>
                       ) : null;
                     })()
+                  )}
+                </div>
+              )}
+
+              {/*
+                As ações de arte moram no mesmo lugar do painel de decisão do
+                cliente, e não mais no rodapé da coluna da arte.
+
+                Lá elas ficavam depois das imagens, que são altas: entregar uma
+                arte exigia rolar a página inteira para achar o botão. Aqui cada
+                papel encontra o que pode fazer logo abaixo da legenda, sem
+                rolagem e no mesmo ponto da tela.
+
+                Com ajuste em aberto, "Enviar nova versão" é o único caminho.
+                "Substituir Feed"/"Substituir Stories" trocam a arte da versão
+                vigente e não fazem mais nada: não criam versão, não tiram o post
+                de ALTERATION_REQUESTED e não avisam o cliente. Atender um ajuste
+                por ali já aconteceu em produção — a arte nova entrou, e para
+                todo mundo o post continuou parecendo que esperava o design.
+                Por isso eles somem enquanto houver ajuste, em vez de conviverem
+                com o botão certo: são o caminho silencioso, e a diferença entre
+                os três não é visível para quem está só tentando entregar a arte.
+              */}
+              {(isAdmin || isDesigner) && (
+                <div className="mt-10 pt-8 border-t border-white/5">
+                  {temAjusteEmAberto ? (
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => setIsNovaVersaoModalOpen(true)}
+                        className="w-full py-3.5 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-black transition-all shadow-[0_0_25px_rgba(245,158,11,0.2)]"
+                      >
+                        <Upload className="w-5 h-5" />
+                        Enviar nova versão
+                      </button>
+                      <p className="text-[11px] text-zinc-500 text-center leading-relaxed">
+                        Atende o ajuste solicitado e avisa o cliente. Envie só a
+                        peça que mudou — a outra é mantida.
+                      </p>
+                    </div>
+                  ) : (
+                    (feedUrls.length > 0 || storiesUrl) && (
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        {feedUrls.length > 0 && (
+                          <button
+                            onClick={() => {
+                              setSelectedAssetId(feedAssetId || 'feed-placeholder');
+                              setSelectedAssetType('FEED');
+                              setIsReplaceAssetModalOpen(true);
+                            }}
+                            className="flex-1 py-3 px-4 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 border border-blue-500/30 transition-all"
+                          >
+                            <RotateCw className="w-4 h-4" />
+                            Substituir Feed
+                          </button>
+                        )}
+
+                        {storiesUrl && (
+                          <button
+                            onClick={() => {
+                              setSelectedAssetId(storiesAssetId || 'stories-placeholder');
+                              setSelectedAssetType('STORIES');
+                              setIsReplaceAssetModalOpen(true);
+                            }}
+                            className="flex-1 py-3 px-4 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-purple-200 border border-purple-500/30 transition-all"
+                          >
+                            <RotateCw className="w-4 h-4" />
+                            Substituir Stories
+                          </button>
+                        )}
+                      </div>
+                    )
                   )}
                 </div>
               )}
@@ -650,70 +721,6 @@ export default function PostDetailPage() {
               )}
             </div>
 
-            {/*
-              Com ajuste em aberto, "Enviar nova versão" é o único caminho.
-
-              "Substituir Feed"/"Substituir Stories" trocam a arte da versão
-              vigente e não fazem mais nada: não criam versão, não tiram o post
-              de ALTERATION_REQUESTED e não avisam o cliente. Atender um ajuste
-              por ali já aconteceu em produção — a arte nova entrou, e para todo
-              mundo o post continuou parecendo que esperava a designer.
-
-              Por isso eles somem enquanto houver ajuste, em vez de conviverem
-              com o botão certo: são o caminho silencioso, e a diferença entre
-              os três não é visível para quem está só tentando entregar a arte.
-              Sem ajuste em aberto, seguem existindo normalmente.
-            */}
-            {(isAdmin || isDesigner) && temAjusteEmAberto && (
-              <div className="space-y-2 pt-4">
-                <button
-                  onClick={() => setIsNovaVersaoModalOpen(true)}
-                  className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-amber-200 border border-amber-500/30 transition-all"
-                >
-                  <Upload className="w-4 h-4" />
-                  Enviar nova versão
-                </button>
-                <p className="text-[11px] text-zinc-500 text-center leading-relaxed">
-                  Atende o ajuste solicitado e avisa o cliente. Envie só a peça
-                  que mudou — a outra é mantida.
-                </p>
-              </div>
-            )}
-
-            {/* Replace Asset Buttons - Visible for ADMIN and DESIGNER */}
-            {(isAdmin || isDesigner) &&
-              !temAjusteEmAberto &&
-              (feedUrls.length > 0 || storiesUrl) && (
-                <div className="space-y-3 pt-4">
-                  {feedUrls.length > 0 && (
-                    <button
-                      onClick={() => {
-                        setSelectedAssetId(feedAssetId || 'feed-placeholder');
-                        setSelectedAssetType('FEED');
-                        setIsReplaceAssetModalOpen(true);
-                      }}
-                      className="w-full py-2 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 border border-blue-500/30 transition-all"
-                    >
-                      <RotateCw className="w-4 h-4" />
-                      Substituir Feed
-                    </button>
-                  )}
-
-                  {storiesUrl && (
-                    <button
-                      onClick={() => {
-                        setSelectedAssetId(storiesAssetId || 'stories-placeholder');
-                        setSelectedAssetType('STORIES');
-                        setIsReplaceAssetModalOpen(true);
-                      }}
-                      className="w-full py-2 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-purple-200 border border-purple-500/30 transition-all"
-                    >
-                      <RotateCw className="w-4 h-4" />
-                      Substituir Stories
-                    </button>
-                  )}
-                </div>
-              )}
           </motion.div>
         </div>
       </div>

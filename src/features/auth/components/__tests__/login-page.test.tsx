@@ -42,7 +42,7 @@ describe('LoginPage', () => {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/organizations" element={<div>Tela de início</div>} />
-              <Route path="/dashboard/designer" element={<div>Dashboard da designer</div>} />
+              <Route path="/dashboard/designer" element={<div>Painel do design</div>} />
             </Routes>
           </MemoryRouter>
         </QueryClientProvider>,
@@ -56,7 +56,7 @@ describe('LoginPage', () => {
     },
   );
 
-  it('leva a designer para o Início, mesmo com várias organizações', async () => {
+  it('leva quem é do design direto ao painel, mesmo com várias organizações', async () => {
     vi.mocked(authService.login).mockResolvedValue({
       user: {
         id: 'designer-1',
@@ -95,7 +95,7 @@ describe('LoginPage', () => {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/organizations" element={<div>Tela de início</div>} />
-            <Route path="/dashboard/designer" element={<div>Dashboard da designer</div>} />
+            <Route path="/dashboard/designer" element={<div>Painel do design</div>} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
@@ -105,7 +105,9 @@ describe('LoginPage', () => {
     await user.type(screen.getByPlaceholderText('••••••••'), 'senha123');
     await user.click(screen.getByRole('button', { name: 'Entrar na Plataforma' }));
 
-    expect(await screen.findByText('Tela de início')).toBeInTheDocument();
-    expect(screen.queryByText('Dashboard da designer')).not.toBeInTheDocument();
+    // Duas organizações de propósito: o painel cobre todas de uma vez, então
+    // nem mesmo quem está em várias precisa passar pela lista de empresas.
+    expect(await screen.findByText('Painel do design')).toBeInTheDocument();
+    expect(screen.queryByText('Tela de início')).not.toBeInTheDocument();
   });
 });
