@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { ArrowRight, Building2, Download, ExternalLink, Maximize2, Share2 } from 'lucide-react';
+import { ArrowRight, Download, ExternalLink, Maximize2, Share2 } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
 import { useToastStore } from '@/stores/use-toast-store';
 import {
@@ -19,13 +19,7 @@ import type { MuralItem } from '../api/mural-service';
  * tivesse a própria forma, o mural pularia de altura a cada seta clicada — e o
  * carrossel ficaria tremendo em vez de deslizar.
  */
-export function MuralItemCard({
-  item,
-  showOrganizationBadge = false,
-}: {
-  item: MuralItem;
-  showOrganizationBadge?: boolean;
-}) {
+export function MuralItemCard({ item }: { item: MuralItem }) {
   const [imagemAberta, setImagemAberta] = useState(false);
   const [detalheAberto, setDetalheAberto] = useState(false);
   const [instrucaoDeInstalacaoAberta, setInstrucaoDeInstalacaoAberta] = useState(false);
@@ -33,7 +27,6 @@ export function MuralItemCard({
   const inicioDoToque = useRef<{ x: number; y: number } | null>(null);
   const arrastou = useRef(false);
   const { addToast } = useToastStore();
-  const showScopeBadge = showOrganizationBadge || item.organizationId === null;
   const showMoreEnabled = item.showMoreEnabled === true;
   const showInstallButton = item.installButtonEnabled === true && !instalado;
   /* Só conta como botão se tiver destino: um rótulo sem link renderizaria uma
@@ -68,7 +61,6 @@ export function MuralItemCard({
               <Maximize2 className="h-4 w-4" />
             </span>
           </button>
-          {showScopeBadge && <MuralScopeBadge item={item} />}
         </div>
 
         <Modal
@@ -146,7 +138,7 @@ export function MuralItemCard({
         />
         <div
           className={`pointer-events-none relative z-[1] flex h-full w-full flex-col overflow-hidden ${
-            showCardActions || showScopeBadge ? 'pb-16 sm:pb-24' : ''
+            showCardActions ? 'pb-16 sm:pb-24' : ''
           }`}
         >
           <MuralBadges item={item} />
@@ -157,7 +149,7 @@ export function MuralItemCard({
           />
         </div>
 
-        {showCardActions ? (
+        {showCardActions && (
           <div /* Alinhado ao respiro do card (p-4 / sm:p-8) em vez de colado na
      borda: encostado no canto, o botão lia como etiqueta presa ao
      card, não como algo clicável solto sobre ele. */
@@ -225,14 +217,7 @@ export function MuralItemCard({
                 </button>
               )}
             </div>
-            {showScopeBadge && (
-              <span className="min-w-0">
-                <MuralScopeBadge item={item} inline />
-              </span>
-            )}
           </div>
-        ) : (
-          showScopeBadge && <MuralScopeBadge item={item} />
         )}
       </div>
 
@@ -253,8 +238,7 @@ export function MuralItemCard({
           <MuralMarkdown markdown={item.markdown ?? ''} modo="completo" />
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <MuralScopeBadge item={item} inline />
+        <div className="mt-4 flex justify-end">
           {dataDePublicacao && (
             <time className="text-[11px] text-zinc-500" dateTime={item.createdAt}>
               Publicado em {dataDePublicacao}
@@ -495,40 +479,5 @@ function MuralMarkdown({
         </span>
       )}
     </div>
-  );
-}
-
-/**
- * Origem do aviso. A foto transforma a badge em reconhecimento, não apenas em
- * metadado; o global usa a própria marca do SocialFlow pelo mesmo motivo.
- */
-function MuralScopeBadge({ item, inline = false }: { item: MuralItem; inline?: boolean }) {
-  const isGlobal = item.organizationId === null;
-
-  return (
-    <span
-      className={`${
-        inline
-          ? 'inline-flex max-w-full'
-          : 'absolute bottom-2 right-2 z-10 inline-flex max-w-[calc(100%-1rem)] sm:bottom-3 sm:right-3 sm:max-w-[calc(100%-1.5rem)]'
-      } items-center gap-1.5 rounded-md border border-white/15 bg-black/70 py-1 pl-1 pr-2.5 text-[11px] font-semibold text-white shadow-lg backdrop-blur-md sm:gap-2 sm:py-1.5 sm:pl-1.5 sm:pr-3 sm:text-xs`}
-      aria-label={isGlobal ? 'Aviso global do SocialFlow' : `Aviso da organização ${item.organizationName}`}
-    >
-      <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full overflow-hidden bg-white/10 flex items-center justify-center shrink-0">
-        {isGlobal ? (
-          <img src="/favicon.png" alt="" className="w-full h-full object-cover" />
-        ) : item.organizationLogoUrl ? (
-          <img src={item.organizationLogoUrl} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <Building2 className="w-3.5 h-3.5 text-zinc-300" />
-        )}
-      </span>
-      <span className="truncate">
-        {isGlobal ? 'SocialFlow · Global' : item.organizationName ?? 'Organização'}
-        {!isGlobal && (item.audienceCount ?? 0) > 0 && (
-          <> · {item.audienceCount} {item.audienceCount === 1 ? 'pessoa' : 'pessoas'}</>
-        )}
-      </span>
-    </span>
   );
 }

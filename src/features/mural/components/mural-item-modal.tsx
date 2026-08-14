@@ -480,7 +480,6 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
                   badges: badges.filter((badge) => badge.label.trim().length > 0),
                   createdAt: '',
                 }}
-                showOrganizationBadge={Boolean(organizacaoSelecionada)}
               />
             </div>
           </div>

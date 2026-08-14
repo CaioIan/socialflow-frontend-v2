@@ -104,7 +104,6 @@ export default function MuralAdminPage() {
         <MuralCarousel
           itens={itens}
           isLoading={isLoading}
-          showOrganizationBadge
           viewerName={user?.name}
         />
       </section>
@@ -132,7 +131,7 @@ export default function MuralAdminPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {itens.map((item) => (
               <div key={item.id} className="space-y-2.5 group">
-                <MuralItemCard item={item} showOrganizationBadge />
+                <MuralItemCard item={item} />
 
                 <div className="flex justify-end gap-1">
                   <button

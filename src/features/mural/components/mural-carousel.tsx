@@ -16,12 +16,10 @@ import { MuralItemCard } from './mural-item-card';
 export function MuralCarousel({
   itens,
   isLoading,
-  showOrganizationBadge = false,
   viewerName,
 }: {
   itens: MuralItem[];
   isLoading?: boolean;
-  showOrganizationBadge?: boolean;
   viewerName?: string;
 }) {
   const trilhoRef = useRef<HTMLDivElement>(null);
@@ -150,10 +148,7 @@ export function MuralCarousel({
                     className={`shrink-0 ${temMaisDeUm ? 'w-[90%] sm:w-[29.5rem]' : 'w-full sm:w-[29.5rem]'
                       }`}
                   >
-                    <MuralItemCard
-                      item={item}
-                      showOrganizationBadge={showOrganizationBadge}
-                    />
+                    <MuralItemCard item={item} />
                   </div>
                 ))}
               </div>
@@ -230,7 +225,7 @@ export function MuralCarousel({
             </li>
             <li className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
               <strong className="mb-1 block text-white">Avisos da organização</strong>
-              A logo e o nome no card mostram a qual organização cada informação pertence.
+              São comunicados exibidos somente para as pessoas vinculadas à organização definida.
             </li>
             <li className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
               <strong className="mb-1 block text-white">Navegação manual</strong>

@@ -5,13 +5,8 @@ import { MuralCarousel } from './mural-carousel';
 
 /**
  * Leitura compartilhada do mural, tanto na tela inicial quanto acima da lista
- * de organizações. Todo aviso identifica sua origem: os globais usam a marca
- * do SocialFlow e os direcionados mostram o nome e a logo da organização.
- *
- * A badge não depende da lista de organizações mantida no estado de login.
- * Essa lista não é persistida ao recarregar a página e, por isso, fazia a
- * origem desaparecer para CLIENT e DESIGNER mesmo quando a API devolvia o
- * aviso corretamente.
+ * de organizações. A API decide quais avisos globais ou direcionados cada
+ * pessoa recebe; o card apresenta somente o conteúdo do comunicado.
  */
 export function MuralFeed() {
   const { user } = useAuthStore();
@@ -28,7 +23,6 @@ export function MuralFeed() {
     <MuralCarousel
       itens={itens}
       isLoading={isLoading}
-      showOrganizationBadge
       viewerName={user?.name}
     />
   );

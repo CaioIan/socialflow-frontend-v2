@@ -57,21 +57,17 @@ describe('MuralItemCard', () => {
     vi.mocked(solicitarInstalacao).mockResolvedValue('dismissed');
   });
 
-  it('identifica a organização com nome e logo quando há múltiplos escopos', () => {
-    const { container } = render(<MuralItemCard item={aviso()} showOrganizationBadge />);
-
-    const origem = screen.getByLabelText('Aviso da organização Radiogenesis');
-    expect(origem).toBeInTheDocument();
-    expect(origem).toHaveClass('bottom-2', 'right-2', 'rounded-md');
-    expect(screen.getByText('Radiogenesis')).toBeInTheDocument();
-    expect(container.querySelector('img')).toHaveAttribute(
-      'src',
-      'https://cdn.example.com/radiogenesis.png',
+  it('não exibe badge de organização ou escopo global no card', () => {
+    const { rerender } = render(
+      <MuralItemCard
+        item={aviso({ audienceCount: 1 })}
+      />,
     );
-  });
 
-  it('mantém a origem global visível e usa a marca do SocialFlow', () => {
-    const { container } = render(
+    expect(screen.queryByLabelText(/aviso da organização/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Radiogenesis/)).not.toBeInTheDocument();
+
+    rerender(
       <MuralItemCard
         item={aviso({
           organizationId: null,
@@ -81,26 +77,8 @@ describe('MuralItemCard', () => {
       />,
     );
 
-    expect(screen.getByLabelText('Aviso global do SocialFlow')).toBeInTheDocument();
-    expect(screen.getByText('SocialFlow · Global')).toBeInTheDocument();
-    expect(container.querySelector('img')).toHaveAttribute('src', '/favicon.png');
-  });
-
-  it('indica quando o aviso está restrito a pessoas específicas', () => {
-    render(
-      <MuralItemCard
-        item={aviso({ audienceCount: 1 })}
-        showOrganizationBadge
-      />,
-    );
-
-    expect(screen.getByText('Radiogenesis · 1 pessoa')).toBeInTheDocument();
-  });
-
-  it('não adiciona badge redundante para quem tem uma única organização', () => {
-    render(<MuralItemCard item={aviso()} />);
-
-    expect(screen.queryByLabelText(/aviso da organização/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/aviso global/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('SocialFlow · Global')).not.toBeInTheDocument();
   });
 
   it('exibe as badges do conteúdo antes do texto e preserva as cores escolhidas', () => {
@@ -144,7 +122,6 @@ describe('MuralItemCard', () => {
             { label: 'Aprovação', backgroundColor: '#dc2626', textColor: '#ffffff' },
           ],
         })}
-        showOrganizationBadge
       />,
     );
 
@@ -300,7 +277,6 @@ describe('MuralItemCard', () => {
           imageUrl: 'https://cdn.example.com/aviso.png',
           markdown: null,
         })}
-        showOrganizationBadge
       />,
     );
 

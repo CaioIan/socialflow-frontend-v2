@@ -41,7 +41,7 @@ describe('MuralFeed', () => {
     useAuthStore.setState({ user: null, organizations: [] });
   });
 
-  it('mostra a organização do aviso para CLIENT mesmo sem organizações no estado persistido', () => {
+  it('exibe o aviso direcionado sem mostrar a organização no card', () => {
     useAuthStore.setState({
       user: {
         id: 'client-1',
@@ -64,13 +64,9 @@ describe('MuralFeed', () => {
       </QueryClientProvider>,
     );
 
-    const badge = screen.getByLabelText('Aviso da organização Radiogenesis');
-    expect(badge).toBeInTheDocument();
-    expect(screen.getByText('Radiogenesis')).toBeInTheDocument();
-    expect(badge.querySelector('img')).toHaveAttribute(
-      'src',
-      'https://cdn.example.com/radiogenesis.png',
-    );
+    expect(screen.getByText('Cronograma atualizado')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/aviso da organização/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Radiogenesis')).not.toBeInTheDocument();
   });
 
   it('não reaproveita avisos guardados para outra conta', async () => {
