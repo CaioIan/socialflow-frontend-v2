@@ -146,7 +146,7 @@ export function MuralItemCard({
         />
         <div
           className={`pointer-events-none relative z-[1] flex h-full w-full flex-col overflow-hidden ${
-            showCardActions || showScopeBadge ? 'pb-12 sm:pb-14' : ''
+            showCardActions || showScopeBadge ? 'pb-16 sm:pb-24' : ''
           }`}
         >
           <MuralBadges item={item} />
@@ -158,7 +158,10 @@ export function MuralItemCard({
         </div>
 
         {showCardActions ? (
-          <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10 flex min-w-0 items-center justify-between gap-2 sm:inset-x-3 sm:bottom-3">
+          <div /* Alinhado ao respiro do card (p-4 / sm:p-8) em vez de colado na
+     borda: encostado no canto, o botão lia como etiqueta presa ao
+     card, não como algo clicável solto sobre ele. */
+          className="pointer-events-none absolute inset-x-4 bottom-4 z-10 flex min-w-0 items-center justify-between gap-2 sm:inset-x-8 sm:bottom-8">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               {showInstallButton && (
                 <button
@@ -168,7 +171,7 @@ export function MuralItemCard({
                     void instalarSocialFlow();
                   }}
                   aria-label="Instalar SocialFlow"
-                  className="pointer-events-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-[11px] font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
+                  className="pointer-events-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-[11px] font-bold text-white shadow-[0_10px_28px_-6px_rgba(0,0,0,0.65)] ring-1 ring-black/10 transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
                 >
                   <Download aria-hidden="true" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span className="sm:hidden">Instalar</span>
@@ -185,7 +188,7 @@ export function MuralItemCard({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(event) => event.stopPropagation()}
-                  className="pointer-events-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
+                  className="pointer-events-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-[0_10px_28px_-6px_rgba(0,0,0,0.65)] ring-1 ring-black/10 transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
                   style={{
                     backgroundColor: botaoDeLink.linkButtonBackgroundColor ?? '#ffffff',
                     color: botaoDeLink.linkButtonTextColor ?? '#18181b',
@@ -207,7 +210,7 @@ export function MuralItemCard({
                     abrirDetalhe();
                   }}
                   aria-label="Ver mais sobre este aviso"
-                  className="pointer-events-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
+                  className="pointer-events-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-[0_10px_28px_-6px_rgba(0,0,0,0.65)] ring-1 ring-black/10 transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
                   style={{
                     backgroundColor: item.showMoreBackgroundColor ?? '#ffffff',
                     color: item.showMoreTextColor ?? '#18181b',
