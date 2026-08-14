@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ArrowRight, Inbox } from 'lucide-react';
+import { Loader2, ArrowRight, Inbox, ImageOff } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
 import dashboardService, { type PostStatus } from '../api/dashboard-service';
 import type { DesignerPostCategory } from '../api/dashboard-service';
@@ -88,9 +88,34 @@ export function PostDrilldownModal({
               key={post.id}
               className="flex items-center justify-between gap-4 bg-white/5 border border-white/5 rounded-2xl p-4"
             >
+              {/* Miniatura antes do texto: numa fila de posts parecidos, a arte
+                  identifica mais rápido do que a legenda. Quem ainda não tem
+                  arte mostra a moldura vazia, que também é informação. */}
+              <div className="shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-white/10 bg-black/30 flex items-center justify-center">
+                {post.previewUrl ? (
+                  <img
+                    src={post.previewUrl}
+                    alt=""
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <ImageOff className="w-5 h-5 text-zinc-700" />
+                )}
+              </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-primary/80 truncate">
-                  {post.organizationName} · {post.campaignTitle}
+                <p className="text-[10px] font-bold uppercase tracking-wider text-primary/80 truncate flex items-center gap-1.5">
+                  {post.organizationLogoUrl ? (
+                    <img
+                      src={post.organizationLogoUrl}
+                      alt=""
+                      loading="lazy"
+                      className="w-4 h-4 rounded-full object-cover shrink-0"
+                    />
+                  ) : (
+                    <span className="w-4 h-4 rounded-full bg-white/10 shrink-0" />
+                  )}
+                  <span className="truncate">{post.organizationName} · {post.campaignTitle}</span>
                 </p>
                 <p className="text-sm text-zinc-200 truncate mt-1">{post.captionFixed}</p>
                 <p className="text-xs text-zinc-500 mt-1">

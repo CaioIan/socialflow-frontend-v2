@@ -9,6 +9,7 @@ import { GlassCard } from '@/shared/components/glass-card';
 import { ReplaceAssetModal } from './replace-asset-modal';
 import { AdjustmentRequestModal } from './adjustment-request-modal';
 import { UploadVersionModal } from './upload-version-modal';
+import { MissingFormatDropzone } from './missing-format-dropzone';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import {
   ArrowLeft,
@@ -705,6 +706,12 @@ export default function PostDetailPage() {
                 </div>
               )}
 
+              {/* O formato que falta vira convite de envio, no lugar onde a arte
+                  apareceria. Só para a equipe: o cliente não sobe arte. */}
+              {feedUrls.length === 0 && podeExcluirArte && (
+                <MissingFormatDropzone postId={postId!} campaignId={campId!} format="FEED" />
+              )}
+
               {storiesUrl && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-2">
@@ -734,7 +741,11 @@ export default function PostDetailPage() {
                 </div>
               )}
 
-              {feedUrls.length === 0 && !storiesUrl && (
+              {!storiesUrl && podeExcluirArte && (
+                <MissingFormatDropzone postId={postId!} campaignId={campId!} format="STORIES" />
+              )}
+
+              {feedUrls.length === 0 && !storiesUrl && !podeExcluirArte && (
                 <div className="py-32 text-center border-2 border-dashed border-white/5 rounded-[3rem] bg-white/[0.01]">
                   <p className="text-zinc-600 font-medium">Nenhuma arte disponível para esta versão.</p>
                 </div>
@@ -820,7 +831,19 @@ export default function PostDetailPage() {
                     </div>
                   )}
 
-                  {feedUrls.length === 0 && !storiesUrl && (
+                  {feedUrls.length === 0 && podeExcluirArte && (
+                    <div className={`${temMaisDeUmSlide ? 'w-[calc(100%-3rem)]' : 'w-full'} shrink-0 snap-start`}>
+                      <MissingFormatDropzone postId={postId!} campaignId={campId!} format="FEED" />
+                    </div>
+                  )}
+
+                  {!storiesUrl && podeExcluirArte && (
+                    <div className={`${temMaisDeUmSlide ? 'w-[calc(100%-3rem)]' : 'w-full'} shrink-0 snap-start`}>
+                      <MissingFormatDropzone postId={postId!} campaignId={campId!} format="STORIES" />
+                    </div>
+                  )}
+
+                  {feedUrls.length === 0 && !storiesUrl && !podeExcluirArte && (
                     <div className="w-full shrink-0 py-20 text-center border-2 border-dashed border-white/5 rounded-[2rem] bg-white/[0.01]">
                       <p className="text-zinc-600 text-sm">Nenhuma arte disponível para esta versão.</p>
                     </div>

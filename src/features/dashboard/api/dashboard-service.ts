@@ -23,6 +23,8 @@ export interface StatsPostListItem {
   id: string;
   organizationId: string;
   organizationName: string;
+  organizationLogoUrl: string | null;
+  previewUrl: string | null;
   campaignId: string;
   campaignTitle: string;
   captionFixed: string;
