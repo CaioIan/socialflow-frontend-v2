@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { ArrowRight, Building2, Download, Maximize2, Share2 } from 'lucide-react';
+import { ArrowRight, Building2, Download, ExternalLink, Maximize2, Share2 } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
 import { useToastStore } from '@/stores/use-toast-store';
 import {
@@ -36,7 +36,11 @@ export function MuralItemCard({
   const showScopeBadge = showOrganizationBadge || item.organizationId === null;
   const showMoreEnabled = item.showMoreEnabled === true;
   const showInstallButton = item.installButtonEnabled === true && !instalado;
-  const showCardActions = showMoreEnabled || showInstallButton;
+  /* Só conta como botão se tiver destino: um rótulo sem link renderizaria uma
+     âncora que não vai a lugar nenhum. */
+  const botaoDeLink =
+    item.linkButtonEnabled === true && item.linkButtonUrl ? item : null;
+  const showCardActions = showMoreEnabled || showInstallButton || botaoDeLink !== null;
   const dataDePublicacao = formatarDataDePublicacao(item.createdAt);
 
   useEffect(() => {
@@ -170,6 +174,29 @@ export function MuralItemCard({
                   <span className="sm:hidden">Instalar</span>
                   <span className="hidden sm:inline">Instalar SocialFlow</span>
                 </button>
+              )}
+
+              {botaoDeLink && (
+                /* `rel` obrigatório: sem `noopener`, a página de destino recebe
+                   `window.opener` e pode navegar a aba do SocialFlow para
+                   qualquer lugar. O destino aqui é digitado à mão. */
+                <a
+                  href={botaoDeLink.linkButtonUrl ?? '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(event) => event.stopPropagation()}
+                  className="pointer-events-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
+                  style={{
+                    backgroundColor: botaoDeLink.linkButtonBackgroundColor ?? '#ffffff',
+                    color: botaoDeLink.linkButtonTextColor ?? '#18181b',
+                  }}
+                >
+                  <span className="truncate">{botaoDeLink.linkButtonLabel}</span>
+                  <ExternalLink
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4"
+                  />
+                </a>
               )}
 
               {showMoreEnabled && (

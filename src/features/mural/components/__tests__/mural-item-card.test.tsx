@@ -38,6 +38,11 @@ function aviso(overrides: Partial<MuralItem> = {}): MuralItem {
     showMoreBackgroundColor: '#ffffff',
     showMoreTextColor: '#18181b',
     showMoreIconColor: '#18181b',
+    linkButtonEnabled: false,
+    linkButtonLabel: null,
+    linkButtonUrl: null,
+    linkButtonBackgroundColor: '#ffffff',
+    linkButtonTextColor: '#18181b',
     installButtonEnabled: false,
     designersOnly: false,
     badges: [],
@@ -170,6 +175,11 @@ describe('MuralItemCard', () => {
           showMoreBackgroundColor: '#7c3aed',
           showMoreTextColor: '#ffffff',
           showMoreIconColor: '#f59e0b',
+          linkButtonEnabled: false,
+          linkButtonLabel: null,
+          linkButtonUrl: null,
+          linkButtonBackgroundColor: '#ffffff',
+          linkButtonTextColor: '#18181b',
         })}
       />,
     );
@@ -186,6 +196,11 @@ describe('MuralItemCard', () => {
           showMoreBackgroundColor: '#7c3aed',
           showMoreTextColor: '#ffffff',
           showMoreIconColor: '#f59e0b',
+          linkButtonEnabled: false,
+          linkButtonLabel: null,
+          linkButtonUrl: null,
+          linkButtonBackgroundColor: '#ffffff',
+          linkButtonTextColor: '#18181b',
         })}
       />,
     );

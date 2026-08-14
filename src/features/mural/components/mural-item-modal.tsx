@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Download, Image as ImageIcon, Loader2, Plus, Tag, Trash2, Type, Upload, Users } from 'lucide-react';
+import { ExternalLink, ArrowRight, Download, Image as ImageIcon, Loader2, Plus, Tag, Trash2, Type, Upload, Users } from 'lucide-react';
 import { Modal } from '@/shared/components/modal';
 import { getApiErrorMessage } from '@/api/api-error';
 import { useToastStore } from '@/stores/use-toast-store';
@@ -63,6 +63,15 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
   );
   const [showMoreIconColor, setShowMoreIconColor] = useState(
     item?.showMoreIconColor ?? '#18181b',
+  );
+  const [linkButtonEnabled, setLinkButtonEnabled] = useState(item?.linkButtonEnabled ?? false);
+  const [linkButtonLabel, setLinkButtonLabel] = useState(item?.linkButtonLabel ?? '');
+  const [linkButtonUrl, setLinkButtonUrl] = useState(item?.linkButtonUrl ?? '');
+  const [linkButtonBackgroundColor, setLinkButtonBackgroundColor] = useState(
+    item?.linkButtonBackgroundColor ?? '#ffffff',
+  );
+  const [linkButtonTextColor, setLinkButtonTextColor] = useState(
+    item?.linkButtonTextColor ?? '#18181b',
   );
   const [installButtonEnabled, setInstallButtonEnabled] = useState(
     item?.installButtonEnabled ?? false,
@@ -127,6 +136,11 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
           badges: badges.map((badge) => ({ ...badge, label: badge.label.trim() })),
           organizationId: org,
           audienceUserIds,
+          linkButtonEnabled,
+          linkButtonLabel,
+          linkButtonUrl,
+          linkButtonBackgroundColor,
+          linkButtonTextColor,
           showMoreEnabled,
           showMoreBackgroundColor,
           showMoreTextColor,
@@ -457,6 +471,11 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
                   showMoreTextColor,
                   showMoreIconColor,
                   installButtonEnabled,
+                  linkButtonEnabled,
+                  linkButtonLabel,
+                  linkButtonUrl,
+                  linkButtonBackgroundColor,
+                  linkButtonTextColor,
                   designersOnly,
                   badges: badges.filter((badge) => badge.label.trim().length > 0),
                   createdAt: '',
@@ -550,6 +569,77 @@ export function MuralItemModal({ isOpen, onClose, item }: Props) {
             )}
           </div>
         )}
+
+        {/*
+          Fora da condicional de tipo, de propósito: o botão personalizado vale
+          tanto para o card de texto quanto para o de imagem — diferente do
+          "Ver mais", que só faz sentido onde existe texto para abrir.
+        */}
+        <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-zinc-400">
+                <ExternalLink className="h-3.5 w-3.5 text-primary" />
+                Botão com link
+              </span>
+              <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+                Opcional. Um botão que leva para o endereço que você escolher, aberto em nova aba.
+              </p>
+            </div>
+            <ToggleSwitch
+              checked={linkButtonEnabled}
+              ariaLabel="Exibir botão com link"
+              onClick={() => setLinkButtonEnabled((atual) => !atual)}
+            />
+          </div>
+
+          {linkButtonEnabled && (
+            <div className="space-y-4 border-t border-white/5 pt-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label className="space-y-2 block">
+                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wide">
+                    Texto do botão
+                  </span>
+                  <input
+                    value={linkButtonLabel}
+                    onChange={(e) => setLinkButtonLabel(e.target.value)}
+                    maxLength={40}
+                    placeholder="Ver o material"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-primary/50"
+                  />
+                </label>
+                <label className="space-y-2 block">
+                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wide">
+                    Link de destino
+                  </span>
+                  <input
+                    value={linkButtonUrl}
+                    onChange={(e) => setLinkButtonUrl(e.target.value)}
+                    inputMode="url"
+                    placeholder="https://..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-primary/50"
+                  />
+                </label>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <SeletorDeCor
+                  rotulo="Cor do botão"
+                  valor={linkButtonBackgroundColor}
+                  onChange={setLinkButtonBackgroundColor}
+                />
+                <SeletorDeCor
+                  rotulo="Cor do texto do botão"
+                  valor={linkButtonTextColor}
+                  onChange={setLinkButtonTextColor}
+                />
+              </div>
+              <p className="text-[11px] leading-relaxed text-zinc-600">
+                O endereço precisa começar com <code className="text-zinc-500">https://</code> ou{' '}
+                <code className="text-zinc-500">http://</code>.
+              </p>
+            </div>
+          )}
+        </section>
 
         {erro && (
           <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl py-2.5 px-3">

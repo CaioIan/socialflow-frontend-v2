@@ -36,6 +36,11 @@ export interface MuralItem {
   showMoreBackgroundColor: string;
   showMoreTextColor: string;
   showMoreIconColor: string;
+  linkButtonEnabled: boolean;
+  linkButtonLabel: string | null;
+  linkButtonUrl: string | null;
+  linkButtonBackgroundColor: string;
+  linkButtonTextColor: string;
   /** Exibe a ação fixa de instalação do PWA com o gradiente da marca. */
   installButtonEnabled: boolean;
   /** Restringe o aviso aos designers da organização. */
@@ -85,6 +90,11 @@ export const muralService = {
     showMoreBackgroundColor: string;
     showMoreTextColor: string;
     showMoreIconColor: string;
+    linkButtonEnabled?: boolean;
+    linkButtonLabel?: string;
+    linkButtonUrl?: string;
+    linkButtonBackgroundColor?: string;
+    linkButtonTextColor?: string;
     installButtonEnabled: boolean;
     designersOnly: boolean;
   }) => {
@@ -105,6 +115,11 @@ export const muralService = {
       showMoreBackgroundColor: string;
       showMoreTextColor: string;
       showMoreIconColor: string;
+      linkButtonEnabled?: boolean;
+      linkButtonLabel?: string;
+      linkButtonUrl?: string;
+      linkButtonBackgroundColor?: string;
+      linkButtonTextColor?: string;
       installButtonEnabled: boolean;
       designersOnly: boolean;
     },
